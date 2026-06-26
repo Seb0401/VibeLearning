@@ -1,5 +1,5 @@
 import { groq } from "@/lib/groq";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import pdfParse from "pdf-parse";
 
 const SYSTEM = `Eres un asistente educativo. Resume el siguiente material de estudio de forma compacta.
 Extrae los puntos más importantes en 150-200 palabras. Sin listas largas, solo los conceptos esenciales

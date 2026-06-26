@@ -17,5 +17,5 @@ export default function MindMap({ markdown }) {
     return () => mm?.destroy();
   }, [markdown]);
 
-  return <svg ref={ref} style={{ width: "100%", height: "420px" }} />;
+  return <svg ref={ref} style={{ width: "100%", height: "100%", minHeight: "200px", display: "block" }} />;
 }

@@ -1,23 +1,126 @@
 @import "tailwindcss";
 
+/* ── Design tokens ────────────────────────────────────────────────────── */
 :root {
-  --bg: #0f0f17;
-  --surface: #1a1a24;
-  --border: #2a2a3a;
-  --text: #e8e8f0;
-  --text-muted: #9a9ab0;
-  --accent: #7c6df2;
-  --success: #22c55e;
-  --error: #ef4444;
-  --radius: 12px;
+  --bg:            #0B0B12;
+  --sidebar:       #11111A;
+  --card:          #171721;
+  --hover:         #20202B;
+  --border:        rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.10);
+  --text:          #FFFFFF;
+  --text-2:        #9CA3AF;
+  --text-3:        #6B7280;
+  --accent:        #7C6CF8;
+  --accent-hover:  #8B7FFF;
+  --accent-dim:    rgba(124, 108, 248, 0.12);
+  --green:         #22C55E;
+  --green-dim:     rgba(34, 197, 94, 0.10);
+  --red:           #EF4444;
+  --yellow:        #FBBF24;
+  --radius-card:   16px;
+  --radius-btn:    14px;
+  --radius-input:  12px;
+  /* Backward-compat aliases for live class view */
+  --surface:       var(--card);
+  --radius:        var(--radius-card);
+  --text-muted:    var(--text-2);
+  --success:       var(--green);
+  --error:         var(--red);
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
-* {
-  box-sizing: border-box;
+/* ── Scrollbar ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar           { width: 4px; height: 4px; }
+::-webkit-scrollbar-track     { background: transparent; }
+::-webkit-scrollbar-thumb     { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+/* ── Card hover ───────────────────────────────────────────────────────── */
+.card-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  border-color: var(--border-strong) !important;
+}
+
+/* ── Stat card hover ──────────────────────────────────────────────────── */
+.stat-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.stat-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+/* ── Nav item hover ───────────────────────────────────────────────────── */
+.nav-item {
+  transition: background 150ms ease, color 150ms ease;
+}
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--text) !important;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn-accent {
+  transition: background 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+}
+.btn-accent:hover {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 4px 20px rgba(124, 108, 248, 0.38) !important;
+}
+.btn-accent:active { transform: scale(0.98); }
+
+.btn-ghost {
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ── Row item hover ───────────────────────────────────────────────────── */
+.row-hover {
+  transition: background 150ms ease;
+  border-radius: 10px;
+}
+.row-hover:hover {
+  background: var(--hover) !important;
+}
+
+/* ── Class list card ──────────────────────────────────────────────────── */
+.class-card {
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.class-card:hover {
+  background: var(--hover) !important;
+  border-color: var(--border-strong) !important;
+}
+.class-card-arrow {
+  transition: opacity 150ms ease, transform 150ms ease;
+  opacity: 0.3;
+}
+.class-card:hover .class-card-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+
