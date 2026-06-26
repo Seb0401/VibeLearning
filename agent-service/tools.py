@@ -69,9 +69,8 @@ def web_search(query: str) -> dict:
     Args:
         query: The search query or general knowledge question to look up on the web.
     """
-    # Restrict search to allowlisted domains using "site:domain"
-    site_restriction = " OR ".join([f"site:{domain}" for domain in ALLOWLIST_DOMAINS])
-    full_query = f"{query} ({site_restriction})"
+    # We perform an open search on DuckDuckGo and then filter results in python using ALLOWLIST_DOMAINS
+    full_query = query
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
