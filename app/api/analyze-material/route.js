@@ -136,6 +136,8 @@ export async function POST(req) {
             summary: parsed.summary,
             mindmap: parsed.mindmap,
             timeline: parsed.timeline,
+          }, {
+            headers: { "Content-Type": "application/json; charset=utf-8" }
           });
         }
 
