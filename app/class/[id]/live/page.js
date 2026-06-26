@@ -117,6 +117,11 @@ export default function LiveClass() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
 
+  // Keep ref in sync so sendChatText always has fresh visualNotes (avoids stale closure)
+  useEffect(() => {
+    visualNotesRef.current = visualNotes;
+  }, [visualNotes]);
+
   function scheduleChunk() {
     if (!isRecordingRef.current) return;
 
@@ -316,21 +321,22 @@ export default function LiveClass() {
           }),
         });
         const json = await res.json();
-        setVisualNotes((prev) => {
-          const next = [...prev, {
-            id: Date.now(),
-            previewUrl,
-            storagePath,
-            source,
-            content_type:   json.content_type   || "other",
-            description:    json.description    || "",
-            extracted_text: json.extracted_text || null,
-            key_concepts:   json.key_concepts   || [],
-            gaps:           json.gaps           || null,
-          }];
-          visualNotesRef.current = next;
-          return next;
-        });
+        // Build the note object
+        const newNote = {
+          id: Date.now(),
+          previewUrl,
+          storagePath,
+          source,
+          content_type:   json.content_type   || "other",
+          description:    json.description    || "",
+          extracted_text: json.extracted_text || null,
+          key_concepts:   json.key_concepts   || [],
+          gaps:           json.gaps           || null,
+        };
+        // Update ref synchronously BEFORE setState — sendChatText reads from this ref
+        // and may be called before the next render cycle completes
+        visualNotesRef.current = [...visualNotesRef.current, newNote];
+        setVisualNotes([...visualNotesRef.current]);
       } catch {}
       setAnalyzeLoading(false);
     };

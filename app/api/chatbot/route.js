@@ -14,36 +14,49 @@ export async function POST(req) {
     const material = material_summary?.trim() || null;
     const visual   = visual_context?.trim()   || null;
 
-    // Build context block — only include non-empty sources
+    // Debug — visible in Vercel Function Logs
+    console.log(`[chatbot] sources: transcript=${transcriptTruncated.length} chars | pdf=${material ? "yes" : "no"} | visual=${visual ? visual.length + " chars" : "none"}`);
+
+    // Build context sections — only include non-empty sources
     const contextParts = [];
     if (transcriptTruncated) {
-      contextParts.push(`TRANSCRIPCIÓN DE CLASE (últimas ~3000 palabras):\n"""${transcriptTruncated}"""`);
+      contextParts.push(`=== TRANSCRIPCIÓN DE CLASE ===\n${transcriptTruncated}`);
     }
     if (material) {
-      contextParts.push(`MATERIAL PDF:\n"""${material}"""`);
+      contextParts.push(`=== MATERIAL PDF ===\n${material}`);
     }
     if (visual) {
-      contextParts.push(`NOTAS VISUALES (diapositivas, pizarrón, diagramas y texto OCR capturado durante la clase):\n"""${visual}"""`);
+      contextParts.push(`=== NOTAS VISUALES (capturas de diapositivas, pizarrón, diagramas — incluye texto OCR extraído) ===\n${visual}`);
     }
 
     const contextBlock = contextParts.length
       ? contextParts.join("\n\n")
-      : "No hay contexto disponible aún.";
+      : "Sin contexto disponible aún.";
 
-    const prompt = `Eres un asistente educativo con acceso a múltiples fuentes de la clase en vivo.
+    const sourcesAvailable = [
+      transcriptTruncated && "transcript de audio",
+      material && "material PDF",
+      visual && "notas visuales con OCR",
+    ].filter(Boolean).join(", ") || "ninguna fuente";
+
+    const prompt = `Eres un asistente educativo. Tienes acceso a las siguientes fuentes de la clase: ${sourcesAvailable}.
 
 ${contextBlock}
 
-Pregunta del estudiante: "${question}"
+Pregunta: "${question}"
 
-Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones salvo que pidan más detalle. Si la respuesta está en las notas visuales (OCR, diagramas), menciona que la información viene de una imagen capturada. Si no puedes responder con el contexto disponible, dilo honestamente.`;
+INSTRUCCIONES:
+- Responde usando TODA la información disponible — transcript, PDF y especialmente las notas visuales si las hay.
+- Si la respuesta está en las NOTAS VISUALES (texto OCR, descripción de imagen), úsala directamente y menciona que viene de una captura visual.
+- Texto plano, SIN markdown. Máximo 3 oraciones claras y directas.
+- Solo di "No tengo esa información en el contexto disponible" si realmente no hay datos relevantes en NINGUNA fuente.`;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const completion = await groq.chat.completions.create({
           model: "openai/gpt-oss-120b",
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 160,
+          max_tokens: 220,
         });
 
         const rawText = completion.choices[0]?.message?.content ?? "";
@@ -56,17 +69,10 @@ Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máx
           .replace(/"?\}?$/g, "")
           .trim();
 
-        if (cleaned) {
-          return Response.json({ answer: cleaned });
-        }
-
-        if (attempt === 2) {
-          return Response.json({ skip: true });
-        }
-      } catch (innerErr) {
-        if (attempt === 2) {
-          return Response.json({ skip: true });
-        }
+        if (cleaned) return Response.json({ answer: cleaned });
+        if (attempt === 2) return Response.json({ skip: true });
+      } catch {
+        if (attempt === 2) return Response.json({ skip: true });
       }
     }
 
