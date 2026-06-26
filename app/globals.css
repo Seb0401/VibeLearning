@@ -21,6 +21,12 @@
   --radius-card:   16px;
   --radius-btn:    14px;
   --radius-input:  12px;
+  /* Backward-compat aliases for live class view */
+  --surface:       var(--card);
+  --radius:        var(--radius-card);
+  --text-muted:    var(--text-2);
+  --success:       var(--green);
+  --error:         var(--red);
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────── */
