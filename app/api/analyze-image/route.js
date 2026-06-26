@@ -7,6 +7,13 @@ export async function POST(request) {
     return Response.json({ error: "No image provided" }, { status: 400 });
   }
 
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("[analyze-image] GEMINI_API_KEY is not set");
+    return Response.json({ content_type: "other", description: "", extracted_text: null, key_concepts: [], gaps: null }, { status: 500 });
+  }
+
+  console.log(`[analyze-image] processing: mimeType=${mimeType}, imageSize=${Math.round(imageBase64.length * 0.75 / 1024)}KB, transcriptLen=${transcript.length}`);
+
   const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const transcriptContext = transcript.length > 2000 ? transcript.slice(-2000) : transcript;
@@ -56,15 +63,17 @@ Instrucciones de clasificación:
 
     const validTypes = ["whiteboard", "slide", "diagram", "graph", "formula", "table", "screenshot", "photo", "other"];
 
-    return Response.json({
+    const result = {
       content_type: validTypes.includes(parsed.content_type) ? parsed.content_type : "other",
       description: parsed.description || "",
       extracted_text: parsed.extracted_text && parsed.extracted_text !== "null" ? parsed.extracted_text : null,
       key_concepts: Array.isArray(parsed.key_concepts) ? parsed.key_concepts : [],
       gaps: parsed.gaps && parsed.gaps !== "null" ? parsed.gaps : null,
-    });
+    };
+    console.log(`[analyze-image] OK: type=${result.content_type}, hasOCR=${!!result.extracted_text}, concepts=${result.key_concepts.length}`);
+    return Response.json(result);
   } catch (e) {
-    console.error("[analyze-image]", e);
+    console.error("[analyze-image] error:", e?.message || e);
     return Response.json(
       { content_type: "other", description: "", extracted_text: null, key_concepts: [], gaps: null },
       { status: 500 }

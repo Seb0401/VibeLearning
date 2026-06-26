@@ -306,17 +306,28 @@ export default function LiveClass() {
       const base64 = e.target.result.split(",")[1];
       const mimeType = blob.type || "image/jpeg";
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage — storagePath is null unless upload succeeds
       let storagePath = null;
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        const ext = mimeType.includes("png") ? "png" : "jpg";
-        storagePath = `${user.id}/${classId}/${Date.now()}.${ext}`;
-        await supabase.storage.from("class-images").upload(storagePath, blob, { contentType: mimeType });
-      } catch {}
+        if (user) {
+          const ext = mimeType.includes("png") ? "png" : "jpg";
+          const candidatePath = `${user.id}/${classId}/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("class-images")
+            .upload(candidatePath, blob, { contentType: mimeType });
+          if (uploadError) {
+            console.error("[visual-notes] Storage upload failed:", uploadError.message);
+          } else {
+            storagePath = candidatePath;
+          }
+        }
+      } catch (uploadEx) {
+        console.error("[visual-notes] Storage exception:", uploadEx?.message);
+      }
 
-      // Analyze with Gemini
+      // Analyze with Gemini — this drives the RAG; works independently of storage
       try {
         const res = await fetch("/api/analyze-image", {
           method: "POST",
@@ -328,7 +339,11 @@ export default function LiveClass() {
           }),
         });
         const json = await res.json();
-        // Build the note object
+
+        if (!res.ok || (!json.description && !json.extracted_text && !json.key_concepts?.length)) {
+          console.error("[visual-notes] Gemini returned no content (status", res.status, "):", json);
+        }
+
         const newNote = {
           id: Date.now(),
           previewUrl,
@@ -340,11 +355,12 @@ export default function LiveClass() {
           key_concepts:   json.key_concepts   || [],
           gaps:           json.gaps           || null,
         };
-        // Update ref synchronously BEFORE setState — sendChatText reads from this ref
-        // and may be called before the next render cycle completes
+        // Update ref BEFORE setState so sendChatText always reads fresh data
         visualNotesRef.current = [...visualNotesRef.current, newNote];
         setVisualNotes([...visualNotesRef.current]);
-      } catch {}
+      } catch (analyzeEx) {
+        console.error("[visual-notes] Gemini call exception:", analyzeEx?.message);
+      }
       setAnalyzeLoading(false);
     };
     reader.readAsDataURL(blob);
