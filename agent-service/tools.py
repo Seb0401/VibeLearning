@@ -85,36 +85,29 @@ def web_search(query: str) -> dict:
         soup = BeautifulSoup(response.text, "html.parser")
         results = []
         
-        for a in soup.find_all("a", class_="result__url"):
-            href = a.get("href", "")
-            if "uddg=" in href:
-                parsed = urllib.parse.parse_qs(urllib.parse.urlparse(href).query)
-                if "uddg" in parsed:
-                    href = parsed["uddg"][0]
-            
-            # Find the title and snippet
-            snippet_elem = a.find_parent("div", class_="result__body")
-            snippet = ""
-            title = ""
-            if snippet_elem:
-                snippet_div = snippet_elem.find("a", class_="result__snippet")
-                if snippet_div:
-                    snippet = snippet_div.get_text(strip=True)
-                title_a = snippet_elem.find("a", class_="result__title")
-                if title_a:
-                    title = title_a.get_text(strip=True)
-            
-            # Double check domain is in allowlist
-            is_allowed = any(domain in href for domain in ALLOWLIST_DOMAINS)
-            if is_allowed and href:
-                results.append({
-                    "title": title,
-                    "url": href,
-                    "snippet": snippet
-                })
-                if len(results) >= 3:
-                    break
-                    
+        for div in soup.find_all("div", class_="result"):
+            a_title = div.find("a", class_="result__a")
+            a_snippet = div.find("a", class_="result__snippet")
+            if a_title:
+                title = a_title.get_text(strip=True)
+                href = a_title.get("href", "")
+                if "uddg=" in href:
+                    parsed = urllib.parse.parse_qs(urllib.parse.urlparse(href).query)
+                    if "uddg" in parsed:
+                        href = parsed["uddg"][0]
+                snippet = a_snippet.get_text(strip=True) if a_snippet else ""
+                
+                # Double check domain is in allowlist
+                is_allowed = any(domain in href for domain in ALLOWLIST_DOMAINS)
+                if is_allowed and href:
+                    results.append({
+                        "title": title,
+                        "url": href,
+                        "snippet": snippet
+                    })
+                    if len(results) >= 3:
+                        break
+                        
         if not results:
             return {"status": "no_results", "results": []}
             
