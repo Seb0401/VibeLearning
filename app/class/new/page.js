@@ -57,6 +57,9 @@ export default function NewClass() {
   const timerRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const chatEndRef = useRef(null);
+  const isRecordingRef = useRef(false);
+  const streamRef = useRef(null);
+  const chunkTimerRef = useRef(null);
 
   useEffect(() => {
     if (recording) {
@@ -75,43 +78,67 @@ export default function NewClass() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
 
-  async function startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      mediaRecorderRef.current = recorder;
+  function scheduleChunk() {
+    if (!isRecordingRef.current) return;
 
-      recorder.addEventListener("dataavailable", async (e) => {
-        if (!e.data || e.data.size === 0) return;
+    const chunks = [];
+    const recorder = new MediaRecorder(streamRef.current, { mimeType: "audio/webm" });
+    mediaRecorderRef.current = recorder;
+
+    recorder.addEventListener("dataavailable", (e) => {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    });
+
+    recorder.addEventListener("stop", async () => {
+      if (chunks.length > 0) {
         chunkCountRef.current += 1;
+        const blob = new Blob(chunks, { type: "audio/webm" });
         const formData = new FormData();
-        formData.append("audio", e.data, "chunk.webm");
+        formData.append("audio", blob, "chunk.webm");
         try {
           const res = await fetch("/api/transcribe", { method: "POST", body: formData });
           const json = await res.json();
-          if (json.skip || !json.text) return;
-          const line = { time: nowHMS(), text: json.text.trim() };
-          setTranscriptLines((prev) => {
-            const next = [...prev, line];
-            transcriptRef.current = next.map((l) => l.text).join(" ");
-            return next;
-          });
-          if (chunkCountRef.current % WINDOW_CHUNKS === 0) {
-            fetchConcepts(transcriptRef.current);
+          if (!json.skip && json.text) {
+            const line = { time: nowHMS(), text: json.text.trim() };
+            setTranscriptLines((prev) => {
+              const next = [...prev, line];
+              transcriptRef.current = next.map((l) => l.text).join(" ");
+              return next;
+            });
+            if (chunkCountRef.current % WINDOW_CHUNKS === 0) {
+              fetchConcepts(transcriptRef.current);
+            }
           }
         } catch {}
-      });
+      }
+      scheduleChunk();
+    });
 
-      recorder.start(CHUNK_INTERVAL);
+    recorder.start();
+    chunkTimerRef.current = setTimeout(() => {
+      if (recorder.state === "recording") recorder.stop();
+    }, CHUNK_INTERVAL);
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      isRecordingRef.current = true;
       setRecording(true);
+      scheduleChunk();
     } catch (err) {
       alert("No se pudo acceder al micrófono: " + err.message);
     }
   }
 
   function stopRecording() {
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
+    isRecordingRef.current = false;
+    clearTimeout(chunkTimerRef.current);
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     setRecording(false);
   }
 

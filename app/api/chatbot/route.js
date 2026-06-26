@@ -12,12 +12,6 @@ function stripMarkdown(text) {
     .trim();
 }
 
-function parseJSON(raw) {
-  const m = raw.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error("no JSON");
-  return JSON.parse(m[0]);
-}
-
 export async function POST(req) {
   try {
     const { question, material_summary, transcript } = await req.json();
@@ -36,30 +30,23 @@ export async function POST(req) {
 Material: """${material}"""
 Transcripción hasta ahora (últimas ~3000 palabras): """${transcriptTruncated}"""
 Pregunta del estudiante: "${question}"
-Responde en texto plano, SIN markdown (sin **, sin #, sin guiones). Máximo 2-3 oraciones, máximo 50 palabras, salvo que pidan más detalle. Ve directo a la idea. Si no se puede responder con el contexto, dilo honestamente.
-Devuelve SOLO: {"answer": "..."}`;
+Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones, máximo 50 palabras salvo que pidan más detalle. Ve directo a la idea. Si no se puede responder con el contexto, dilo honestamente.`;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const completion = await groq.chat.completions.create({
           model: "openai/gpt-oss-120b",
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 110,
+          max_tokens: 160,
         });
 
         const raw = completion.choices[0]?.message?.content ?? "";
-
-        let answer = "";
-
-        try {
-          const parsed = parseJSON(raw);
-          answer = parsed.answer ?? raw;
-        } catch {
-          // Si no viene JSON, usar el texto directo
-          answer = raw;
-        }
-
-        answer = stripMarkdown(answer);
+        const answer = stripMarkdown(
+          raw
+            .replace(/^\{?"?answer"?:?\s*"?/i, "")
+            .replace(/"?\}?$/g, "")
+            .trim()
+        );
 
         if (answer) {
           return Response.json({ answer });
