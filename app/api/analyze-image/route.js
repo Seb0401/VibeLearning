@@ -44,12 +44,12 @@ Instrucciones de clasificación:
 - other: cualquier otro visual`;
 
   try {
-    const result = await model.generateContent([
+    const geminiResponse = await model.generateContent([
       { text: prompt },
       { inlineData: { data: imageBase64, mimeType } },
     ]);
 
-    let text = result.response.text().trim();
+    let text = geminiResponse.response.text().trim();
     text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     let parsed;
