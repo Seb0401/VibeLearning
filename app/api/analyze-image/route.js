@@ -1,38 +1,7 @@
+import { groq } from "@/lib/groq";
+
 const VALID_TYPES = ["whiteboard", "slide", "diagram", "graph", "formula", "table", "screenshot", "photo", "other"];
 const EMPTY = { content_type: "other", description: "", extracted_text: null, key_concepts: [], gaps: null };
-
-// Use fetch directly — groq-sdk v1.3.0 may not support vision content arrays
-async function callGroqVision(imageBase64, mimeType, prompt) {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-          ],
-        },
-      ],
-      max_tokens: 800,
-      temperature: 0.1,
-    }),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw Object.assign(new Error(`Groq vision error ${res.status}: ${errBody}`), { status: res.status });
-  }
-
-  const data = await res.json();
-  return data.choices[0]?.message?.content ?? "";
-}
 
 export async function POST(request) {
   try {
@@ -42,18 +11,8 @@ export async function POST(request) {
       return Response.json({ error: "No image provided" }, { status: 400 });
     }
 
-    if (!process.env.GROQ_API_KEY) {
-      console.error("[analyze-image] GROQ_API_KEY is not set");
-      return Response.json(EMPTY, { status: 500 });
-    }
-
     const sizeKB = Math.round(imageBase64.length * 0.75 / 1024);
     console.log(`[analyze-image] received: mimeType=${mimeType}, size=${sizeKB}KB`);
-
-    if (sizeKB > 3800) {
-      console.error(`[analyze-image] image too large: ${sizeKB}KB (limit ~4000KB)`);
-      return Response.json(EMPTY, { status: 413 });
-    }
 
     const transcriptContext = transcript.length > 2000 ? transcript.slice(-2000) : transcript;
 
@@ -73,9 +32,23 @@ Analiza la imagen y responde ÚNICAMENTE con JSON válido, sin bloques de códig
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        let text = await callGroqVision(imageBase64, mimeType, prompt);
+        const completion = await groq.chat.completions.create({
+          model: "meta-llama/llama-4-scout-17b-16e-instruct",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+              ],
+            },
+          ],
+          max_tokens: 800,
+          temperature: 0.1,
+        });
 
-        // Strip thinking tokens from reasoning models
+        let text = (completion.choices[0]?.message?.content ?? "").trim();
+        // Strip thinking tokens (<think>...</think>) from reasoning models
         text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
         text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
@@ -84,8 +57,13 @@ Analiza la imagen y responde ÚNICAMENTE con JSON válido, sin bloques de códig
           parsed = JSON.parse(text);
         } catch {
           const match = text.match(/\{[\s\S]*\}/);
-          if (!match) throw new Error(`No JSON in response: ${text.slice(0, 100)}`);
-          parsed = JSON.parse(match[0]);
+          parsed = match ? JSON.parse(match[0]) : null;
+        }
+
+        if (!parsed) {
+          console.error(`[analyze-image] attempt ${attempt}: no JSON found in response: "${text.slice(0, 120)}"`);
+          if (attempt === 2) return Response.json(EMPTY, { status: 500 });
+          continue;
         }
 
         const result = {
@@ -100,20 +78,17 @@ Analiza la imagen y responde ÚNICAMENTE con JSON válido, sin bloques de códig
         return Response.json(result);
 
       } catch (e) {
-        if (e?.status === 429) {
-          console.error("[analyze-image] rate limit hit");
-          return Response.json(EMPTY, { status: 429 });
-        }
-        console.error(`[analyze-image] attempt ${attempt} failed:`, e?.message?.slice(0, 200));
-        if (attempt === 2) {
-          return Response.json(EMPTY, { status: 500 });
-        }
+        const status = e?.status ?? e?.error?.code;
+        console.error(`[analyze-image] attempt ${attempt} error — status=${status} msg=${e?.message?.slice(0, 200)}`);
+        if (status === 429) return Response.json(EMPTY, { status: 429 });
+        if (attempt === 2) return Response.json(EMPTY, { status: 500 });
       }
     }
-  } catch (outer) {
-    console.error("[analyze-image] outer error:", outer?.message);
+
+    return Response.json(EMPTY, { status: 500 });
+
+  } catch (fatal) {
+    console.error("[analyze-image] fatal outer error:", fatal?.message);
     return Response.json(EMPTY, { status: 500 });
   }
-
-  return Response.json(EMPTY, { status: 500 });
 }
