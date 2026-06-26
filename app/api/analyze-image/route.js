@@ -23,7 +23,7 @@ Transcripción actual: ${transcriptContext || "ninguna"}`;
         console.log(`[analyze-image] attempt ${attempt} — calling groq vision`);
 
         const completion = await groq.chat.completions.create({
-          model: "meta-llama/llama-4-scout-17b-16e-instruct",
+          model: "openai/gpt-oss-120b",
           messages: [
             {
               role: "user",
