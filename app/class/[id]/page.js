@@ -56,13 +56,24 @@ export default async function ClassPage({ params }) {
 
   if (!cls) notFound();
 
-  const { transcript, concepts = [], material_summary, final_summary, final_mindmap } = cls.data ?? {};
+  const { transcript, concepts = [], material_summary, final_summary, final_mindmap, visual_notes = [] } = cls.data ?? {};
   const duration   = estimateDuration(transcript);
   const classDate  = formatDate(cls.created_at);
   const excerpt    = summaryExcerpt(final_summary);
   const transcriptLines = transcript
     ? transcript.trim().split(/\n+/).filter(Boolean).map(t => t.trim())
     : [];
+
+  // Get signed URLs for stored images (1h expiry)
+  const notesWithUrls = await Promise.all(
+    visual_notes.map(async (note) => {
+      if (!note.storagePath) return { ...note, imageUrl: null };
+      const { data } = await supabase.storage
+        .from("class-images")
+        .createSignedUrl(note.storagePath, 3600);
+      return { ...note, imageUrl: data?.signedUrl || null };
+    })
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", paddingBottom: 96 }}>
@@ -218,6 +229,46 @@ export default async function ClassPage({ params }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ── 5.5 NOTAS VISUALES ──────────────────────────────────────── */}
+        {notesWithUrls.length > 0 && (
+          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: "28px 32px", marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(96,165,250,0.1)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <RI s={18}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 0 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></RI>
+              </div>
+              <div>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Notas visuales de la clase</h2>
+                <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{notesWithUrls.length} imagen{notesWithUrls.length !== 1 ? "es" : ""} analizadas por Gemini</p>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+              {notesWithUrls.map((note, i) => (
+                <div key={i} style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                  {note.imageUrl && (
+                    <img src={note.imageUrl} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                  )}
+                  <div style={{ padding: "12px 14px" }}>
+                    {note.key_concepts?.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                        {note.key_concepts.map((kc, j) => (
+                          <span key={j} style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 8px" }}>{kc}</span>
+                        ))}
+                      </div>
+                    )}
+                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: note.gaps ? 8 : 0 }}>{note.description}</p>
+                    {note.gaps && (
+                      <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 8, padding: "7px 10px" }}>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: "var(--yellow)", marginBottom: 3 }}>⚠ Información visual no verbalizada</p>
+                        <p style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.5 }}>{note.gaps}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
