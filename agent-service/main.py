@@ -47,6 +47,19 @@ async def chat_endpoint(req: ChatRequest):
     material_summary_token = material_summary_var.set(req.material_summary)
     
     try:
+        # Check if session exists, otherwise create it
+        session = await runner.session_service.get_session(
+            app_name=adk_app.name,
+            user_id=req.user_id,
+            session_id=req.session_id
+        )
+        if not session:
+            await runner.session_service.create_session(
+                app_name=adk_app.name,
+                user_id=req.user_id,
+                session_id=req.session_id
+            )
+
         user_message = genai_types.Content(
             role="user",
             parts=[genai_types.Part(text=req.question)]
