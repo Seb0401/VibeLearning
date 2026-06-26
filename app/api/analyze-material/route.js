@@ -13,8 +13,8 @@ const PROMPT = `Eres un asistente educativo experto. Analiza el contenido del ar
 }
 
 Reglas estrictas:
-- summary: markdown puro, denso en información, sin relleno. Asegúrate de representar correctamente las ecuaciones matemáticas usando caracteres unicode estándar (como el símbolo de sumatoria 'Σ', no '??' ni '???') o texto claro (como sumatoria o suma).
-- mindmap: SOLO lista jerárquica markdown, sin explicaciones extra. Evita símbolos extraños o caracteres corruptos en las fórmulas matemáticas.
+- summary: markdown puro, denso en información, sin relleno. Asegúrate de representar correctamente las ecuaciones matemáticas usando texto plano estándar o LaTeX simple. No uses caracteres con formato de subíndice o superíndice unicode raros (como ¹, ², ₃, ₘ) que puedan corromperse; en su lugar, usa formato estándar como 'x_1', 'x_2', 'x_m', o 'y_hat' para 'ŷ'. Para sumatorias, usa la palabra completa 'suma' o el símbolo unicode estándar 'Σ' sin caracteres corruptos.
+- mindmap: SOLO lista jerárquica markdown, sin explicaciones extra. Evita símbolos extraños, subíndices unicode, o caracteres corruptos en las fórmulas matemáticas. Usa formatos sencillos como 'x_i', 'w_i'.
 - timeline: array JSON ordenado del concepto más fundamental al más avanzado o derivado. Mínimo 4 items, máximo 10.
 - Responde ÚNICAMENTE con el JSON. Sin bloques de código, sin explicaciones, sin texto antes o después.`;
 
