@@ -1,17 +1,5 @@
 import { groq } from "@/lib/groq";
 
-function stripMarkdown(text) {
-  return text
-    .replace(/#{1,6}\s*/g, "")      // headers
-    .replace(/\*\*(.+?)\*\*/g, "$1") // bold
-    .replace(/\*(.+?)\*/g, "$1")     // italic
-    .replace(/`(.+?)`/g, "$1")       // inline code
-    .replace(/[-*+]\s+/g, "")        // list bullets
-    .replace(/\n{2,}/g, " ")         // doble salto → espacio
-    .replace(/\n/g, " ")             // salto simple → espacio
-    .trim();
-}
-
 export async function POST(req) {
   try {
     const { question, material_summary, transcript } = await req.json();
@@ -20,7 +8,6 @@ export async function POST(req) {
       return Response.json({ error: "missing question" }, { status: 400 });
     }
 
-    // Truncar transcript a ~3000 palabras
     const transcriptWords = (transcript ?? "").split(/\s+/);
     const transcriptTruncated = transcriptWords.slice(-3000).join(" ");
 
@@ -40,16 +27,18 @@ Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máx
           max_tokens: 160,
         });
 
-        const raw = completion.choices[0]?.message?.content ?? "";
-        const answer = stripMarkdown(
-          raw
-            .replace(/^\{?"?answer"?:?\s*"?/i, "")
-            .replace(/"?\}?$/g, "")
-            .trim()
-        );
+        const rawText = completion.choices[0]?.message?.content ?? "";
+        const cleaned = rawText
+          .trim()
+          .replace(/\*\*/g, "")
+          .replace(/^#+\s*/gm, "")
+          .replace(/^-\s+/gm, "")
+          .replace(/^\{?"?answer"?:?\s*"?/i, "")
+          .replace(/"?\}?$/g, "")
+          .trim();
 
-        if (answer) {
-          return Response.json({ answer });
+        if (cleaned) {
+          return Response.json({ answer: cleaned });
         }
 
         if (attempt === 2) {
