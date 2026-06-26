@@ -298,25 +298,55 @@ export default function LiveClass() {
     }).join("\n\n---\n\n");
   }
 
+  // Resize + compress to JPEG max 1024px, quality 0.82 — stays well under 4MB limit
+  function compressBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1024;
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        if (w > MAX || h > MAX) {
+          const r = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * r);
+          h = Math.round(h * r);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
   async function processImageBlob(blob, source) {
     setAnalyzeLoading(true);
     const previewUrl = URL.createObjectURL(blob);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target.result.split(",")[1];
-      const mimeType = blob.type || "image/jpeg";
+    try {
+      // Compress before sending — reduces 4K screenshots from ~8MB to ~200-400KB
+      const compressed = await compressBlob(blob);
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(compressed);
+      });
 
-      // Upload to Supabase Storage — storagePath is null unless upload succeeds
+      // Upload original blob to Supabase Storage — storagePath is null if upload fails
       let storagePath = null;
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const ext = mimeType.includes("png") ? "png" : "jpg";
-          const candidatePath = `${user.id}/${classId}/${Date.now()}.${ext}`;
+          const candidatePath = `${user.id}/${classId}/${Date.now()}.jpg`;
           const { error: uploadError } = await supabase.storage
             .from("class-images")
-            .upload(candidatePath, blob, { contentType: mimeType });
+            .upload(candidatePath, compressed, { contentType: "image/jpeg" });
           if (uploadError) {
             console.error("[visual-notes] Storage upload failed:", uploadError.message);
           } else {
@@ -327,43 +357,40 @@ export default function LiveClass() {
         console.error("[visual-notes] Storage exception:", uploadEx?.message);
       }
 
-      // Analyze with Gemini — this drives the RAG; works independently of storage
-      try {
-        const res = await fetch("/api/analyze-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imageBase64: base64,
-            mimeType,
-            transcript: transcriptRef.current.slice(-2000),
-          }),
-        });
-        const json = await res.json();
+      // Analyze with Groq vision — drives the RAG, independent of storage success
+      const res = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: "image/jpeg",
+          transcript: transcriptRef.current.slice(-2000),
+        }),
+      });
+      const json = await res.json();
 
-        if (!res.ok || (!json.description && !json.extracted_text && !json.key_concepts?.length)) {
-          console.error("[visual-notes] Gemini returned no content (status", res.status, "):", json);
-        }
-
-        const newNote = {
-          id: Date.now(),
-          previewUrl,
-          storagePath,
-          source,
-          content_type:   json.content_type   || "other",
-          description:    json.description    || "",
-          extracted_text: json.extracted_text || null,
-          key_concepts:   json.key_concepts   || [],
-          gaps:           json.gaps           || null,
-        };
-        // Update ref BEFORE setState so sendChatText always reads fresh data
-        visualNotesRef.current = [...visualNotesRef.current, newNote];
-        setVisualNotes([...visualNotesRef.current]);
-      } catch (analyzeEx) {
-        console.error("[visual-notes] Gemini call exception:", analyzeEx?.message);
+      if (!res.ok || (!json.description && !json.extracted_text && !json.key_concepts?.length)) {
+        console.error("[visual-notes] analyze-image returned no content (status", res.status, "):", json);
       }
-      setAnalyzeLoading(false);
-    };
-    reader.readAsDataURL(blob);
+
+      const newNote = {
+        id: Date.now(),
+        previewUrl,
+        storagePath,
+        source,
+        content_type:   json.content_type   || "other",
+        description:    json.description    || "",
+        extracted_text: json.extracted_text || null,
+        key_concepts:   json.key_concepts   || [],
+        gaps:           json.gaps           || null,
+      };
+      // Update ref BEFORE setState so sendChatText always reads fresh data
+      visualNotesRef.current = [...visualNotesRef.current, newNote];
+      setVisualNotes([...visualNotesRef.current]);
+    } catch (err) {
+      console.error("[visual-notes] processImageBlob error:", err?.message);
+    }
+    setAnalyzeLoading(false);
   }
 
   async function captureScreen() {
