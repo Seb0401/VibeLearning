@@ -1,6 +1,7 @@
 import os
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google.adk.apps import App
@@ -37,7 +38,7 @@ class ChatResponse(BaseModel):
 def read_root():
     return {"status": "ok", "service": "Agent Service"}
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     if not req.question:
         raise HTTPException(status_code=400, detail="missing question")
@@ -73,17 +74,30 @@ async def chat_endpoint(req: ChatRequest):
         )
         
         answer_text = ""
+        source = "rag_local"  # default
         async for event in event_stream:
             # Accumulate text content of the events
             if event.content and event.content.parts:
                 part_text = event.content.parts[0].text
                 if part_text:
                     answer_text += part_text
+            
+            # Detect which tool was called
+            func_calls = event.get_function_calls()
+            if func_calls:
+                for fc in func_calls:
+                    if fc.name == "web_search":
+                        source = "web_search"
+                    elif fc.name == "rag_local":
+                        source = "rag_local"
                     
         if not answer_text:
             raise HTTPException(status_code=500, detail="Agent returned empty response")
             
-        return ChatResponse(answer=answer_text.strip())
+        return JSONResponse(
+            content={"answer": answer_text.strip(), "source": source},
+            media_type="application/json; charset=utf-8"
+        )
         
     except Exception as e:
         print(f"Error executing agent: {e}")

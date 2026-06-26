@@ -1,3 +1,11 @@
+import os
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
+os.environ["GOOGLE_CLOUD_PROJECT"] = "hackathon-500619"
+os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
+
+import vertexai
+vertexai.init(project="hackathon-500619", location="us-central1")
+
 from google.adk.agents import LlmAgent
 from tools import rag_local, web_search
 

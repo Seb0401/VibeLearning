@@ -40,8 +40,9 @@ export async function POST(req) {
 
     const data = await response.json();
     const answer = stripMarkdown(data.answer ?? "");
+    const source = data.source ?? "rag_local";
 
-    return Response.json({ answer });
+    return Response.json({ answer, source });
   } catch (err) {
     console.error("[chatbot] error:", err);
     return Response.json({ error: "chatbot failed" }, { status: 500 });
