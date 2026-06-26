@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['pdf-parse', '@google/generative-ai'],
+  serverExternalPackages: ['pdf-parse'],
 };
 
 export default nextConfig;
