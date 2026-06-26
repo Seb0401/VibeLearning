@@ -5,64 +5,52 @@ const EMPTY = { content_type: "other", description: "", extracted_text: null, ke
 
 export async function POST(request) {
   try {
-    const { imageBase64, mimeType = "image/jpeg", transcript = "" } = await request.json();
+    const body = await request.json();
+    const { imageBase64, mimeType = "image/jpeg", transcript = "" } = body;
 
-    if (!imageBase64) {
-      return Response.json({ error: "No image provided" }, { status: 400 });
-    }
+    if (!imageBase64) return Response.json({ error: "No image provided" }, { status: 400 });
 
     const sizeKB = Math.round(imageBase64.length * 0.75 / 1024);
-    console.log(`[analyze-image] received: mimeType=${mimeType}, size=${sizeKB}KB`);
+    console.log(`[analyze-image] START size=${sizeKB}KB`);
 
     const transcriptContext = transcript.length > 2000 ? transcript.slice(-2000) : transcript;
-
-    const prompt = `Eres un asistente educativo analizando material visual capturado durante una clase.
-
-TRANSCRIPCIÓN ACTUAL:
-${transcriptContext || "(sin transcripción todavía)"}
-
-Analiza la imagen y responde ÚNICAMENTE con JSON válido, sin bloques de código ni texto extra:
-{
-  "content_type": "whiteboard | slide | diagram | graph | formula | table | screenshot | photo | other",
-  "description": "descripción en español de qué muestra la imagen, máximo 80 palabras",
-  "extracted_text": "TODO el texto legible: fórmulas, ecuaciones, términos, datos, labels. null si no hay",
-  "key_concepts": ["concepto 1", "concepto 2"],
-  "gaps": "info visible que NO aparece en la transcripción. null si no hay gaps"
-}`;
+    const prompt = `Analiza la imagen y responde SOLO con JSON válido sin bloques de código:
+{"content_type":"whiteboard|slide|diagram|graph|formula|table|screenshot|photo|other","description":"descripción en español máximo 60 palabras","extracted_text":"texto legible o null","key_concepts":["concepto"],"gaps":"info visual no mencionada verbalmente o null"}
+Transcripción actual: ${transcriptContext || "ninguna"}`;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
+        console.log(`[analyze-image] attempt ${attempt} — calling groq vision`);
+
         const completion = await groq.chat.completions.create({
           model: "meta-llama/llama-4-scout-17b-16e-instruct",
           messages: [
             {
               role: "user",
               content: [
+                {
+                  type: "image_url",
+                  image_url: { url: `data:${mimeType};base64,${imageBase64}` },
+                },
                 { type: "text", text: prompt },
-                { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
               ],
             },
           ],
-          max_tokens: 800,
+          max_tokens: 600,
           temperature: 0.1,
         });
 
         let text = (completion.choices[0]?.message?.content ?? "").trim();
-        // Strip thinking tokens (<think>...</think>) from reasoning models
         text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
         text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+        console.log(`[analyze-image] raw response: ${text.slice(0, 200)}`);
 
-        let parsed;
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          const match = text.match(/\{[\s\S]*\}/);
-          parsed = match ? JSON.parse(match[0]) : null;
-        }
+        let parsed = null;
+        try { parsed = JSON.parse(text); }
+        catch { const m = text.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
 
         if (!parsed) {
-          console.error(`[analyze-image] attempt ${attempt}: no JSON found in response: "${text.slice(0, 120)}"`);
-          if (attempt === 2) return Response.json(EMPTY, { status: 500 });
+          if (attempt === 2) return Response.json(EMPTY, { status: 200 });
           continue;
         }
 
@@ -73,22 +61,21 @@ Analiza la imagen y responde ÚNICAMENTE con JSON válido, sin bloques de códig
           key_concepts: Array.isArray(parsed.key_concepts) ? parsed.key_concepts : [],
           gaps: parsed.gaps && parsed.gaps !== "null" ? parsed.gaps : null,
         };
-
-        console.log(`[analyze-image] OK: type=${result.content_type}, hasOCR=${!!result.extracted_text}, concepts=${result.key_concepts.length}`);
+        console.log(`[analyze-image] OK type=${result.content_type} ocr=${!!result.extracted_text}`);
         return Response.json(result);
 
-      } catch (e) {
-        const status = e?.status ?? e?.error?.code;
-        console.error(`[analyze-image] attempt ${attempt} error — status=${status} msg=${e?.message?.slice(0, 200)}`);
-        if (status === 429) return Response.json(EMPTY, { status: 429 });
-        if (attempt === 2) return Response.json(EMPTY, { status: 500 });
+      } catch (err) {
+        const code = err?.status ?? err?.code ?? "unknown";
+        const msg = (err?.message ?? String(err)).slice(0, 300);
+        console.error(`[analyze-image] attempt ${attempt} FAILED — code=${code} msg=${msg}`);
+        if (err?.status === 429) return Response.json(EMPTY, { status: 200 });
+        if (attempt === 2) return Response.json(EMPTY, { status: 200 });
       }
     }
 
-    return Response.json(EMPTY, { status: 500 });
-
+    return Response.json(EMPTY, { status: 200 });
   } catch (fatal) {
-    console.error("[analyze-image] fatal outer error:", fatal?.message);
-    return Response.json(EMPTY, { status: 500 });
+    console.error("[analyze-image] FATAL:", fatal?.message ?? String(fatal));
+    return Response.json(EMPTY, { status: 200 });
   }
 }

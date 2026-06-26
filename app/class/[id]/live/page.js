@@ -131,9 +131,15 @@ export default function LiveClass() {
 
   function scheduleChunk() {
     if (!isRecordingRef.current) return;
+    if (!streamRef.current || streamRef.current.getTracks().every(t => t.readyState === "ended")) return;
 
     const chunks = [];
-    const recorder = new MediaRecorder(streamRef.current, { mimeType: "audio/webm" });
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+      ? "audio/webm"
+      : "";
+    const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : {});
     mediaRecorderRef.current = recorder;
 
     recorder.addEventListener("dataavailable", (e) => {
@@ -143,7 +149,7 @@ export default function LiveClass() {
     recorder.addEventListener("stop", async () => {
       if (chunks.length > 0) {
         chunkCountRef.current += 1;
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
         const formData = new FormData();
         formData.append("audio", blob, "chunk.webm");
         try {
