@@ -189,15 +189,17 @@ export default async function Dashboard() {
               Iniciar clase
             </button>
           </Link>
-          <button className="btn-ghost" style={{
-            display: "flex", alignItems: "center", gap: 7,
-            background: "transparent", color: "var(--text-2)",
-            border: "1px solid var(--border)", borderRadius: "var(--radius-btn)",
-            padding: "10px 18px", fontWeight: 500, fontSize: 14, cursor: "pointer",
-          }}>
-            <IcoHistory s={15} />
-            Historial
-          </button>
+          <Link href="/dashboard/historial" style={{ textDecoration: "none" }}>
+            <button className="btn-ghost" style={{
+              display: "flex", alignItems: "center", gap: 7,
+              background: "transparent", color: "var(--text-2)",
+              border: "1px solid var(--border)", borderRadius: "var(--radius-btn)",
+              padding: "10px 18px", fontWeight: 500, fontSize: 14, cursor: "pointer",
+            }}>
+              <IcoHistory s={15} />
+              Historial
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -335,7 +337,9 @@ export default async function Dashboard() {
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Biblioteca reciente</h3>
-              <span style={{ fontSize: 12, color: "var(--accent)", cursor: "pointer", fontWeight: 500 }}>Ver todo</span>
+              <Link href="/dashboard/biblioteca" style={{ textDecoration: "none" }}>
+                <span style={{ fontSize: 12, color: "var(--accent)", cursor: "pointer", fontWeight: 500 }}>Ver todo</span>
+              </Link>
             </div>
 
             {recentPdfs.length === 0 ? (
