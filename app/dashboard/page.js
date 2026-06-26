@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import ClassCard from "./ClassCard";
 
 /* ── Lucide-style SVG helpers ─────────────────────────────────────────── */
 function Icon({ size = 16, children }) {
@@ -200,42 +201,6 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      {/* ── STATS GRID ─────────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap }}>
-        <StatCard
-          icon={<IcoGradCap s={20} />}
-          iconBg="rgba(124,108,248,0.12)" iconColor="var(--accent)"
-          label="Clases completadas"
-          value={stats.total}
-          delta={stats.weekCount > 0 ? `+${stats.weekCount} esta semana` : "Empieza tu primera clase"}
-          deltaGreen={stats.weekCount > 0}
-        />
-        <StatCard
-          icon={<IcoClock s={20} />}
-          iconBg="rgba(96,165,250,0.12)" iconColor="#60A5FA"
-          label="Horas estudiadas"
-          value={fmtH(stats.totalHours)}
-          delta={stats.weekHours > 0.05 ? `+${fmtH(stats.weekHours)} esta semana` : "Sin actividad esta semana"}
-          deltaGreen={stats.weekHours > 0.05}
-        />
-        <StatCard
-          icon={<IcoZap s={20} />}
-          iconBg="rgba(34,197,94,0.12)" iconColor="var(--green)"
-          label="Conceptos dominados"
-          value={stats.totalConcepts}
-          delta={stats.weekConcepts > 0 ? `+${stats.weekConcepts} esta semana` : "Sin nuevos conceptos"}
-          deltaGreen={stats.weekConcepts > 0}
-        />
-        <StatCard
-          icon={<IcoFileText s={20} />}
-          iconBg="rgba(251,191,36,0.12)" iconColor="var(--yellow)"
-          label="Materiales subidos"
-          value={stats.materials}
-          delta={`de ${stats.total} clase${stats.total !== 1 ? "s" : ""} totales`}
-          deltaGreen={false}
-        />
-      </div>
-
       {/* ── CONTENT ROW ────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
 
@@ -265,128 +230,10 @@ export default async function Dashboard() {
           )}
 
           {/* Class cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {classes.map((c, idx) => {
-              const { date, time }  = fmtDate(c.created_at);
-              const duration        = estimateDuration(c.data?.transcript);
-              const concepts        = c.data?.concepts || [];
-              const tags            = concepts.map(x => typeof x === "string" ? x : x.name).filter(Boolean);
-              const hasPDF          = !!c.data?.material_summary;
-
-              return (
-                <div key={c.id} className="card-lift" style={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-card)",
-                  padding: "20px 24px",
-                }}>
-                  <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-
-                    {/* Subject icon */}
-                    <div style={{ position: "relative", flexShrink: 0 }}>
-                      <SubjectBadge title={c.title} idx={idx} size={48} />
-                      {hasPDF && (
-                        <span style={{
-                          position: "absolute", bottom: -5, right: -5,
-                          background: "#EF4444", color: "white",
-                          fontSize: 9, fontWeight: 700, letterSpacing: "0.03em",
-                          borderRadius: 5, padding: "2px 5px",
-                          border: "1.5px solid var(--card)",
-                        }}>PDF</span>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-
-                      {/* Row 1: title + status + menu */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {c.title}
-                        </h3>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-                          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 500, color: "var(--green)" }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--green)", display: "inline-block" }} />
-                            Completada
-                          </span>
-                          <button style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px 4px", borderRadius: 6, transition: "color 150ms" }}>
-                            <IcoMoreH s={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Row 2: metadata */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, color: "var(--text-3)", fontSize: 12 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <IcoCalendar s={12} />{date}
-                        </span>
-                        <span style={{ opacity: 0.4 }}>·</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <IcoClock s={12} />{time}
-                        </span>
-                        {duration && (
-                          <>
-                            <span style={{ opacity: 0.4 }}>·</span>
-                            <span>{duration}</span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Row 3: tags + action buttons */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, gap: 12 }}>
-
-                        {/* Tags */}
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                          {tags.slice(0, 3).map((tag, ti) => (
-                            <span key={ti} style={{
-                              background: "rgba(255,255,255,0.05)",
-                              color: "var(--text-2)",
-                              fontSize: 11, fontWeight: 500,
-                              borderRadius: 6, padding: "3px 9px",
-                              border: "1px solid var(--border)",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              maxWidth: 120,
-                              textOverflow: "ellipsis",
-                            }}>{tag}</span>
-                          ))}
-                          {tags.length > 3 && (
-                            <span style={{ fontSize: 11, color: "var(--text-3)", alignSelf: "center", fontWeight: 500 }}>
-                              +{tags.length - 3}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                          <Link href={`/class/${c.id}`} style={{ textDecoration: "none" }}>
-                            <button className="btn-ghost" style={{
-                              display: "flex", alignItems: "center", gap: 5,
-                              background: "transparent", border: "1px solid var(--border)",
-                              borderRadius: 10, padding: "6px 12px",
-                              color: "var(--text-2)", fontSize: 12, fontWeight: 500, cursor: "pointer",
-                            }}>
-                              <IcoFileText s={13} /> Ver resumen
-                            </button>
-                          </Link>
-                          <Link href={`/class/${c.id}`} style={{ textDecoration: "none" }}>
-                            <button className="btn-ghost" style={{
-                              display: "flex", alignItems: "center", gap: 5,
-                              background: "transparent", border: "1px solid var(--border)",
-                              borderRadius: 10, padding: "6px 12px",
-                              color: "var(--text-2)", fontSize: 12, fontWeight: 500, cursor: "pointer",
-                            }}>
-                              <IcoLayers s={13} /> Transcript
-                            </button>
-                          </Link>
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {classes.map((c, idx) => (
+              <ClassCard key={c.id} c={c} idx={idx} />
+            ))}
           </div>
         </div>
 

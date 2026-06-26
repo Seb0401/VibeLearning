@@ -105,3 +105,20 @@ body {
 .row-hover:hover {
   background: var(--hover) !important;
 }
+
+/* ── Class list card ──────────────────────────────────────────────────── */
+.class-card {
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.class-card:hover {
+  background: var(--hover) !important;
+  border-color: var(--border-strong) !important;
+}
+.class-card-arrow {
+  transition: opacity 150ms ease, transform 150ms ease;
+  opacity: 0.3;
+}
+.class-card:hover .class-card-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
