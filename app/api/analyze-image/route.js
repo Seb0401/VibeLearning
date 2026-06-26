@@ -11,17 +11,30 @@ export async function POST(request) {
 
   const transcriptContext = transcript.length > 2000 ? transcript.slice(-2000) : transcript;
 
-  const prompt = `Eres un asistente educativo analizando material visual de una clase o conferencia.
+  const prompt = `Eres un asistente educativo analizando material visual capturado durante una clase o conferencia.
 
 TRANSCRIPCIÓN ACTUAL (últimas palabras del profesor):
 ${transcriptContext || "(sin transcripción todavía)"}
 
-Analiza la imagen adjunta en el contexto de esta clase y responde ÚNICAMENTE en JSON con este formato exacto (sin bloques de código, sin markdown):
+Analiza la imagen y responde ÚNICAMENTE en JSON válido con este formato exacto (sin bloques de código, sin markdown):
 {
-  "description": "descripción concisa de lo que muestra la imagen en contexto de la clase, máximo 80 palabras",
-  "key_concepts": ["concepto 1", "concepto 2"],
-  "gaps": "información visible en la imagen que NO aparece en la transcripción — fórmulas, términos técnicos, datos numéricos, diagramas, texto en pizarrón o diapositiva que el profesor señaló sin mencionar verbalmente. Si no hay gaps relevantes, devuelve null"
-}`;
+  "content_type": "uno de: whiteboard | slide | diagram | graph | formula | table | screenshot | photo | other",
+  "description": "descripción concisa en español de qué muestra la imagen en el contexto de la clase, máximo 80 palabras",
+  "extracted_text": "TODO el texto legible en la imagen transcrito con exactitud: fórmulas, ecuaciones, términos, datos numéricos, labels de gráficos, texto en pizarrón o diapositiva. Si no hay texto visible, devuelve null",
+  "key_concepts": ["concepto clave 1", "concepto clave 2"],
+  "gaps": "información visible en la imagen que NO aparece en la transcripción — fórmulas, términos, datos que el profesor señaló sin mencionar verbalmente. Si no hay gaps relevantes, devuelve null"
+}
+
+Instrucciones de clasificación:
+- whiteboard: pizarrón con texto/dibujos
+- slide: diapositiva de presentación
+- diagram: diagrama, esquema, árbol conceptual
+- graph: gráfica estadística, función matemática, scatter plot
+- formula: ecuación o fórmula matemática/química prominente
+- table: tabla de datos
+- screenshot: captura de pantalla de software, código o interfaz
+- photo: fotografía de objeto/persona real
+- other: cualquier otro visual`;
 
   try {
     const result = await model.generateContent([
@@ -30,28 +43,30 @@ Analiza la imagen adjunta en el contexto de esta clase y responde ÚNICAMENTE en
     ]);
 
     let text = result.response.text().trim();
-    // Strip markdown code fences if present
     text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     let parsed;
     try {
       parsed = JSON.parse(text);
     } catch {
-      // Second attempt: extract first JSON object from the response
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("No JSON found");
       parsed = JSON.parse(match[0]);
     }
 
+    const validTypes = ["whiteboard", "slide", "diagram", "graph", "formula", "table", "screenshot", "photo", "other"];
+
     return Response.json({
+      content_type: validTypes.includes(parsed.content_type) ? parsed.content_type : "other",
       description: parsed.description || "",
+      extracted_text: parsed.extracted_text && parsed.extracted_text !== "null" ? parsed.extracted_text : null,
       key_concepts: Array.isArray(parsed.key_concepts) ? parsed.key_concepts : [],
       gaps: parsed.gaps && parsed.gaps !== "null" ? parsed.gaps : null,
     });
   } catch (e) {
     console.error("[analyze-image]", e);
     return Response.json(
-      { description: "", key_concepts: [], gaps: null, error: "Error al analizar la imagen" },
+      { content_type: "other", description: "", extracted_text: null, key_concepts: [], gaps: null },
       { status: 500 }
     );
   }

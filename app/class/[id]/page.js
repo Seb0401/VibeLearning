@@ -23,6 +23,18 @@ const PALETTE = [
   { bg: "rgba(20,184,166,0.1)",  fg: "#2DD4BF" },
 ];
 
+const TYPE_BADGE = {
+  whiteboard:  { bg: "rgba(20,184,166,0.15)",  fg: "#2DD4BF", label: "Pizarrón"    },
+  slide:       { bg: "rgba(96,165,250,0.15)",   fg: "#60A5FA", label: "Diapositiva" },
+  diagram:     { bg: "rgba(124,108,248,0.15)",  fg: "#A78BFA", label: "Diagrama"    },
+  graph:       { bg: "rgba(34,197,94,0.15)",    fg: "#22C55E", label: "Gráfico"     },
+  formula:     { bg: "rgba(251,191,36,0.15)",   fg: "#FBBF24", label: "Fórmula"     },
+  table:       { bg: "rgba(249,115,22,0.15)",   fg: "#FB923C", label: "Tabla"       },
+  screenshot:  { bg: "rgba(99,102,241,0.15)",   fg: "#818CF8", label: "Captura"     },
+  photo:       { bg: "rgba(239,68,68,0.15)",    fg: "#F87171", label: "Foto"        },
+  other:       { bg: "rgba(255,255,255,0.08)",  fg: "#9CA3AF", label: "Visual"      },
+};
+
 /* ── Helpers ───────────────────────────────────────────────────────────── */
 function estimateDuration(transcript) {
   if (!transcript) return null;
@@ -246,29 +258,45 @@ export default async function ClassPage({ params }) {
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-              {notesWithUrls.map((note, i) => (
-                <div key={i} style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
-                  {note.imageUrl && (
-                    <img src={note.imageUrl} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
-                  )}
-                  <div style={{ padding: "12px 14px" }}>
-                    {note.key_concepts?.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-                        {note.key_concepts.map((kc, j) => (
-                          <span key={j} style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 8px" }}>{kc}</span>
-                        ))}
+              {notesWithUrls.map((note, i) => {
+                const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
+                return (
+                  <div key={i} style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                    {note.imageUrl ? (
+                      <div style={{ position: "relative" }}>
+                        <img src={note.imageUrl} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                        <span style={{ position: "absolute", top: 8, left: 8, fontSize: 10, fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", borderRadius: 99, padding: "3px 9px", border: `1px solid ${tb.fg}50` }}>{tb.label}</span>
+                      </div>
+                    ) : (
+                      <div style={{ height: 48, background: tb.bg, display: "flex", alignItems: "center", paddingLeft: 14 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: tb.fg }}>{tb.label}</span>
                       </div>
                     )}
-                    <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: note.gaps ? 8 : 0 }}>{note.description}</p>
-                    {note.gaps && (
-                      <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 8, padding: "7px 10px" }}>
-                        <p style={{ fontSize: 11, fontWeight: 700, color: "var(--yellow)", marginBottom: 3 }}>⚠ Información visual no verbalizada</p>
-                        <p style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.5 }}>{note.gaps}</p>
-                      </div>
-                    )}
+                    <div style={{ padding: "12px 14px" }}>
+                      {note.key_concepts?.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                          {note.key_concepts.map((kc, j) => (
+                            <span key={j} style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 8px" }}>{kc}</span>
+                          ))}
+                        </div>
+                      )}
+                      <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: (note.extracted_text || note.gaps) ? 8 : 0 }}>{note.description}</p>
+                      {note.extracted_text && (
+                        <div style={{ background: "rgba(124,108,248,0.06)", border: "1px solid rgba(124,108,248,0.14)", borderRadius: 8, padding: "8px 10px", marginBottom: note.gaps ? 8 : 0 }}>
+                          <p style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>Texto detectado (OCR)</p>
+                          <p style={{ fontSize: 11, color: "var(--text-2)", fontFamily: "monospace", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{note.extracted_text}</p>
+                        </div>
+                      )}
+                      {note.gaps && (
+                        <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 8, padding: "7px 10px" }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--yellow)", marginBottom: 3 }}>⚠ Información visual no verbalizada</p>
+                          <p style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.5 }}>{note.gaps}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

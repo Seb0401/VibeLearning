@@ -53,6 +53,18 @@ const REPORT_PALETTE = [
   { bg: "rgba(20,184,166,0.1)",  fg: "#2DD4BF" },
 ];
 
+const TYPE_BADGE = {
+  whiteboard:  { bg: "rgba(20,184,166,0.15)",  fg: "#2DD4BF", label: "Pizarrón"    },
+  slide:       { bg: "rgba(96,165,250,0.15)",   fg: "#60A5FA", label: "Diapositiva" },
+  diagram:     { bg: "rgba(124,108,248,0.15)",  fg: "#A78BFA", label: "Diagrama"    },
+  graph:       { bg: "rgba(34,197,94,0.15)",    fg: "#22C55E", label: "Gráfico"     },
+  formula:     { bg: "rgba(251,191,36,0.15)",   fg: "#FBBF24", label: "Fórmula"     },
+  table:       { bg: "rgba(249,115,22,0.15)",   fg: "#FB923C", label: "Tabla"       },
+  screenshot:  { bg: "rgba(99,102,241,0.15)",   fg: "#818CF8", label: "Captura"     },
+  photo:       { bg: "rgba(239,68,68,0.15)",    fg: "#F87171", label: "Foto"        },
+  other:       { bg: "rgba(255,255,255,0.08)",  fg: "#9CA3AF", label: "Visual"      },
+};
+
 export default function LiveClass() {
   const { id: classId } = useParams();
 
@@ -86,6 +98,7 @@ export default function LiveClass() {
   const chunkTimerRef = useRef(null);
   const cameraVideoRef = useRef(null);
   const cameraStreamRef = useRef(null);
+  const visualNotesRef = useRef([]);
 
   useEffect(() => {
     if (recording) {
@@ -243,6 +256,7 @@ export default function LiveClass() {
           question: q,
           material_summary: materialSummary,
           transcript: transcriptRef.current,
+          visual_context: buildVisualContext(visualNotesRef.current),
         }),
       });
       const json = await res.json();
@@ -257,6 +271,19 @@ export default function LiveClass() {
   function handleChatSubmit(e) {
     e.preventDefault();
     sendChatText(chatQuestion);
+  }
+
+  function buildVisualContext(notes) {
+    if (!notes.length) return "";
+    return notes.map((note, i) => {
+      const typeLabel = TYPE_BADGE[note.content_type]?.label || "Visual";
+      let ctx = `[Imagen ${i + 1} — ${typeLabel}]`;
+      if (note.description)    ctx += `\nDescripción: ${note.description}`;
+      if (note.extracted_text) ctx += `\nTexto OCR visible: ${note.extracted_text}`;
+      if (note.key_concepts?.length) ctx += `\nConceptos clave: ${note.key_concepts.join(", ")}`;
+      if (note.gaps)           ctx += `\nInformación visual no mencionada verbalmente: ${note.gaps}`;
+      return ctx;
+    }).join("\n\n---\n\n");
   }
 
   async function processImageBlob(blob, source) {
@@ -289,15 +316,21 @@ export default function LiveClass() {
           }),
         });
         const json = await res.json();
-        setVisualNotes((prev) => [...prev, {
-          id: Date.now(),
-          previewUrl,
-          storagePath,
-          source,
-          description: json.description || "",
-          key_concepts: json.key_concepts || [],
-          gaps: json.gaps || null,
-        }]);
+        setVisualNotes((prev) => {
+          const next = [...prev, {
+            id: Date.now(),
+            previewUrl,
+            storagePath,
+            source,
+            content_type:   json.content_type   || "other",
+            description:    json.description    || "",
+            extracted_text: json.extracted_text || null,
+            key_concepts:   json.key_concepts   || [],
+            gaps:           json.gaps           || null,
+          }];
+          visualNotesRef.current = next;
+          return next;
+        });
       } catch {}
       setAnalyzeLoading(false);
     };
@@ -571,27 +604,39 @@ export default function LiveClass() {
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-                {visualNotes.map((note) => (
-                  <div key={note.id} style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
-                    <img src={note.previewUrl} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
-                    <div style={{ padding: "12px 14px" }}>
-                      {note.key_concepts?.length > 0 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-                          {note.key_concepts.map((kc, j) => (
-                            <span key={j} style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 8px" }}>{kc}</span>
-                          ))}
-                        </div>
-                      )}
-                      <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: note.gaps ? 8 : 0 }}>{note.description}</p>
-                      {note.gaps && (
-                        <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 8, padding: "7px 10px" }}>
-                          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--yellow)", marginBottom: 3 }}>⚠ Información visual no verbalizada</p>
-                          <p style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.5 }}>{note.gaps}</p>
-                        </div>
-                      )}
+                {visualNotes.map((note) => {
+                  const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
+                  return (
+                    <div key={note.id} style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                      <div style={{ position: "relative" }}>
+                        <img src={note.previewUrl} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                        <span style={{ position: "absolute", top: 8, left: 8, fontSize: 10, fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", borderRadius: 99, padding: "3px 9px", border: `1px solid ${tb.fg}50` }}>{tb.label}</span>
+                      </div>
+                      <div style={{ padding: "12px 14px" }}>
+                        {note.key_concepts?.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                            {note.key_concepts.map((kc, j) => (
+                              <span key={j} style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 8px" }}>{kc}</span>
+                            ))}
+                          </div>
+                        )}
+                        <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6, marginBottom: (note.extracted_text || note.gaps) ? 8 : 0 }}>{note.description}</p>
+                        {note.extracted_text && (
+                          <div style={{ background: "rgba(124,108,248,0.06)", border: "1px solid rgba(124,108,248,0.14)", borderRadius: 8, padding: "8px 10px", marginBottom: note.gaps ? 8 : 0 }}>
+                            <p style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", marginBottom: 4 }}>Texto detectado (OCR)</p>
+                            <p style={{ fontSize: 11, color: "var(--text-2)", fontFamily: "monospace", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{note.extracted_text}</p>
+                          </div>
+                        )}
+                        {note.gaps && (
+                          <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 8, padding: "7px 10px" }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "var(--yellow)", marginBottom: 3 }}>⚠ Información visual no verbalizada</p>
+                            <p style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.5 }}>{note.gaps}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -803,20 +848,32 @@ export default function LiveClass() {
               {visualNotes.length === 0 && !analyzeLoading && (
                 <p style={{ fontSize: "0.67rem", color: "var(--text-3)", textAlign: "center", paddingBottom: 8, lineHeight: 1.5 }}>Captura diapositivas o pizarrón para complementar el transcript</p>
               )}
-              {visualNotes.map((note) => (
-                <div key={note.id} style={{ marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", background: "rgba(255,255,255,0.02)", overflow: "hidden" }}>
-                  <img src={note.previewUrl} alt="" style={{ width: "100%", height: 68, objectFit: "cover", display: "block" }} />
-                  <div style={{ padding: "6px 8px" }}>
-                    <p style={{ fontSize: "0.68rem", color: "var(--text-2)", lineHeight: 1.5, marginBottom: note.gaps ? 5 : 0 }}>{note.description}</p>
-                    {note.gaps && (
-                      <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 5, padding: "4px 7px" }}>
-                        <span style={{ fontSize: "0.63rem", fontWeight: 700, color: "var(--yellow)" }}>⚠ Gap: </span>
-                        <span style={{ fontSize: "0.63rem", color: "var(--text-2)" }}>{note.gaps}</span>
-                      </div>
-                    )}
+              {visualNotes.map((note) => {
+                const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
+                return (
+                  <div key={note.id} style={{ marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", background: "rgba(255,255,255,0.02)", overflow: "hidden" }}>
+                    <div style={{ position: "relative" }}>
+                      <img src={note.previewUrl} alt="" style={{ width: "100%", height: 68, objectFit: "cover", display: "block" }} />
+                      <span style={{ position: "absolute", top: 4, left: 4, fontSize: "0.58rem", fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: 99, padding: "2px 6px", border: `1px solid ${tb.fg}40` }}>{tb.label}</span>
+                    </div>
+                    <div style={{ padding: "6px 8px" }}>
+                      <p style={{ fontSize: "0.68rem", color: "var(--text-2)", lineHeight: 1.5, marginBottom: (note.extracted_text || note.gaps) ? 5 : 0 }}>{note.description}</p>
+                      {note.extracted_text && (
+                        <div style={{ background: "rgba(124,108,248,0.06)", border: "1px solid rgba(124,108,248,0.14)", borderRadius: 5, padding: "4px 7px", marginBottom: note.gaps ? 5 : 0 }}>
+                          <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--accent)" }}>OCR: </span>
+                          <span style={{ fontSize: "0.6rem", color: "var(--text-2)", fontFamily: "monospace", lineHeight: 1.4 }}>{note.extracted_text.length > 130 ? note.extracted_text.slice(0, 130) + "…" : note.extracted_text}</span>
+                        </div>
+                      )}
+                      {note.gaps && (
+                        <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 5, padding: "4px 7px" }}>
+                          <span style={{ fontSize: "0.63rem", fontWeight: 700, color: "var(--yellow)" }}>⚠ Gap: </span>
+                          <span style={{ fontSize: "0.63rem", color: "var(--text-2)" }}>{note.gaps}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Progress */}

@@ -2,7 +2,7 @@ import { groq } from "@/lib/groq";
 
 export async function POST(req) {
   try {
-    const { question, material_summary, transcript } = await req.json();
+    const { question, material_summary, transcript, visual_context } = await req.json();
 
     if (!question) {
       return Response.json({ error: "missing question" }, { status: 400 });
@@ -11,13 +11,32 @@ export async function POST(req) {
     const transcriptWords = (transcript ?? "").split(/\s+/);
     const transcriptTruncated = transcriptWords.slice(-3000).join(" ");
 
-    const material = material_summary?.trim() || "No se subió material.";
+    const material = material_summary?.trim() || null;
+    const visual   = visual_context?.trim()   || null;
 
-    const prompt = `Eres un asistente educativo dentro de una clase en vivo.
-Material: """${material}"""
-Transcripción hasta ahora (últimas ~3000 palabras): """${transcriptTruncated}"""
+    // Build context block — only include non-empty sources
+    const contextParts = [];
+    if (transcriptTruncated) {
+      contextParts.push(`TRANSCRIPCIÓN DE CLASE (últimas ~3000 palabras):\n"""${transcriptTruncated}"""`);
+    }
+    if (material) {
+      contextParts.push(`MATERIAL PDF:\n"""${material}"""`);
+    }
+    if (visual) {
+      contextParts.push(`NOTAS VISUALES (diapositivas, pizarrón, diagramas y texto OCR capturado durante la clase):\n"""${visual}"""`);
+    }
+
+    const contextBlock = contextParts.length
+      ? contextParts.join("\n\n")
+      : "No hay contexto disponible aún.";
+
+    const prompt = `Eres un asistente educativo con acceso a múltiples fuentes de la clase en vivo.
+
+${contextBlock}
+
 Pregunta del estudiante: "${question}"
-Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones, máximo 50 palabras salvo que pidan más detalle. Ve directo a la idea. Si no se puede responder con el contexto, dilo honestamente.`;
+
+Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones salvo que pidan más detalle. Si la respuesta está en las notas visuales (OCR, diagramas), menciona que la información viene de una imagen capturada. Si no puedes responder con el contexto disponible, dilo honestamente.`;
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
