@@ -1,10 +1,18 @@
 import { groq } from "@/lib/groq";
-import pdfParse from "pdf-parse";
 
-async function extractText(file) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const parsed = await pdfParse(buffer);
-  return parsed.text.slice(0, 5000);
+// Lazy-load pdf-parse to avoid crash when the module isn't installed
+async function parsePDF(buffer) {
+  try {
+    const { createRequire } = await import("module");
+    const { fileURLToPath } = await import("url");
+    const r = createRequire(fileURLToPath(import.meta.url));
+    const pdfParse = r("pdf-parse");
+    const parsed = await pdfParse(buffer);
+    return parsed.text;
+  } catch {
+    // Module not installed or wrong version — signal the caller
+    return null;
+  }
 }
 
 function buildTextPrompt(examText, instrText, subject, grade) {
@@ -16,8 +24,7 @@ ${instrSection}
 CONTENIDO DEL EXAMEN:
 ${examText}
 
-Evalúa cada pregunta considerando las indicaciones del profesor si las hay.
-Responde SOLO con JSON válido:
+Evalúa cada pregunta. Responde SOLO con JSON válido:
 {
   "score_detected": "nota visible en el documento o null",
   "total_questions": número,
@@ -27,7 +34,7 @@ Responde SOLO con JSON válido:
       "number": 1,
       "question": "enunciado completo",
       "student_answer": "respuesta del estudiante",
-      "correct_answer": "respuesta correcta o null si no se puede determinar",
+      "correct_answer": "respuesta correcta o null",
       "is_correct": true,
       "feedback": "retroalimentación específica"
     }
@@ -38,9 +45,7 @@ Responde SOLO con JSON válido:
 }
 
 function buildImagePrompt(instrText, subject, grade) {
-  const instrSection = instrText
-    ? `\nINDICACIONES DEL PROFESOR:\n${instrText}`
-    : "";
+  const instrSection = instrText ? `\nINDICACIONES DEL PROFESOR:\n${instrText}` : "";
   return `Lee este examen del estudiante y evalúa cada pregunta.${subject ? ` Materia: ${subject}.` : ""}${grade ? ` Nota del estudiante: ${grade}.` : ""}${instrSection}
 
 Si hay una calificación visible en el examen, identifícala.
@@ -72,40 +77,50 @@ function parseJSON(raw) {
 }
 
 export async function POST(req) {
-  const form        = await req.formData();
-  const file        = form.get("file");
-  const subject     = form.get("subject")          || "";
-  const grade       = form.get("given_grade")       || "";
-  const instrText   = form.get("instructions_text") || "";
-  const instrPDF    = form.get("instructions_pdf");
+  const form      = await req.formData();
+  const file      = form.get("file");
+  const subject   = form.get("subject")          || "";
+  const grade     = form.get("given_grade")       || "";
+  const instrText = form.get("instructions_text") || "";
+  const instrPDF  = form.get("instructions_pdf");
 
   if (!file) return Response.json({ error: "No file uploaded" }, { status: 400 });
 
-  // Extract instructor instructions from PDF if provided
+  const isPDF = file.type === "application/pdf" || file.name?.toLowerCase().endsWith(".pdf");
+
+  // Extract instructor instructions (PDF takes priority over text if both sent)
   let instructions = instrText;
   if (!instructions && instrPDF && instrPDF.size > 0) {
-    try {
-      const buf    = Buffer.from(await instrPDF.arrayBuffer());
-      const parsed = await pdfParse(buf);
-      instructions = parsed.text.slice(0, 2000);
-    } catch {}
+    if (!isPDF) {
+      // Only attempt PDF parse for instruction files; if unavailable, skip silently
+      const buf = Buffer.from(await instrPDF.arrayBuffer());
+      const txt = await parsePDF(buf);
+      if (txt) instructions = txt.slice(0, 2000);
+    }
   }
-
-  const isPDF = file.type === "application/pdf" || file.name?.toLowerCase().endsWith(".pdf");
 
   try {
     let result;
 
     if (isPDF) {
-      const text = await extractText(file);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const text   = await parsePDF(buffer);
+
+      if (!text) {
+        return Response.json({
+          error: "PDF no soportado en esta instalación. Sube una foto (JPG/PNG) del examen, o ejecuta en la terminal: npm install pdf-parse@1.1.1 --ignore-scripts",
+        }, { status: 422 });
+      }
+
       const r = await groq.chat.completions.create({
         model: "openai/gpt-oss-120b",
-        messages: [{ role: "user", content: buildTextPrompt(text, instructions, subject, grade) }],
+        messages: [{ role: "user", content: buildTextPrompt(text.slice(0, 5000), instructions, subject, grade) }],
         max_tokens: 2500,
         temperature: 0.1,
       });
       result = parseJSON(r.choices[0].message.content);
     } else {
+      // Image — use Groq vision model
       const buffer = Buffer.from(await file.arrayBuffer());
       const b64    = buffer.toString("base64");
       const mime   = file.type || "image/jpeg";

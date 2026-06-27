@@ -1,9 +1,21 @@
 import { groq } from "@/lib/groq";
-import pdfParse from "pdf-parse";
 
 const SYSTEM = `Eres un asistente educativo. Resume el siguiente material de estudio de forma compacta.
 Extrae los puntos más importantes en 150-200 palabras. Sin listas largas, solo los conceptos esenciales
 que sirvan de contexto para responder preguntas del alumno.`;
+
+async function parsePDF(buffer) {
+  try {
+    const { createRequire } = await import("module");
+    const { fileURLToPath } = await import("url");
+    const r = createRequire(fileURLToPath(import.meta.url));
+    const pdfParse = r("pdf-parse");
+    const parsed = await pdfParse(buffer);
+    return parsed.text;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request) {
   try {
@@ -15,7 +27,11 @@ export async function POST(request) {
 
     const arrayBuffer = await pdf.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const { text } = await pdfParse(buffer);
+    const text = await parsePDF(buffer);
+
+    if (!text) {
+      return Response.json({ skip: true });
+    }
 
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-120b",
