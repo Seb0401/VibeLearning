@@ -107,6 +107,7 @@ export default function LiveClass() {
   const { id: classId } = useParams();
 
   const [recording, setRecording] = useState(false);
+  const [audioSource, setAudioSource] = useState("mic"); // "mic" | "system" | "both"
   const [elapsed, setElapsed] = useState(0);
   const [transcriptLines, setTranscriptLines] = useState([]);
   const [concepts, setConcepts] = useState([]);
@@ -142,6 +143,9 @@ export default function LiveClass() {
   const streamRef = useRef(null);
   const chunkTimerRef = useRef(null);
   const reportChatEndRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const displayStreamRef = useRef(null);
+  const audioCtxRef = useRef(null);
 
   // Quiz refs
   const quizIntervalRef = useRef(null);
@@ -258,13 +262,72 @@ export default function LiveClass() {
 
   async function startRecording() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
+      let finalStream;
+
+      if (audioSource === "mic") {
+        finalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = finalStream;
+
+      } else if (audioSource === "system") {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false },
+        });
+        displayStream.getVideoTracks().forEach((t) => t.stop());
+        const audioTracks = displayStream.getAudioTracks();
+        if (!audioTracks.length) {
+          displayStream.getTracks().forEach((t) => t.stop());
+          alert("No se capturó audio. Al compartir, selecciona una pestaña y activa 'Compartir audio de la pestaña'.");
+          return;
+        }
+        displayStreamRef.current = displayStream;
+        finalStream = new MediaStream(audioTracks);
+        streamRef.current = finalStream;
+
+      } else {
+        // "both" — micrófono + audio del sistema, mezclados
+        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        let displayStream;
+        try {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false },
+          });
+          displayStream.getVideoTracks().forEach((t) => t.stop());
+        } catch {
+          // Usuario canceló la pantalla — grabamos solo micrófono
+          streamRef.current = micStream;
+          micStreamRef.current = micStream;
+          finalStream = micStream;
+        }
+
+        if (displayStream) {
+          const sysAudio = displayStream.getAudioTracks();
+          if (!sysAudio.length) {
+            // Sin audio de sistema — solo micrófono
+            displayStream.getTracks().forEach((t) => t.stop());
+            finalStream = micStream;
+            streamRef.current = finalStream;
+            micStreamRef.current = micStream;
+          } else {
+            // Mezclar ambas fuentes con AudioContext
+            const ctx = new AudioContext();
+            const dest = ctx.createMediaStreamDestination();
+            ctx.createMediaStreamSource(micStream).connect(dest);
+            ctx.createMediaStreamSource(new MediaStream(sysAudio)).connect(dest);
+            finalStream = dest.stream;
+            streamRef.current = finalStream;
+            micStreamRef.current = micStream;
+            displayStreamRef.current = displayStream;
+            audioCtxRef.current = ctx;
+          }
+        }
+      }
+
       isRecordingRef.current = true;
       setRecording(true);
       scheduleChunk();
 
-      // Timer independiente de quiz — cada 60s
       quizIntervalRef.current = setInterval(() => {
         if (conceptsRef.current.length > 0 && !quizActiveRef.current) {
           const idx = quizConceptIdxRef.current % conceptsRef.current.length;
@@ -273,7 +336,7 @@ export default function LiveClass() {
         }
       }, QUIZ_INTERVAL);
     } catch (err) {
-      alert("No se pudo acceder al micrófono: " + err.message);
+      alert("No se pudo acceder al audio: " + err.message);
     }
   }
 
@@ -285,6 +348,12 @@ export default function LiveClass() {
       mediaRecorderRef.current.stop();
     }
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    displayStreamRef.current?.getTracks().forEach((t) => t.stop());
+    audioCtxRef.current?.close();
+    micStreamRef.current = null;
+    displayStreamRef.current = null;
+    audioCtxRef.current = null;
     setRecording(false);
   }
 
@@ -724,7 +793,9 @@ export default function LiveClass() {
         {recording && (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-            <span style={{ color: "#22c55e", fontSize: "0.82rem", fontWeight: 600 }}>Grabando</span>
+            <span style={{ color: "#22c55e", fontSize: "0.82rem", fontWeight: 600 }}>
+              {audioSource === "mic" ? "🎤 Grabando" : audioSource === "system" ? "🖥️ Capturando tab" : "🔀 Mic + Tab"}
+            </span>
             <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>{formatTimer(elapsed)}</span>
           </div>
         )}
@@ -782,6 +853,47 @@ export default function LiveClass() {
                   </div>
                 )}
               </div>
+              {/* Selector de fuente de audio — solo cuando no está grabando */}
+              {!recording && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", margin: 0 }}>Fuente de audio</p>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {[
+                      { key: "mic",    icon: "🎤", label: "Micrófono" },
+                      { key: "system", icon: "🖥️", label: "Pantalla / Tab" },
+                      { key: "both",   icon: "🔀", label: "Micrófono + Tab" },
+                    ].map(({ key, icon, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setAudioSource(key)}
+                        style={{
+                          background: audioSource === key ? "rgba(124,108,248,0.18)" : "var(--surface)",
+                          border: `1px solid ${audioSource === key ? "var(--accent)" : "var(--border)"}`,
+                          borderRadius: 8,
+                          padding: "5px 9px",
+                          color: audioSource === key ? "var(--accent)" : "var(--text-muted)",
+                          fontSize: "0.72rem",
+                          fontWeight: audioSource === key ? 700 : 400,
+                          cursor: "pointer",
+                          display: "flex", alignItems: "center", gap: 4,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {icon} {label}
+                      </button>
+                    ))}
+                  </div>
+                  {audioSource !== "mic" && (
+                    <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", textAlign: "center", lineHeight: 1.5, margin: 0, maxWidth: 260 }}>
+                      {audioSource === "system"
+                        ? "Elige una pestaña del navegador y activa \"Compartir audio de la pestaña\""
+                        : "Primero se pedirá el micrófono y luego la pestaña a compartir"}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <LiveMicButton recording={recording} onToggle={recording ? stopRecording : startRecording} />
             </div>
 
