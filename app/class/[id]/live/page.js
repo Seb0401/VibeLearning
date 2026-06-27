@@ -222,7 +222,18 @@ export default function LiveClass() {
     if (!isRecordingRef.current) return;
 
     const chunks = [];
-    const recorder = new MediaRecorder(streamRef.current, { mimeType: "audio/webm" });
+    // Detect best supported MIME type (Safari doesn't support audio/webm)
+    const mimeType = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus",
+      "audio/mp4",
+      "",
+    ].find((t) => !t || MediaRecorder.isTypeSupported(t)) ?? "";
+    const recorder = new MediaRecorder(
+      streamRef.current,
+      mimeType ? { mimeType } : {}
+    );
     mediaRecorderRef.current = recorder;
 
     recorder.addEventListener("dataavailable", (e) => {
@@ -232,9 +243,13 @@ export default function LiveClass() {
     recorder.addEventListener("stop", async () => {
       if (chunks.length > 0) {
         chunkCountRef.current += 1;
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const actualMime = recorder.mimeType || mimeType || "audio/webm";
+        const ext = actualMime.includes("mp4") ? "mp4"
+                  : actualMime.includes("ogg") ? "ogg"
+                  : "webm";
+        const blob = new Blob(chunks, { type: actualMime });
         const formData = new FormData();
-        formData.append("audio", blob, "chunk.webm");
+        formData.append("audio", blob, `chunk.${ext}`);
         try {
           const res = await fetch("/api/transcribe", { method: "POST", body: formData });
           const json = await res.json();
