@@ -1,6 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 
+const NODE_COLORS = [
+  "#7C3AED", // Violeta
+  "#0EA5E9", // Celeste / Sky
+  "#10B981", // Esmeralda / Verde
+  "#F59E0B", // Ámbar / Naranja
+  "#EF4444", // Rojo
+  "#EC4899", // Rosa
+  "#8B5CF6", // Morado
+  "#14B8A6", // Turquesa
+];
+
 export default function ObsidianCanvas({ nodes }) {
   const [zoom, setZoom] = useState(0.85);
   const [pan, setPan] = useState({ x: 50, y: 50 });
@@ -14,17 +25,16 @@ export default function ObsidianCanvas({ nodes }) {
 
   const viewportRef = useRef(null);
 
+  // Obtener color por índice para un nodo específico
+  const getNodeColor = (nodeId) => {
+    const idx = nodes.findIndex((n) => n.id === nodeId);
+    return NODE_COLORS[idx !== -1 ? idx % NODE_COLORS.length : 0];
+  };
+
   // Lógica de gradientes fallback por ID para que sean consistentes
   const getGradientFallback = (id) => {
-    const gradients = [
-      "linear-gradient(135deg, #7C6CF8 0%, #60A5FA 100%)",
-      "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
-      "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-      "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
-      "linear-gradient(135deg, #EF4444 0%, #C084FC 100%)",
-    ];
-    const index = parseInt(id.replace(/\D/g, "") || "0") % gradients.length;
-    return gradients[index];
+    const color = getNodeColor(id);
+    return `linear-gradient(135deg, ${color} 0%, #0c0c1b 100%)`;
   };
 
   // Inicializar posiciones de los nodos en círculo equidistante
@@ -130,7 +140,7 @@ export default function ObsidianCanvas({ nodes }) {
     setIsPanning(false);
   };
 
-  // Renderizar conexiones (Líneas SVG entre nodos conectados)
+  // Renderizar conexiones (Líneas SVG entre nodos conectados usando el color del nodo origen)
   const renderConnections = () => {
     const renderedLines = [];
     const seenConnections = new Set();
@@ -139,6 +149,7 @@ export default function ObsidianCanvas({ nodes }) {
       const pos1 = nodePositions[node.id];
       if (!pos1) return;
 
+      const color = getNodeColor(node.id);
       const connections = node.connections || [];
       connections.forEach((connId) => {
         const pos2 = nodePositions[connId];
@@ -162,7 +173,7 @@ export default function ObsidianCanvas({ nodes }) {
             y1={y1}
             x2={x2}
             y2={y2}
-            stroke="#7C6CF8"
+            stroke={color}
             strokeWidth="2"
             strokeOpacity="0.45"
             strokeDasharray="5,5"
@@ -172,6 +183,83 @@ export default function ObsidianCanvas({ nodes }) {
     });
 
     return renderedLines;
+  };
+
+  // Generar puntos del Minimapa basados en la escala relativa
+  const getMinimapPoints = () => {
+    if (nodes.length === 0) return [];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    nodes.forEach((node) => {
+      const pos = nodePositions[node.id] || { x: 320, y: 240 };
+      if (pos.x < minX) minX = pos.x;
+      if (pos.x > maxX) maxX = pos.x;
+      if (pos.y < minY) minY = pos.y;
+      if (pos.y > maxY) maxY = pos.y;
+    });
+
+    // Añadir padding para que no se corten en los bordes
+    const padding = 120;
+    minX -= padding;
+    maxX += padding;
+    minY -= padding;
+    maxY += padding;
+
+    const width = maxX - minX || 1;
+    const height = maxY - minY || 1;
+
+    return nodes.map((node, index) => {
+      const pos = nodePositions[node.id] || { x: 320, y: 240 };
+      const pctX = (pos.x - minX) / width;
+      const pctY = (pos.y - minY) / height;
+      // Mapear a escala 160x100 de forma segura
+      const x = Math.max(4, Math.min(156, pctX * 160));
+      const y = Math.max(4, Math.min(96, pctY * 100));
+      return {
+        id: node.id,
+        x,
+        y,
+        color: NODE_COLORS[index % NODE_COLORS.length],
+        rawX: pos.x,
+        rawY: pos.y,
+      };
+    });
+  };
+
+  // Click en el minimap mueve la cámara al nodo seleccionado
+  const handleMinimapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    nodes.forEach((node) => {
+      const pos = nodePositions[node.id] || { x: 320, y: 240 };
+      if (pos.x < minX) minX = pos.x;
+      if (pos.x > maxX) maxX = pos.x;
+      if (pos.y < minY) minY = pos.y;
+      if (pos.y > maxY) maxY = pos.y;
+    });
+
+    const padding = 120;
+    minX -= padding;
+    maxX += padding;
+    minY -= padding;
+    maxY += padding;
+
+    const width = maxX - minX || 1;
+    const height = maxY - minY || 1;
+
+    const canvasX = minX + (clickX / 160) * width;
+    const canvasY = minY + (clickY / 100) * height;
+
+    const viewportWidth = viewportRef.current ? viewportRef.current.clientWidth : 640;
+    const viewportHeight = viewportRef.current ? viewportRef.current.clientHeight : 550;
+
+    // Centrar la vista en las coordenadas seleccionadas
+    setPan({
+      x: viewportWidth / 2 - canvasX * zoom,
+      y: viewportHeight / 2 - canvasY * zoom,
+    });
   };
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
@@ -239,9 +327,10 @@ export default function ObsidianCanvas({ nodes }) {
           </svg>
 
           {/* Capa de Nodos HTML */}
-          {nodes.map((node) => {
+          {nodes.map((node, index) => {
             const pos = nodePositions[node.id] || { x: 100, y: 100 };
             const isSelected = node.id === selectedNodeId;
+            const color = getNodeColor(node.id);
 
             return (
               <div
@@ -253,11 +342,11 @@ export default function ObsidianCanvas({ nodes }) {
                   top: pos.y,
                   width: "160px",
                   background: "#121225",
-                  border: isSelected ? "2px solid #7C6CF8" : "1px solid var(--border)",
+                  border: isSelected ? `2px solid ${color}` : `1px solid ${color}45`,
                   borderRadius: "10px",
                   padding: "10px",
                   boxShadow: isSelected
-                    ? "0 0 16px rgba(124, 108, 248, 0.6)"
+                    ? `0 0 16px ${color}80`
                     : "0 4px 14px rgba(0,0,0,0.4)",
                   cursor: "grab",
                   pointerEvents: "auto",
@@ -265,14 +354,16 @@ export default function ObsidianCanvas({ nodes }) {
                   display: "flex",
                   flexDirection: "column",
                   gap: "6px",
+                  animation: "nodeIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+                  animationDelay: `${index * 0.08}s`,
                 }}
               >
                 {/* ID / Tag */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span
                     style={{
-                      background: "rgba(124, 108, 248, 0.15)",
-                      color: "#A78BFA",
+                      background: `${color}25`,
+                      color: color,
                       fontSize: "9px",
                       fontWeight: "700",
                       padding: "2px 6px",
@@ -282,9 +373,26 @@ export default function ObsidianCanvas({ nodes }) {
                   >
                     {node.id}
                   </span>
-                  {/* Pequeña bombilla/punto de conexión */}
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#7C6CF8" }} />
+                  {/* Pequeña bombilla de color representativo */}
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
                 </div>
+
+                {/* Imagen Unsplash directamente en la tarjeta del nodo */}
+                <img
+                  src={`https://source.unsplash.com/280x100/?${encodeURIComponent(node.image_query || node.label)}`}
+                  alt={node.label}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                  style={{
+                    width: "100%",
+                    height: "80px",
+                    objectFit: "cover",
+                    borderRadius: "6px",
+                    marginBottom: "4px",
+                    pointerEvents: "none",
+                  }}
+                />
 
                 {/* Título Nodo */}
                 <h3
@@ -321,16 +429,59 @@ export default function ObsidianCanvas({ nodes }) {
           })}
         </div>
 
-        {/* Indicadores de Control del Canvas (Esquina inferior izquierda) */}
+        {/* Minimapa (Esquina inferior izquierda, 160x100px) */}
         <div
+          onClick={handleMinimapClick}
           style={{
             position: "absolute",
             bottom: "12px",
             left: "12px",
+            width: "160px",
+            height: "100px",
+            background: "rgba(10, 10, 25, 0.85)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            overflow: "hidden",
+            cursor: "crosshair",
+            backdropFilter: "blur(6px)",
+            zIndex: 5,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            {getMinimapPoints().map((pt) => {
+              const isPtSelected = pt.id === selectedNodeId;
+              return (
+                <div
+                  key={pt.id}
+                  style={{
+                    position: "absolute",
+                    left: `${pt.x}px`,
+                    top: `${pt.y}px`,
+                    width: isPtSelected ? "8px" : "4px",
+                    height: isPtSelected ? "8px" : "4px",
+                    borderRadius: "50%",
+                    background: pt.color,
+                    transform: "translate(-50%, -50%)",
+                    boxShadow: isPtSelected ? `0 0 6px ${pt.color}` : "none",
+                    transition: "width 0.2s, height 0.2s",
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Indicadores de Control del Canvas (Esquina inferior izquierda, desplazados por el minimapa) */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "12px",
+            left: "182px",
             background: "rgba(18, 18, 35, 0.8)",
             border: "1px solid var(--border)",
             borderRadius: "8px",
-            padding: "6px 10px",
+            padding: "6px 12px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
@@ -338,11 +489,46 @@ export default function ObsidianCanvas({ nodes }) {
             color: "var(--text-3)",
             backdropFilter: "blur(6px)",
             zIndex: 5,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
           }}
         >
           <span>Zoom: {Math.round(zoom * 100)}%</span>
           <div style={{ width: 1, height: 12, background: "var(--border)" }} />
-          <span>Arrastra para mover • Scroll para Zoom</span>
+          
+          {/* Botón de Centrar Vista */}
+          <button
+            onClick={() => {
+              setZoom(0.85);
+              setPan({ x: 50, y: 50 });
+            }}
+            style={{
+              background: "rgba(124, 108, 248, 0.15)",
+              border: "1px solid rgba(124, 108, 248, 0.4)",
+              borderRadius: "4px",
+              padding: "2px 8px",
+              color: "#A78BFA",
+              fontSize: "10px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              transition: "background 0.2s, border-color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(124, 108, 248, 0.3)";
+              e.currentTarget.style.borderColor = "rgba(124, 108, 248, 0.6)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(124, 108, 248, 0.15)";
+              e.currentTarget.style.borderColor = "rgba(124, 108, 248, 0.4)";
+            }}
+          >
+            🎯 Centrar vista
+          </button>
+          
+          <div style={{ width: 1, height: 12, background: "var(--border)" }} />
+          <span>Arrastra fondo para mover • Rueda para Zoom</span>
         </div>
       </div>
 
@@ -372,7 +558,7 @@ export default function ObsidianCanvas({ nodes }) {
             }}
           >
             <div>
-              <span style={{ fontSize: "10px", fontWeight: "700", color: "#A78BFA", textTransform: "uppercase" }}>
+              <span style={{ fontSize: "10px", fontWeight: "700", color: getNodeColor(selectedNode.id), textTransform: "uppercase" }}>
                 Detalles del Concepto
               </span>
               <h2 style={{ fontSize: "15px", fontWeight: "700", color: "white", margin: "2px 0 0" }}>
@@ -399,7 +585,7 @@ export default function ObsidianCanvas({ nodes }) {
 
           {/* Contenido Desplazable del Panel */}
           <div style={{ padding: "16px", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* Imagen del Concepto (Unsplash Source con Fallback a Degradado) */}
+            {/* Imagen del Concepto en Alta Resolución (Unsplash 400x200 con Fallback a Degradado) */}
             <div
               style={{
                 width: "100%",
@@ -412,7 +598,7 @@ export default function ObsidianCanvas({ nodes }) {
             >
               {!imageErrors[selectedNode.id] && (
                 <img
-                  src={`https://source.unsplash.com/268x140/?${encodeURIComponent(selectedNode.image_query || selectedNode.label)}`}
+                  src={`https://source.unsplash.com/400x200/?${encodeURIComponent(selectedNode.image_query || selectedNode.label)}`}
                   alt={selectedNode.label}
                   onError={() => {
                     setImageErrors((prev) => ({ ...prev, [selectedNode.id]: true }));
@@ -445,7 +631,7 @@ export default function ObsidianCanvas({ nodes }) {
                   borderRadius: "4px",
                 }}
               >
-                📸 Unsplash
+                📸 Unsplash HD
               </span>
             </div>
 
@@ -483,7 +669,7 @@ export default function ObsidianCanvas({ nodes }) {
                           fontSize: "11px",
                           color: "white",
                           background: "#1c1c38",
-                          border: "1px solid var(--border)",
+                          border: `1px solid ${getNodeColor(connId)}40`,
                           padding: "4px 8px",
                           borderRadius: "6px",
                           cursor: "pointer",
@@ -551,6 +737,16 @@ export default function ObsidianCanvas({ nodes }) {
           }
           to {
             transform: translateX(0);
+          }
+        }
+        @keyframes nodeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.7);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
           }
         }
       `}</style>
