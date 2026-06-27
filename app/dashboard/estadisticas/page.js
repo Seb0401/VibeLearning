@@ -183,7 +183,7 @@ export default async function Estadisticas() {
   const bestDay = dayCount.indexOf(Math.max(...dayCount));
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "36px", maxWidth: 1100 }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "36px" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

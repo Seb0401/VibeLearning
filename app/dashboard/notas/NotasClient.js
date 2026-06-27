@@ -69,7 +69,7 @@ export default function NotasClient({ classes: initialClasses }) {
   const noteCount = classes.filter(c => c.data?.notes?.trim()).length;
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, maxWidth: 1100, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>

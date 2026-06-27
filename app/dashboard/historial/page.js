@@ -52,7 +52,7 @@ export default async function Historial() {
   const totalConcepts = classes.reduce((s, c) => s + (c.data?.concepts?.length || 0), 0);
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "32px", maxWidth: 900 }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "32px" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
