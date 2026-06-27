@@ -35,32 +35,26 @@ const NAV_GROUPS = [
   {
     label: "Principal",
     items: [
-      { href: "/dashboard",              label: "Inicio",       Icon: IcoHome,     exact: true },
-      { href: "/dashboard/estadisticas", label: "Estadísticas", Icon: IcoStats               },
-      { href: "/dashboard/cronologia",   label: "Cronología",   Icon: IcoCronolog            },
-      { href: "/dashboard/logros",       label: "Logros",       Icon: IcoTrophy              },
-      { href: "/dashboard/metas",        label: "Metas",        Icon: IcoTarget              },
+      { href: "/dashboard",              label: "Inicio",       Icon: IcoHome,  exact: true },
+      { href: "/dashboard/estadisticas", label: "Estadísticas", Icon: IcoStats              },
+      { href: "/dashboard/logros",       label: "Logros",       Icon: IcoTrophy             },
     ],
   },
   {
     label: "Aprender",
     items: [
-      { href: "/dashboard/repaso",       label: "Repaso",       Icon: IcoRepaso   },
-      { href: "/dashboard/evaluaciones", label: "Evaluaciones", Icon: IcoExam     },
-      { href: "/dashboard/examenes",     label: "Mis exámenes", Icon: IcoScanDoc  },
-      { href: "/dashboard/agenda",       label: "Agenda",       Icon: IcoCalendar },
-      { href: "/dashboard/mapa-global",  label: "Mapa global",  Icon: IcoMapNet   },
-      { href: "/dashboard/pomodoro",     label: "Pomodoro",     Icon: IcoTimer    },
+      { href: "/dashboard/evaluaciones", label: "Evaluaciones", Icon: IcoExam    },
+      { href: "/dashboard/examenes",     label: "Mis exámenes", Icon: IcoScanDoc },
     ],
   },
   {
     label: "Contenido",
     items: [
-      { href: "/dashboard/biblioteca",   label: "Biblioteca",   Icon: IcoLibrary  },
-      { href: "/dashboard/notas",        label: "Notas",        Icon: IcoNotes    },
-      { href: "/dashboard/cursos",       label: "Cursos",       Icon: IcoCourses  },
-      { href: "/dashboard/cheat-sheet",  label: "Cheat Sheet",  Icon: IcoCheatSh  },
-      { href: "/dashboard/exportar",     label: "Exportar",     Icon: IcoExport   },
+      { href: "/dashboard/biblioteca",   label: "Biblioteca",   Icon: IcoLibrary },
+      { href: "/dashboard/notas",        label: "Notas",        Icon: IcoNotes   },
+      { href: "/dashboard/cursos",       label: "Cursos",       Icon: IcoCourses },
+      { href: "/dashboard/cheat-sheet",  label: "Cheat Sheet",  Icon: IcoCheatSh },
+      { href: "/dashboard/exportar",     label: "Exportar",     Icon: IcoExport  },
     ],
   },
 ];

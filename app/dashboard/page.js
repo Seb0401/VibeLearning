@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import ClassCard from "./ClassCard";
+import CoursesWidget from "@/components/CoursesWidget";
 
 function Icon({ size = 16, children }) {
   return (
@@ -255,6 +256,9 @@ export default async function Dashboard() {
               </Link>
             </div>
           )}
+
+          {/* Courses widget */}
+          <CoursesWidget classes={classes} />
 
           {/* Recent library */}
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "20px 20px 8px" }}>

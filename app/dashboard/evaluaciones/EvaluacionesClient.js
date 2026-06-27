@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Icon({ size = 16, children }) {
   return (
@@ -27,15 +27,38 @@ function Spinner() {
 }
 
 export default function EvaluacionesClient({ classes }) {
-  const [selectedIds, setSelectedIds] = useState(new Set(classes.map(c => c.id)));
-  const [numQ,        setNumQ]        = useState(5);
-  const [phase,       setPhase]       = useState("setup");
-  const [questions,   setQuestions]   = useState([]);
-  const [answers,     setAnswers]     = useState({});
-  const [submitted,   setSubmitted]   = useState(false);
-  const [error,       setError]       = useState("");
+  const [selectedIds,   setSelectedIds]   = useState(new Set(classes.map(c => c.id)));
+  const [numQ,          setNumQ]          = useState(5);
+  const [phase,         setPhase]         = useState("setup");
+  const [questions,     setQuestions]     = useState([]);
+  const [answers,       setAnswers]       = useState({});
+  const [submitted,     setSubmitted]     = useState(false);
+  const [error,         setError]         = useState("");
+  const [selectorMode,  setSelectorMode]  = useState("clases"); // "clases" | "cursos"
+  const [courses,       setCourses]       = useState([]);
+  const [activeCourse,  setActiveCourse]  = useState(null);
+
+  useEffect(() => {
+    try { setCourses(JSON.parse(localStorage.getItem("cursos_v1") || "[]")); } catch {}
+  }, []);
 
   function toggleClass(id) { setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
+
+  function pickCourse(course) {
+    if (activeCourse?.id === course.id) {
+      setActiveCourse(null);
+      setSelectedIds(new Set());
+    } else {
+      setActiveCourse(course);
+      setSelectedIds(new Set(course.classIds || []));
+    }
+  }
+
+  function switchSelectorMode(m) {
+    setSelectorMode(m);
+    setActiveCourse(null);
+    setSelectedIds(m === "clases" ? new Set(classes.map(c => c.id)) : new Set());
+  }
 
   async function generate() {
     setError("");
@@ -67,29 +90,92 @@ export default function EvaluacionesClient({ classes }) {
 
       <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 340px", gap: 20, minHeight: 0 }}>
 
-        {/* Left: class selector */}
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: 24, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexShrink: 0 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Selecciona las clases</h2>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setSelectedIds(new Set(classes.map(c => c.id)))} style={{ fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Todas</button>
-              <button onClick={() => setSelectedIds(new Set())} style={{ fontSize: 12, color: "var(--text-3)", background: "none", border: "none", cursor: "pointer" }}>Ninguna</button>
-            </div>
+        {/* Left: class / course selector */}
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Mode tabs */}
+          <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+            {[["clases", "Clases"], ["cursos", "Cursos"]].map(([key, label]) => (
+              <button key={key} onClick={() => switchSelectorMode(key)} style={{
+                flex: 1, padding: "12px 0", fontSize: 13, fontWeight: selectorMode === key ? 700 : 400,
+                color: selectorMode === key ? "var(--accent)" : "var(--text-3)",
+                background: "none", border: "none", cursor: "pointer",
+                borderBottom: `2px solid ${selectorMode === key ? "var(--accent)" : "transparent"}`,
+                transition: "all 140ms",
+              }}>
+                {label}
+              </button>
+            ))}
           </div>
 
-          {classes.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: "40px 0" }}>No tienes clases guardadas aún.</p>
-          ) : (
-            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
-              {classes.map(c => {
-                const checked   = selectedIds.has(c.id);
-                const nConcepts = c.data?.concepts?.length || 0;
+          {/* Classes mode */}
+          {selectorMode === "clases" && (
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 10px", flexShrink: 0 }}>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Selecciona las clases</h2>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={() => setSelectedIds(new Set(classes.map(c => c.id)))} style={{ fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Todas</button>
+                  <button onClick={() => setSelectedIds(new Set())} style={{ fontSize: 12, color: "var(--text-3)", background: "none", border: "none", cursor: "pointer" }}>Ninguna</button>
+                </div>
+              </div>
+              {classes.length === 0 ? (
+                <p style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: "40px 20px" }}>No tienes clases guardadas aún.</p>
+              ) : (
+                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: "0 16px 16px" }}>
+                  {classes.map(c => {
+                    const checked   = selectedIds.has(c.id);
+                    const nConcepts = c.data?.concepts?.length || 0;
+                    return (
+                      <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: checked ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", border: `1px solid ${checked ? "rgba(124,108,248,0.25)" : "transparent"}`, cursor: "pointer", transition: "background 150ms" }}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleClass(c.id)} style={{ accentColor: "var(--accent)", width: 15, height: 15 }} />
+                        <span style={{ flex: 1, fontSize: 14, color: checked ? "var(--text)" : "var(--text-2)", fontWeight: checked ? 500 : 400 }}>{c.title}</span>
+                        {nConcepts > 0 && <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{nConcepts} conceptos</span>}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Courses mode */}
+          {selectorMode === "cursos" && (
+            <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+              {courses.length === 0 ? (
+                <p style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: "32px 16px", lineHeight: 1.6 }}>
+                  Sin cursos creados.<br />Ve a <strong>Cursos</strong> para agrupar tus clases.
+                </p>
+              ) : courses.map(course => {
+                const courseClasses = classes.filter(c => (course.classIds || []).includes(c.id));
+                const isActive = activeCourse?.id === course.id;
                 return (
-                  <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: checked ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", border: `1px solid ${checked ? "rgba(124,108,248,0.25)" : "transparent"}`, cursor: "pointer", transition: "background 150ms" }}>
-                    <input type="checkbox" checked={checked} onChange={() => toggleClass(c.id)} style={{ accentColor: "var(--accent)", width: 15, height: 15 }} />
-                    <span style={{ flex: 1, fontSize: 14, color: checked ? "var(--text)" : "var(--text-2)", fontWeight: checked ? 500 : 400 }}>{c.title}</span>
-                    {nConcepts > 0 && <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{nConcepts} conceptos</span>}
-                  </label>
+                  <div key={course.id}>
+                    <div onClick={() => pickCourse(course)} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 12px", borderRadius: 10, marginBottom: 4,
+                      cursor: "pointer",
+                      background: isActive ? "var(--accent-dim)" : "rgba(255,255,255,0.02)",
+                      border: `1px solid ${isActive ? "rgba(124,108,248,0.25)" : "transparent"}`,
+                      transition: "all 140ms",
+                    }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: course.color || "var(--accent)", flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: isActive ? "var(--accent)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{course.title}</p>
+                        <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                          {courseClasses.length} clase{courseClasses.length !== 1 ? "s" : ""} · {courseClasses.reduce((s, c) => s + (c.data?.concepts?.length || 0), 0)} conceptos
+                        </p>
+                      </div>
+                      <input type="checkbox" checked={isActive} onChange={() => pickCourse(course)} style={{ accentColor: "var(--accent)", width: 15, height: 15 }} />
+                    </div>
+                    {isActive && courseClasses.map(c => {
+                      const on = selectedIds.has(c.id);
+                      return (
+                        <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px 7px 30px", borderRadius: 8, marginBottom: 2, cursor: "pointer", background: on ? "rgba(124,108,248,0.06)" : "transparent" }}>
+                          <input type="checkbox" checked={on} onChange={() => toggleClass(c.id)} style={{ accentColor: "var(--accent)", width: 13, height: 13 }} />
+                          <span style={{ fontSize: 13, color: on ? "var(--text)" : "var(--text-2)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </div>
