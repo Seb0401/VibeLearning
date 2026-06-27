@@ -33,7 +33,7 @@ const IcoLogOut   = () => <Svg size={15}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 
 
 const NAV_GROUPS = [
   {
-    label: "Principal",
+    label: "General",
     items: [
       { href: "/dashboard",              label: "Inicio",       Icon: IcoHome,  exact: true },
       { href: "/dashboard/estadisticas", label: "Estadísticas", Icon: IcoStats              },
@@ -41,19 +41,18 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Aprender",
+    label: "Estudiar",
     items: [
       { href: "/dashboard/evaluaciones", label: "Evaluaciones", Icon: IcoExam    },
       { href: "/dashboard/examenes",     label: "Mis exámenes", Icon: IcoScanDoc },
+      { href: "/dashboard/cheat-sheet",  label: "Cheat Sheet",  Icon: IcoCheatSh },
     ],
   },
   {
-    label: "Contenido",
+    label: "Organizar",
     items: [
-      { href: "/dashboard/biblioteca",   label: "Biblioteca",   Icon: IcoLibrary },
-      { href: "/dashboard/notas",        label: "Notas",        Icon: IcoNotes   },
       { href: "/dashboard/cursos",       label: "Cursos",       Icon: IcoCourses },
-      { href: "/dashboard/cheat-sheet",  label: "Cheat Sheet",  Icon: IcoCheatSh },
+      { href: "/dashboard/biblioteca",   label: "Biblioteca",   Icon: IcoLibrary },
       { href: "/dashboard/exportar",     label: "Exportar",     Icon: IcoExport  },
     ],
   },
