@@ -8,9 +8,10 @@ import ReactMarkdown from "react-markdown";
 
 const CHUNK_INTERVAL = 7000;
 const WINDOW_CHUNKS = 13;
-const QUIZ_INTERVAL = 60_000;   // nueva pregunta cada 60s
+const QUIZ_INTERVAL = 30_000;   // nueva pregunta cada 30s
 const QUIZ_TIMEOUT = 30_000;    // auto-cierre si no responde
 const QUIZ_RESULT_DELAY = 4000; // muestra resultado 4s antes de cerrar
+const QUIZ_MIN_WORDS = 25;      // transcript mínimo para empezar a preguntar
 const CONCEPT_ICONS = ["📈", "Σ", "✕", "🛡", "⚡", "🔬", "💡", "🔗", "📊", "🎯"];
 
 function formatTimer(s) {
@@ -19,6 +20,10 @@ function formatTimer(s) {
 
 function nowHMS() {
   return new Date().toLocaleTimeString("es-MX", { hour12: false });
+}
+
+function wordCount(text) {
+  return (text || "").trim().split(/\s+/).filter(Boolean).length;
 }
 
 function HighlightedText({ text, conceptNames }) {
@@ -113,7 +118,7 @@ export default function LiveClass() {
   const [expandedConcept, setExpandedConcept] = useState(null);
   const [quiz, setQuiz] = useState(null);
   const [quizAnswer, setQuizAnswer] = useState(null);
-  const [reinforcement, setReinforcement] = useState(null);
+  const [nextQuizIn, setNextQuizIn] = useState(null); // segundos para la próxima pregunta
   const [materialSummary, setMaterialSummary] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [chatQuestion, setChatQuestion] = useState("");
@@ -148,7 +153,8 @@ export default function LiveClass() {
   const quizAutoCloseRef = useRef(null);
   const quizCountdownRef = useRef(null);
   const quizActiveRef = useRef(false);
-  const quizConceptIdxRef = useRef(0);
+  const nextQuizTimerRef = useRef(null);      // countdown "próxima pregunta"
+  const firstQuizFiredRef = useRef(false);    // dispara el primer quiz al haber transcript
   const streakRef = useRef(0);
   const maxStreakRef = useRef(0);
 
@@ -190,9 +196,26 @@ export default function LiveClass() {
     clearInterval(quizCountdownRef.current);
     setQuiz(null);
     setQuizAnswer(null);
-    setReinforcement(null);
     setQuizCountdown(null);
     quizActiveRef.current = false;
+  }
+
+  // (Re)inicia el ciclo de quiz cada 60s y el contador "próxima pregunta"
+  function startQuizTimer() {
+    clearInterval(quizIntervalRef.current);
+    clearInterval(nextQuizTimerRef.current);
+
+    setNextQuizIn(QUIZ_INTERVAL / 1000);
+    nextQuizTimerRef.current = setInterval(() => {
+      setNextQuizIn((s) => (s === null ? null : s > 1 ? s - 1 : QUIZ_INTERVAL / 1000));
+    }, 1000);
+
+    quizIntervalRef.current = setInterval(() => {
+      if (!quizActiveRef.current) {
+        setNextQuizIn(QUIZ_INTERVAL / 1000);
+        triggerQuiz();
+      }
+    }, QUIZ_INTERVAL);
   }
 
   function startQuizAutoClose(seconds, onClose) {
@@ -244,6 +267,12 @@ export default function LiveClass() {
             if (chunkCountRef.current % WINDOW_CHUNKS === 0) {
               fetchConcepts(transcriptRef.current);
             }
+            // Primer quiz en cuanto haya suficiente transcript: no esperar a los conceptos
+            if (!firstQuizFiredRef.current && wordCount(transcriptRef.current) >= QUIZ_MIN_WORDS) {
+              firstQuizFiredRef.current = true;
+              triggerQuiz();
+              startQuizTimer();
+            }
           }
         } catch {}
       }
@@ -264,14 +293,7 @@ export default function LiveClass() {
       setRecording(true);
       scheduleChunk();
 
-      // Timer independiente de quiz — cada 60s
-      quizIntervalRef.current = setInterval(() => {
-        if (conceptsRef.current.length > 0 && !quizActiveRef.current) {
-          const idx = quizConceptIdxRef.current % conceptsRef.current.length;
-          quizConceptIdxRef.current += 1;
-          triggerQuiz([conceptsRef.current[idx]]);
-        }
-      }, QUIZ_INTERVAL);
+      // El ciclo de quiz arranca cuando lleguen los primeros conceptos (ver fetchConcepts)
     } catch (err) {
       alert("No se pudo acceder al micrófono: " + err.message);
     }
@@ -281,6 +303,8 @@ export default function LiveClass() {
     isRecordingRef.current = false;
     clearTimeout(chunkTimerRef.current);
     clearInterval(quizIntervalRef.current);
+    clearInterval(nextQuizTimerRef.current);
+    setNextQuizIn(null);
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
     }
@@ -314,14 +338,19 @@ export default function LiveClass() {
     } catch {}
   }
 
-  async function triggerQuiz(conceptsToQuiz) {
+  async function triggerQuiz() {
     if (quizActiveRef.current) return;
+    const transcript = (transcriptRef.current || "").trim();
+    if (wordCount(transcript) < QUIZ_MIN_WORDS) return; // aún no hay de qué preguntar
     quizActiveRef.current = true;
     try {
       const res = await fetch("/api/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concepts: conceptsToQuiz }),
+        body: JSON.stringify({
+          concepts: conceptsRef.current.slice(-4),
+          transcript: transcript.slice(-1500),
+        }),
       });
       const json = await res.json();
       if (json.skip || !json.question) {
@@ -330,13 +359,11 @@ export default function LiveClass() {
       }
       setQuiz(json);
       setQuizAnswer(null);
-      setReinforcement(null);
       // Auto-close sin respuesta tras 30s
       startQuizAutoClose(30, () => {
         quizActiveRef.current = false;
         setQuiz(null);
         setQuizAnswer(null);
-        setReinforcement(null);
         setQuizCountdown(null);
       });
     } catch {
@@ -367,18 +394,9 @@ export default function LiveClass() {
       setTimeout(() => setScoreFlash(null), 2000);
     } else {
       setStreak(0);
-      try {
-        const res = await fetch("/api/reinforcement", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ concept_name: quiz.concept, concept_summary: quiz.question }),
-        });
-        const json = await res.json();
-        if (!json.skip && json.markdown) setReinforcement(json.markdown);
-      } catch {}
     }
 
-    // Auto-cierre del resultado tras 4s (más si hay refuerzo)
+    // Auto-cierre del resultado tras unos segundos (feedback ya es corto)
     quizAutoCloseRef.current = setTimeout(() => {
       closeQuiz();
     }, QUIZ_RESULT_DELAY);
@@ -896,8 +914,14 @@ export default function LiveClass() {
                   <span style={{ fontSize: 15 }}>⚡</span>
                   <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Active Recall</span>
                 </div>
-                {quizCountdown !== null && quizAnswer === null && (
+                {quiz && quizCountdown !== null && quizAnswer === null && (
                   <span style={{ color: "var(--text-muted)", fontSize: "0.76rem", fontVariantNumeric: "tabular-nums" }}>{quizCountdown}s</span>
+                )}
+                {!quiz && nextQuizIn !== null && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--text-muted)", fontSize: "0.76rem", fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
+                    Próxima en {nextQuizIn}s
+                  </span>
                 )}
               </div>
 
@@ -926,7 +950,7 @@ export default function LiveClass() {
                   <p style={{ fontSize: "0.85rem", marginBottom: 10, color: "var(--text)", fontWeight: 500, lineHeight: 1.45 }}>{quiz.question}</p>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
-                    {["A", "B", "C", "D"].map((opt) => {
+                    {["A", "B", "C"].map((opt) => {
                       if (!quiz.options?.[opt]) return null;
                       const isSelected = quizAnswer === opt;
                       const isCorrect = quiz.correct === opt;
@@ -975,14 +999,10 @@ export default function LiveClass() {
                     </div>
                   )}
 
-                  {reinforcement && (
-                    <div style={{ marginTop: 10, background: "rgba(124,109,242,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px" }}>
-                      <p style={{ fontSize: "0.78rem", fontWeight: 700, marginBottom: 6, color: "var(--accent)" }}>Refuerzo</p>
-                      <div style={{ fontSize: "0.81rem", lineHeight: 1.5 }}>
-                        <ReactMarkdown>{reinforcement}</ReactMarkdown>
-                      </div>
-                      <MindMap markdown={reinforcement} />
-                    </div>
+                  {quizAnswer !== null && quiz.explanation && (
+                    <p style={{ marginTop: 8, fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.45 }}>
+                      💡 {quiz.explanation}
+                    </p>
                   )}
                 </div>
               ) : (
