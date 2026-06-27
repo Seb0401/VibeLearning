@@ -1,4 +1,14 @@
-import { groq } from "@/lib/groq";
+function stripMarkdown(text) {
+  return text
+    .replace(/#{1,6}\s*/g, "")      // headers
+    .replace(/\*\*(.+?)\*\*/g, "$1") // bold
+    .replace(/\*(.+?)\*/g, "$1")     // italic
+    .replace(/`(.+?)`/g, "$1")       // inline code
+    .replace(/[-*+]\s+/g, "")        // list bullets
+    .replace(/\n{2,}/g, " ")         // doble salto → espacio
+    .replace(/\n/g, " ")             // salto simple → espacio
+    .trim();
+}
 
 export async function POST(req) {
   try {
@@ -8,43 +18,45 @@ export async function POST(req) {
       return Response.json({ error: "missing question" }, { status: 400 });
     }
 
-    const transcriptWords = (transcript ?? "").split(/\s+/);
-    const transcriptTruncated = transcriptWords.slice(-3000).join(" ");
-
-    const material = material_summary?.trim() || "No se subió material.";
-
-    const prompt = `Eres un asistente educativo dentro de una clase en vivo.
-Material: """${material}"""
-Transcripción hasta ahora (últimas ~3000 palabras): """${transcriptTruncated}"""
-Pregunta del estudiante: "${question}"
-Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones, máximo 50 palabras salvo que pidan más detalle. Ve directo a la idea. Si no se puede responder con el contexto, dilo honestamente.`;
+    const agentServiceUrl = process.env.AGENT_SERVICE_URL || "http://localhost:8080";
 
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const completion = await groq.chat.completions.create({
-          model: "openai/gpt-oss-120b",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 160,
+        const response = await fetch(`${agentServiceUrl}/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            question,
+            transcript,
+            material_summary,
+          }),
         });
 
-        const rawText = completion.choices[0]?.message?.content ?? "";
-        const cleaned = rawText
-          .trim()
-          .replace(/\*\*/g, "")
-          .replace(/^#+\s*/gm, "")
-          .replace(/^-\s+/gm, "")
-          .replace(/^\{?"?answer"?:?\s*"?/i, "")
-          .replace(/"?\}?$/g, "")
-          .trim();
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[chatbot] agent service error (attempt ${attempt}):`, errorText);
+          if (attempt === 2) {
+            return Response.json({ skip: true });
+          }
+          continue;
+        }
 
-        if (cleaned) {
-          return Response.json({ answer: cleaned });
+        const data = await response.json();
+        const rawAnswer = data.answer ?? "";
+        const answer = stripMarkdown(rawAnswer);
+        const source = data.source ?? "rag_local";
+
+        if (answer) {
+          return Response.json({ answer, source });
         }
 
         if (attempt === 2) {
           return Response.json({ skip: true });
         }
       } catch (innerErr) {
+        console.error(`[chatbot] inner error (attempt ${attempt}):`, innerErr);
         if (attempt === 2) {
           return Response.json({ skip: true });
         }
