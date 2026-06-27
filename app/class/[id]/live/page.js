@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { Mic, MicOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import MindMap from "@/components/MindMap";
+import ObsidianCanvas from "@/app/components/ObsidianCanvas";
 import ReactMarkdown from "react-markdown";
 
 const CHUNK_INTERVAL = 7000;
@@ -120,6 +121,9 @@ export default function LiveClass() {
   const [chatLoading, setChatLoading] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finalData, setFinalData] = useState(null);
+  const [canvasNodes, setCanvasNodes] = useState([]);
+  const [canvasLoading, setCanvasLoading] = useState(false);
+  const [canvasError, setCanvasError] = useState(false);
   const [reportChatHistory, setReportChatHistory] = useState([]);
   const [reportChatInput, setReportChatInput] = useState("");
   const [reportChatLoading, setReportChatLoading] = useState(false);
@@ -443,6 +447,7 @@ export default function LiveClass() {
         quizStats,
         maxStreak: maxStreakRef.current,
       });
+      fetchCanvasData();
       const supabase = createClient();
       await supabase.from("classes").update({
         title: json.title || "Clase sin título",
@@ -458,6 +463,39 @@ export default function LiveClass() {
       }).eq("id", classId);
     } catch {
       setFinishing(false);
+    }
+  }
+
+  async function fetchCanvasData() {
+    setCanvasLoading(true);
+    setCanvasError(false);
+    try {
+      const chatHistText = chatHistory.map(c => `${c.role === 'user' ? 'Estudiante' : 'Asistente'}: ${c.text}`).join('\n');
+      const conceptNames = conceptsRef.current.map(c => typeof c === 'string' ? c : c.name || c);
+      
+      const res = await fetch("/api/generate-canvas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: transcriptRef.current,
+          material_summary: materialSummary,
+          concepts: conceptNames,
+          chat_history: chatHistText
+        })
+      });
+      
+      if (!res.ok) throw new Error("Error generating canvas");
+      const data = await res.json();
+      if (data && data.nodes) {
+        setCanvasNodes(data.nodes);
+      } else {
+        setCanvasError(true);
+      }
+    } catch (err) {
+      console.error("Canvas generation error:", err);
+      setCanvasError(true);
+    } finally {
+      setCanvasLoading(false);
     }
   }
 
@@ -553,7 +591,7 @@ export default function LiveClass() {
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
           {/* MAIN REPORT AREA */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
             {/* Metrics row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, padding: "14px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
@@ -575,7 +613,7 @@ export default function LiveClass() {
             </div>
 
             {/* Summary + MindMap */}
-            <div style={{ flex: 1, display: "flex", overflow: "hidden", padding: "14px 16px", gap: 12 }}>
+            <div style={{ height: "460px", display: "flex", flexShrink: 0, padding: "14px 16px", gap: 12 }}>
 
               {/* AI Summary */}
               {finalData.final_summary && (
@@ -626,6 +664,43 @@ export default function LiveClass() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Obsidian Canvas */}
+            <div style={{ padding: "0 16px 24px", flexShrink: 0 }}>
+              <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124, 108, 248, 0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      🗺️
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>🗺️ Mapa de conocimiento</h2>
+                      <p style={{ fontSize: 10, color: "var(--text-3)" }}>Explora los conceptos y sus relaciones de manera interactiva</p>
+                    </div>
+                  </div>
+                  {canvasLoading && (
+                    <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>Generando mapa...</span>
+                  )}
+                </div>
+                <div style={{ padding: "12px 16px" }}>
+                  {canvasLoading ? (
+                    <div style={{ height: "300px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                      <div className="animate-spin" style={{ width: "30px", height: "30px", border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%" }} />
+                      <span style={{ fontSize: "12px", color: "var(--text-3)" }}>El Asistente IA está extrayendo relaciones tridimensionales de la clase...</span>
+                    </div>
+                  ) : canvasError || canvasNodes.length === 0 ? (
+                    <div style={{ height: "200px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "13px", color: "var(--text-3)" }}>No se pudo cargar el mapa de conocimiento o no hay conceptos suficientes.</span>
+                      <button onClick={fetchCanvasData} style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 16px", color: "white", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}>
+                        Reintentar generación
+                      </button>
+                    </div>
+                  ) : (
+                    <ObsidianCanvas nodes={canvasNodes} />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
