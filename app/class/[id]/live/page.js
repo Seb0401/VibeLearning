@@ -67,11 +67,11 @@ function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainCli
   const optColor = isMic ? "#60A5FA" : "#A78BFA";
   const optBg    = isMic ? "rgba(96,165,250,0.22)" : "rgba(167,139,250,0.22)";
 
-  // Fan positions: [left, top-center, right] relative to button center
+  // Fan positions: [left, bottom-center, right] — opens downward to stay within overflow:hidden column
   const fanPositions = [
-    { x: -90, y: -94 },
-    { x:   0, y: -116 },
-    { x:  90, y: -94 },
+    { x: -90, y: 90 },
+    { x:   0, y: 112 },
+    { x:  90, y: 90 },
   ];
 
   return (
@@ -434,9 +434,66 @@ export default function LiveClass() {
     if (micExpanded) setMicExpanded(false);
   }
 
-  function handleCamOption(key) {
+  async function handleCamOption(key) {
     setVisualSource(key);
     setCamExpanded(false);
+    try {
+      let dataUrl = null;
+      let label = "";
+
+      if (key === "screenshot") {
+        label = "Captura de pantalla";
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
+        await new Promise(res => setTimeout(res, 250));
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        dataUrl = canvas.toDataURL("image/png");
+
+      } else if (key === "upload") {
+        label = "Imagen subida";
+        dataUrl = await new Promise((resolve) => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) { resolve(null); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target.result);
+            reader.readAsDataURL(file);
+          };
+          input.click();
+        });
+
+      } else if (key === "camera") {
+        label = "Foto con cámara";
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
+        await new Promise(res => setTimeout(res, 300));
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      }
+
+      if (dataUrl) {
+        setTranscriptLines(prev => [...prev, { time: nowHMS(), type: "image", dataUrl, label }]);
+      }
+    } catch (err) {
+      if (err?.name !== "NotAllowedError" && err?.name !== "AbortError") {
+        console.error("Visual capture error:", err);
+      }
+    }
   }
 
   async function fetchConcepts(currentTranscript) {
@@ -921,11 +978,11 @@ export default function LiveClass() {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
         {/* 3-column grid */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "visible", minWidth: 0 }}>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "hidden", minHeight: 0 }}>
 
           {/* ── COL 2: TRANSCRIPT ── */}
-          <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "visible" }}>
-            <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))", overflow: "visible" }}>
+          <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+            <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))", position: "relative", zIndex: 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                 <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Transcript en vivo</span>
                 {recording && (
@@ -969,7 +1026,7 @@ export default function LiveClass() {
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
               {transcriptLines.length === 0 && (
                 <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
                   La transcripción aparecerá aquí<br />cuando inicies la clase
@@ -978,13 +1035,26 @@ export default function LiveClass() {
               {transcriptLines.map((line, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
                   <div style={{ flexShrink: 0, paddingTop: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: line.type === "image" ? "#A78BFA" : "var(--accent)" }} />
                   </div>
-                  <div>
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 3 }}>{line.time}</span>
-                    <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
-                      <HighlightedText text={line.text} conceptNames={conceptNames} />
-                    </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 4 }}>{line.time}</span>
+                    {line.type === "image" ? (
+                      <div>
+                        <span style={{ fontSize: "0.71rem", color: "#A78BFA", fontWeight: 600, display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+                          📷 {line.label}
+                        </span>
+                        <img
+                          src={line.dataUrl}
+                          alt={line.label}
+                          style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid rgba(167,139,250,0.3)", display: "block" }}
+                        />
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
+                        <HighlightedText text={line.text} conceptNames={conceptNames} />
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
