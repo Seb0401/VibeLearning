@@ -73,12 +73,14 @@ export default function Sidebar({ userName }) {
   return (
     <aside style={{ width: 230, flexShrink: 0, background: "var(--sidebar)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", position: "sticky", top: 0 }}>
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "22px 18px 18px" }}>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg, #7C6CF8 0%, #A78BFA 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,108,248,0.3)" }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <Link href="/dashboard" style={{ textDecoration: "none" }}>
+        <div className="nav-item" style={{ display: "flex", alignItems: "center", gap: 10, padding: "22px 18px 18px", borderRadius: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg, #7C6CF8 0%, #A78BFA 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,108,248,0.3)" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)", letterSpacing: "-0.01em" }}>VibeLearning</span>
         </div>
-        <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)", letterSpacing: "-0.01em" }}>VibeLearning</span>
-      </div>
+      </Link>
 
       {/* Nav */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 10px" }}>
