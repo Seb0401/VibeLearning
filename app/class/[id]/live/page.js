@@ -179,6 +179,22 @@ export default function LiveClass() {
   const [reportChatHistory, setReportChatHistory] = useState([]);
   const [reportChatInput, setReportChatInput] = useState("");
   const [reportChatLoading, setReportChatLoading] = useState(false);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+  const mapCardRef = useRef(null);
+
+  useEffect(() => {
+    function onFsChange() { setIsMapFullscreen(!!document.fullscreenElement); }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  async function toggleMapFullscreen() {
+    if (!document.fullscreenElement) {
+      await mapCardRef.current?.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  }
 
   // Gamification
   const [score, setScore] = useState(0);
@@ -839,11 +855,11 @@ export default function LiveClass() {
             </div>
 
             {/* Summary + MindMap */}
-            <div style={{ height: "460px", display: "flex", flexShrink: 0, padding: "14px 16px", gap: 12 }}>
+            <div style={{ height: "560px", display: "flex", flexShrink: 0, padding: "14px 16px", gap: 12 }}>
 
               {/* AI Summary */}
               {finalData.final_summary && (
-                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
+                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", flex: "0 1 42%", minWidth: 0, minHeight: 0, overflow: "hidden" }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <RI s={14}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/></RI>
@@ -861,15 +877,23 @@ export default function LiveClass() {
 
               {/* MindMap */}
               {finalData.final_mindmap && (
-                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(96,165,250,0.1)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <RI s={14}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></RI>
+                <div ref={mapCardRef} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", flex: "1 1 58%", minWidth: 0, minHeight: 0, overflow: "hidden" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, flexShrink: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(96,165,250,0.1)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <RI s={14}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></RI>
+                      </div>
+                      <div>
+                        <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Mapa mental</h2>
+                        <p style={{ fontSize: 10, color: "var(--text-3)" }}>Visualización de conceptos</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Mapa mental</h2>
-                      <p style={{ fontSize: 10, color: "var(--text-3)" }}>Visualización de conceptos</p>
-                    </div>
+                    <button onClick={toggleMapFullscreen} style={{ background: isMapFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isMapFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isMapFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                      {isMapFullscreen
+                        ? <RI s={13}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></RI>
+                        : <RI s={13}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></RI>
+                      }
+                    </button>
                   </div>
                   <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
                     <MindMap markdown={finalData.final_mindmap} />
