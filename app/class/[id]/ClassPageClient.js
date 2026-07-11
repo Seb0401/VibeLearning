@@ -2,6 +2,9 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import MindMap from "@/components/MindMap";
+import SummaryMarkdown from "@/components/SummaryMarkdown";
+import ObsidianCanvas from "@/app/components/ObsidianCanvas";
+import { createClient } from "@/lib/supabase/client";
 
 function RI({ s = 16, children }) {
   return (
@@ -9,46 +12,6 @@ function RI({ s = 16, children }) {
       stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       {children}
     </svg>
-  );
-}
-
-function stripMd(text) {
-  return (text || "")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/\*(.+?)\*/g, "$1")
-    .replace(/`(.+?)`/g, "$1")
-    .replace(/^[-*]\s+/gm, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function HighlightedSummary({ text, concepts }) {
-  const plain = stripMd(text);
-  const paras = plain.split(/\n{2,}/).filter(Boolean).slice(0, 4);
-  const fullText = paras.join(" ");
-
-  if (!concepts.length) {
-    return <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>{fullText}</p>;
-  }
-
-  const names = concepts
-    .map(c => (typeof c === "string" ? c : c.name))
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
-
-  const escaped = names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-  const parts = fullText.split(new RegExp(`(${escaped})`, "gi"));
-
-  return (
-    <p style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.75, margin: 0 }}>
-      {parts.map((part, i) => {
-        const isMatch = names.some(n => n.toLowerCase() === part.toLowerCase());
-        return isMatch
-          ? <span key={i} style={{ color: "var(--accent)", fontWeight: 500 }}>{part}</span>
-          : part;
-      })}
-    </p>
   );
 }
 
@@ -71,7 +34,7 @@ const QUICK_ACTIONS = [
 const OPTION_KEYS = ["A", "B", "C", "D"];
 
 export default function ClassPageClient({ cls }) {
-  const { transcript, concepts = [], material_summary, final_summary, final_mindmap } = cls.data ?? {};
+  const { transcript, concepts = [], material_summary, final_summary, final_mindmap, canvas_nodes = [] } = cls.data ?? {};
   const duration = estimateDuration(transcript);
 
   const [quizTab, setQuizTab]     = useState(0);
@@ -85,6 +48,43 @@ export default function ClassPageClient({ cls }) {
   const msgsEndRef = useRef(null);
   const mapContainerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [canvasNodes, setCanvasNodes] = useState(canvas_nodes);
+  const [canvasLoading, setCanvasLoading] = useState(false);
+  const [canvasError, setCanvasError] = useState(false);
+
+  async function generateCanvas() {
+    setCanvasLoading(true);
+    setCanvasError(false);
+    try {
+      const res = await fetch("/api/generate-canvas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: transcript || "",
+          material_summary: material_summary || "",
+          concepts: concepts.map(c => (typeof c === "string" ? c : c.name || c)),
+          chat_history: "",
+        }),
+      });
+      if (!res.ok) throw new Error("Error generating canvas");
+      const data = await res.json();
+      if (data?.nodes?.length) {
+        setCanvasNodes(data.nodes);
+        const supabase = createClient();
+        await supabase.from("classes").update({
+          data: { ...cls.data, canvas_nodes: data.nodes },
+        }).eq("id", cls.id);
+      } else {
+        setCanvasError(true);
+      }
+    } catch (err) {
+      console.error("Canvas generation error:", err);
+      setCanvasError(true);
+    } finally {
+      setCanvasLoading(false);
+    }
+  }
 
   useEffect(() => {
     msgsEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -237,9 +237,11 @@ export default function ClassPageClient({ cls }) {
 
           <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-            {/* Summary with highlights */}
+            {/* Summary */}
             {final_summary && (
-              <HighlightedSummary text={final_summary} concepts={concepts} />
+              <div style={{ fontSize: 14, color: "var(--text-2)", lineHeight: 1.75 }}>
+                <SummaryMarkdown text={final_summary} />
+              </div>
             )}
 
             {/* Stats chips */}
@@ -343,32 +345,71 @@ export default function ClassPageClient({ cls }) {
           </div>
         </div>
 
-        {/* ── CENTER: MAPA MENTAL ── */}
+        {/* ── CENTER: MAPA MENTAL + MAPA DE CONOCIMIENTO ── */}
         <div style={{ ...COL, borderRight: "1px solid var(--border)" }}>
-          <div style={PANEL_HDR}>
-            <div style={HDR_ICON}>
-              {SPARKLE}
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: 0 }}>Mapa mental</h2>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={toggleFullscreen} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 7px", color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                <RI s={13}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></RI>
-              </button>
-              <button onClick={toggleFullscreen} style={{ background: isFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                {isFullscreen
-                  ? <RI s={13}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></RI>
-                  : <RI s={13}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></RI>
-                }
-              </button>
-            </div>
-          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
 
-          <div ref={mapContainerRef} style={{ flex: 1, overflow: "hidden", padding: "12px", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
-            {final_mindmap ? (
-              <MindMap markdown={final_mindmap} />
-            ) : (
-              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", fontSize: 13 }}>
-                Sin mapa mental disponible
+            {/* Mapa mental clásico */}
+            <div ref={mapContainerRef} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, display: "flex", flexDirection: "column", height: isFullscreen ? "100%" : 320, flexShrink: 0, overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, flexShrink: 0 }}>
+                <div style={HDR_ICON}>
+                  {SPARKLE}
+                  <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: 0 }}>Mapa mental</h2>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={toggleFullscreen} style={{ background: isFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                    {isFullscreen
+                      ? <RI s={13}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></RI>
+                      : <RI s={13}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></RI>
+                    }
+                  </button>
+                </div>
+              </div>
+              <div style={{ flex: 1, overflow: "hidden", padding: "12px", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+                {final_mindmap ? (
+                  <MindMap markdown={final_mindmap} />
+                ) : (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", fontSize: 13 }}>
+                    Sin mapa mental disponible
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mapa de conocimiento (Obsidian) */}
+            {!isFullscreen && (
+              <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", flexShrink: 0 }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,108,248,0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>🗺️</div>
+                    <div>
+                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>🗺️ Mapa de conocimiento</h2>
+                      <p style={{ fontSize: 10, color: "var(--text-3)" }}>Explora los conceptos y sus relaciones de manera interactiva</p>
+                    </div>
+                  </div>
+                  {canvasLoading && (
+                    <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, flexShrink: 0 }}>Generando mapa...</span>
+                  )}
+                </div>
+                <div style={{ padding: "12px 16px" }}>
+                  {canvasLoading ? (
+                    <div style={{ height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                      <div className="animate-spin" style={{ width: 30, height: 30, border: "3px solid var(--border)", borderTopColor: "var(--accent)", borderRadius: "50%" }} />
+                      <span style={{ fontSize: 12, color: "var(--text-3)" }}>El Asistente IA está extrayendo relaciones de la clase...</span>
+                    </div>
+                  ) : canvasNodes.length > 0 ? (
+                    <ObsidianCanvas nodes={canvasNodes} />
+                  ) : (
+                    <div style={{ height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", maxWidth: 260 }}>
+                        {canvasError ? "No se pudo generar el mapa de conocimiento." : "Este mapa aún no se ha generado para esta clase."}
+                      </span>
+                      <button onClick={generateCanvas} style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "7px 16px", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                        {canvasError ? "Reintentar" : "Generar mapa de conocimiento"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

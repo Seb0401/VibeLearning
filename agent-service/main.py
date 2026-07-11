@@ -38,11 +38,10 @@ from tools import transcript_var, material_summary_var
 
 app = FastAPI(title="Agent Service - VibeLearning")
 
-use_vertexai = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true"
-if use_vertexai:
-    client = genai.Client()
-else:
-    client = genai.Client(vertexai=False, api_key=os.environ.get("GOOGLE_API_KEY"))
+# NOTA: agent.py fuerza GOOGLE_GENAI_USE_VERTEXAI=true al importarse (para el root_agent
+# de ADK, que sí usa Vertex). Este cliente es solo para /generate-canvas y debe usar
+# siempre la API key simple de AI Studio, sin importar esa variable de entorno.
+client = genai.Client(vertexai=False, api_key=os.environ.get("GOOGLE_API_KEY"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -180,7 +179,7 @@ Responde SOLO con este JSON sin texto adicional:
 
     response = await asyncio.to_thread(
         client.models.generate_content,
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         contents=prompt
     )
 
