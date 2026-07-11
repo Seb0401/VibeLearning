@@ -12,6 +12,7 @@ export async function POST(request) {
       file: audio,
       model: "whisper-large-v3-turbo",
       response_format: "json",
+      language: "es",
     });
 
     return Response.json({ text: transcription.text ?? "" });
