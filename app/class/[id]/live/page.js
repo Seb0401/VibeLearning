@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import MindMap from "@/components/MindMap";
 import ObsidianCanvas from "@/app/components/ObsidianCanvas";
@@ -63,13 +63,59 @@ function VibeLearningLogo() {
   );
 }
 
-function LiveMicButton({ recording, onToggle }) {
-  const Icon = recording ? MicOff : Mic;
+function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainClick, options, selectedKey, onOptionClick }) {
+  const isMic    = colorClass === "mic";
+  const optColor = isMic ? "#60A5FA" : "#A78BFA";
+  const optBg    = isMic ? "rgba(96,165,250,0.22)" : "rgba(167,139,250,0.22)";
+
+  // Fan positions: [left, bottom-center, right] — opens downward to stay within overflow:hidden column
+  const fanPositions = [
+    { x: -90, y: 90 },
+    { x:   0, y: 112 },
+    { x:  90, y: 90 },
+  ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 9 }}>
+    <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      {/* Radial option pills */}
+      {isExpanded && options.map(({ key, icon, label }, idx) => {
+        const { x, y } = fanPositions[idx];
+        const sel = selectedKey === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOptionClick(key); }}
+            style={{
+              position: "absolute",
+              top: "50%", left: "50%",
+              transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+              background: sel ? optBg : "rgba(13,13,28,0.92)",
+              border: `1px solid ${sel ? optColor : "rgba(255,255,255,0.13)"}`,
+              borderRadius: 99,
+              padding: "5px 12px",
+              color: sel ? optColor : "rgba(255,255,255,0.72)",
+              fontSize: "0.69rem",
+              fontWeight: sel ? 700 : 400,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              display: "flex", alignItems: "center", gap: 5,
+              zIndex: 50,
+              boxShadow: sel ? `0 4px 20px ${optBg}` : "0 4px 20px rgba(0,0,0,0.48)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              transition: "all 0.12s",
+            }}
+          >
+            <span style={{ fontSize: "0.82rem" }}>{icon}</span>
+            <span>{label}</span>
+          </button>
+        );
+      })}
+
+      {/* Main circular button */}
       <div style={{ position: "relative", width: 108, height: 108, display: "grid", placeItems: "center" }}>
-        {recording && (
+        {isRecording && (
           <>
             <span className="mic-ring mic-ring-one" />
             <span className="mic-ring mic-ring-two" />
@@ -78,27 +124,29 @@ function LiveMicButton({ recording, onToggle }) {
         )}
         <button
           type="button"
-          className={`live-mic-button ${recording ? "is-recording" : ""}`}
-          onClick={onToggle}
-          aria-label={recording ? "Detener grabacion" : "Iniciar grabacion"}
-          title={recording ? "Detener grabacion" : "Iniciar grabacion"}
+          className={`live-src-btn live-src-btn--${colorClass}${isRecording ? " is-recording" : ""}${isExpanded ? " is-expanded" : ""}`}
+          onClick={onMainClick}
         >
-          <Icon size={36} strokeWidth={2.15} />
+          <MainIcon size={36} strokeWidth={2.15} />
         </button>
       </div>
+
+      {/* Waveform / static bar */}
       <div style={{ height: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-        {recording ? (
-          <>
-            {[0, 1, 2, 3, 4].map((bar) => (
-              <span key={bar} className="mic-level" style={{ animationDelay: `${bar * 90}ms` }} />
-            ))}
-          </>
+        {isRecording ? (
+          [0,1,2,3,4].map(bar => <span key={bar} className="mic-level" style={{ animationDelay: `${bar * 90}ms` }} />)
         ) : (
           <span style={{ width: 34, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.11)" }} />
         )}
       </div>
-      <span style={{ color: recording ? "#f87171" : "var(--text-2)", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-        {recording ? "Detener" : "Iniciar"}
+
+      {/* Label */}
+      <span style={{
+        fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+        color: isRecording ? "#f87171" : isExpanded ? optColor : "var(--text-2)",
+        transition: "color 0.2s",
+      }}>
+        {isRecording ? "Detener" : isMic ? "Audio" : "Visual"}
       </span>
     </div>
   );
@@ -108,6 +156,10 @@ export default function LiveClass() {
   const { id: classId } = useParams();
 
   const [recording, setRecording] = useState(false);
+  const [audioSource, setAudioSource] = useState("mic"); // "mic" | "system" | "both"
+  const [visualSource, setVisualSource] = useState(null); // null | "screenshot" | "upload" | "camera"
+  const [micExpanded, setMicExpanded] = useState(false);
+  const [camExpanded, setCamExpanded] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [transcriptLines, setTranscriptLines] = useState([]);
   const [concepts, setConcepts] = useState([]);
@@ -146,6 +198,10 @@ export default function LiveClass() {
   const streamRef = useRef(null);
   const chunkTimerRef = useRef(null);
   const reportChatEndRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const displayStreamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const audioSourceRef = useRef("mic");
 
   // Quiz refs
   const quizIntervalRef = useRef(null);
@@ -182,6 +238,8 @@ export default function LiveClass() {
     streakRef.current = streak;
     if (streak > maxStreakRef.current) maxStreakRef.current = streak;
   }, [streak]);
+
+  useEffect(() => { audioSourceRef.current = audioSource; }, [audioSource]);
 
   function getStreakMultiplier(s) {
     if (s >= 5) return 3;
@@ -275,15 +333,75 @@ export default function LiveClass() {
     }, CHUNK_INTERVAL);
   }
 
-  async function startRecording() {
+  async function startRecording(srcOverride) {
+    const src = srcOverride !== undefined ? srcOverride : audioSourceRef.current;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
+      let finalStream;
+
+      if (src === "mic") {
+        finalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = finalStream;
+
+      } else if (src === "system") {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false },
+        });
+        displayStream.getVideoTracks().forEach((t) => t.stop());
+        const audioTracks = displayStream.getAudioTracks();
+        if (!audioTracks.length) {
+          displayStream.getTracks().forEach((t) => t.stop());
+          alert("No se capturó audio. Al compartir, selecciona una pestaña y activa 'Compartir audio de la pestaña'.");
+          return;
+        }
+        displayStreamRef.current = displayStream;
+        finalStream = new MediaStream(audioTracks);
+        streamRef.current = finalStream;
+
+      } else {
+        // "both" src — micrófono + audio del sistema, mezclados
+        const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        let displayStream;
+        try {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: { suppressLocalAudioPlayback: false, echoCancellation: false, noiseSuppression: false },
+          });
+          displayStream.getVideoTracks().forEach((t) => t.stop());
+        } catch {
+          // Usuario canceló la pantalla — grabamos solo micrófono
+          streamRef.current = micStream;
+          micStreamRef.current = micStream;
+          finalStream = micStream;
+        }
+
+        if (displayStream) {
+          const sysAudio = displayStream.getAudioTracks();
+          if (!sysAudio.length) {
+            // Sin audio de sistema — solo micrófono
+            displayStream.getTracks().forEach((t) => t.stop());
+            finalStream = micStream;
+            streamRef.current = finalStream;
+            micStreamRef.current = micStream;
+          } else {
+            // Mezclar ambas fuentes con AudioContext
+            const ctx = new AudioContext();
+            const dest = ctx.createMediaStreamDestination();
+            ctx.createMediaStreamSource(micStream).connect(dest);
+            ctx.createMediaStreamSource(new MediaStream(sysAudio)).connect(dest);
+            finalStream = dest.stream;
+            streamRef.current = finalStream;
+            micStreamRef.current = micStream;
+            displayStreamRef.current = displayStream;
+            audioCtxRef.current = ctx;
+          }
+        }
+      }
+
       isRecordingRef.current = true;
       setRecording(true);
       scheduleChunk();
 
-      // Timer independiente de quiz — cada 60s
       quizIntervalRef.current = setInterval(() => {
         if (conceptsRef.current.length > 0 && !quizActiveRef.current) {
           const idx = quizConceptIdxRef.current % conceptsRef.current.length;
@@ -292,7 +410,7 @@ export default function LiveClass() {
         }
       }, QUIZ_INTERVAL);
     } catch (err) {
-      alert("No se pudo acceder al micrófono: " + err.message);
+      alert("No se pudo acceder al audio: " + err.message);
     }
   }
 
@@ -304,7 +422,97 @@ export default function LiveClass() {
       mediaRecorderRef.current.stop();
     }
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    displayStreamRef.current?.getTracks().forEach((t) => t.stop());
+    audioCtxRef.current?.close();
+    micStreamRef.current = null;
+    displayStreamRef.current = null;
+    audioCtxRef.current = null;
     setRecording(false);
+  }
+
+  function handleMicMainClick() {
+    if (recording) {
+      stopRecording();
+      setMicExpanded(false);
+    } else {
+      setMicExpanded(prev => !prev);
+      if (camExpanded) setCamExpanded(false);
+    }
+  }
+
+  async function handleMicOption(key) {
+    setAudioSource(key);
+    audioSourceRef.current = key;
+    setMicExpanded(false);
+    await startRecording(key);
+  }
+
+  function handleCamMainClick() {
+    setCamExpanded(prev => !prev);
+    if (micExpanded) setMicExpanded(false);
+  }
+
+  async function handleCamOption(key) {
+    setVisualSource(key);
+    setCamExpanded(false);
+    try {
+      let dataUrl = null;
+      let label = "";
+
+      if (key === "screenshot") {
+        label = "Captura de pantalla";
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
+        await new Promise(res => setTimeout(res, 250));
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        dataUrl = canvas.toDataURL("image/png");
+
+      } else if (key === "upload") {
+        label = "Imagen subida";
+        dataUrl = await new Promise((resolve) => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+          input.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) { resolve(null); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target.result);
+            reader.readAsDataURL(file);
+          };
+          input.click();
+        });
+
+      } else if (key === "camera") {
+        label = "Foto con cámara";
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
+        await new Promise(res => setTimeout(res, 300));
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      }
+
+      if (dataUrl) {
+        setTranscriptLines(prev => [...prev, { time: nowHMS(), type: "image", dataUrl, label }]);
+      }
+    } catch (err) {
+      if (err?.name !== "NotAllowedError" && err?.name !== "AbortError") {
+        console.error("Visual capture error:", err);
+      }
+    }
   }
 
   async function fetchConcepts(currentTranscript) {
@@ -814,7 +1022,9 @@ export default function LiveClass() {
         {recording && (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-            <span style={{ color: "#22c55e", fontSize: "0.82rem", fontWeight: 600 }}>Grabando</span>
+            <span style={{ color: "#22c55e", fontSize: "0.82rem", fontWeight: 600 }}>
+              {audioSource === "mic" ? "🎤 Grabando" : audioSource === "system" ? "🖥️ Capturando tab" : "🔀 Mic + Tab"}
+            </span>
             <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>{formatTimer(elapsed)}</span>
           </div>
         )}
@@ -858,11 +1068,11 @@ export default function LiveClass() {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
         {/* 3-column grid */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "hidden", minHeight: 0 }}>
 
           {/* ── COL 2: TRANSCRIPT ── */}
-          <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-            <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))" }}>
+          <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+            <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))", position: "relative", zIndex: 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                 <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Transcript en vivo</span>
                 {recording && (
@@ -872,10 +1082,41 @@ export default function LiveClass() {
                   </div>
                 )}
               </div>
-              <LiveMicButton recording={recording} onToggle={recording ? stopRecording : startRecording} />
+
+              {/* Dos botones de fuente: audio (azul) + visual (morado) */}
+              <div style={{ display: "flex", gap: 32, justifyContent: "center", paddingTop: 8 }}>
+                <SourceButton
+                  colorClass="mic"
+                  MainIcon={recording ? MicOff : Mic}
+                  isRecording={recording}
+                  isExpanded={micExpanded}
+                  onMainClick={handleMicMainClick}
+                  options={[
+                    { key: "mic",    icon: "🎤", label: "Micrófono" },
+                    { key: "system", icon: "🖥️", label: "Pantalla / Tab" },
+                    { key: "both",   icon: "🔀", label: "Mic + Tab" },
+                  ]}
+                  selectedKey={audioSource}
+                  onOptionClick={handleMicOption}
+                />
+                <SourceButton
+                  colorClass="cam"
+                  MainIcon={Camera}
+                  isRecording={false}
+                  isExpanded={camExpanded}
+                  onMainClick={handleCamMainClick}
+                  options={[
+                    { key: "screenshot", icon: "🖥️", label: "Captura" },
+                    { key: "upload",     icon: "📁", label: "Subir archivo" },
+                    { key: "camera",     icon: "📷", label: "Cámara" },
+                  ]}
+                  selectedKey={visualSource}
+                  onOptionClick={handleCamOption}
+                />
+              </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
               {transcriptLines.length === 0 && (
                 <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
                   La transcripción aparecerá aquí<br />cuando inicies la clase
@@ -884,13 +1125,26 @@ export default function LiveClass() {
               {transcriptLines.map((line, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
                   <div style={{ flexShrink: 0, paddingTop: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: line.type === "image" ? "#A78BFA" : "var(--accent)" }} />
                   </div>
-                  <div>
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 3 }}>{line.time}</span>
-                    <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
-                      <HighlightedText text={line.text} conceptNames={conceptNames} />
-                    </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 4 }}>{line.time}</span>
+                    {line.type === "image" ? (
+                      <div>
+                        <span style={{ fontSize: "0.71rem", color: "#A78BFA", fontWeight: 600, display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
+                          📷 {line.label}
+                        </span>
+                        <img
+                          src={line.dataUrl}
+                          alt={line.label}
+                          style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid rgba(167,139,250,0.3)", display: "block" }}
+                        />
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
+                        <HighlightedText text={line.text} conceptNames={conceptNames} />
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1155,37 +1409,60 @@ export default function LiveClass() {
           from { width: 100%; }
           to   { width: 0%; }
         }
-        .live-mic-button {
+        /* ── Source buttons (mic = blue, cam = purple) ── */
+        .live-src-btn {
           position: relative;
           width: 78px;
           height: 78px;
-          border: 1px solid rgba(167,139,250,0.48);
           border-radius: 50%;
           color: white;
-          background:
-            radial-gradient(circle at 34% 28%, rgba(255,255,255,0.32), transparent 27%),
-            linear-gradient(135deg, #7c6cf8 0%, #9b8cff 52%, #5b8def 100%);
-          box-shadow: 0 18px 44px rgba(124,108,248,0.36), inset 0 1px 0 rgba(255,255,255,0.22);
           display: grid;
           place-items: center;
           cursor: pointer;
-          transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, filter 160ms ease;
           z-index: 2;
+          transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
         }
-        .live-mic-button:hover {
-          transform: translateY(-1px) scale(1.03);
-          box-shadow: 0 22px 54px rgba(124,108,248,0.44), inset 0 1px 0 rgba(255,255,255,0.26);
+        .live-src-btn:hover  { transform: translateY(-1px) scale(1.03); }
+        .live-src-btn:active { transform: scale(0.96); }
+
+        /* Blue — mic */
+        .live-src-btn--mic {
+          border: 1px solid rgba(96,165,250,0.48);
+          background:
+            radial-gradient(circle at 34% 28%, rgba(255,255,255,0.32), transparent 27%),
+            linear-gradient(135deg, #3b82f6 0%, #60A5FA 52%, #5b8def 100%);
+          box-shadow: 0 18px 44px rgba(59,130,246,0.36), inset 0 1px 0 rgba(255,255,255,0.22);
         }
-        .live-mic-button:active {
-          transform: scale(0.96);
+        .live-src-btn--mic:hover {
+          box-shadow: 0 22px 54px rgba(59,130,246,0.46), inset 0 1px 0 rgba(255,255,255,0.26);
         }
-        .live-mic-button.is-recording {
+        .live-src-btn--mic.is-recording {
           border-color: rgba(248,113,113,0.55);
           background:
             radial-gradient(circle at 34% 28%, rgba(255,255,255,0.28), transparent 27%),
             linear-gradient(135deg, #ef4444 0%, #fb7185 56%, #f97316 100%);
           box-shadow: 0 18px 48px rgba(239,68,68,0.34), inset 0 1px 0 rgba(255,255,255,0.2);
           animation: micBreath 1.2s ease-in-out infinite;
+        }
+        .live-src-btn--mic.is-expanded:not(.is-recording) {
+          border-color: rgba(96,165,250,0.75);
+          box-shadow: 0 18px 44px rgba(59,130,246,0.48), 0 0 0 5px rgba(96,165,250,0.12), inset 0 1px 0 rgba(255,255,255,0.22);
+        }
+
+        /* Purple — camera */
+        .live-src-btn--cam {
+          border: 1px solid rgba(167,139,250,0.48);
+          background:
+            radial-gradient(circle at 34% 28%, rgba(255,255,255,0.32), transparent 27%),
+            linear-gradient(135deg, #7C6CF8 0%, #A78BFA 52%, #9b8cff 100%);
+          box-shadow: 0 18px 44px rgba(124,108,248,0.36), inset 0 1px 0 rgba(255,255,255,0.22);
+        }
+        .live-src-btn--cam:hover {
+          box-shadow: 0 22px 54px rgba(124,108,248,0.46), inset 0 1px 0 rgba(255,255,255,0.26);
+        }
+        .live-src-btn--cam.is-expanded {
+          border-color: rgba(167,139,250,0.75);
+          box-shadow: 0 18px 44px rgba(124,108,248,0.5), 0 0 0 5px rgba(167,139,250,0.12), inset 0 1px 0 rgba(255,255,255,0.22);
         }
         .mic-ring {
           position: absolute;
