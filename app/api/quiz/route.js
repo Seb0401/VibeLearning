@@ -34,7 +34,7 @@ function shuffleAnswer(parsed) {
 
 export async function POST(req) {
   try {
-    const { concepts = [], transcript = "" } = await req.json();
+    const { concepts = [], transcript = "", recent_questions = [] } = await req.json();
 
     const cleanTranscript = (transcript || "").trim();
     if (!cleanTranscript && (!concepts || concepts.length === 0)) {
@@ -45,10 +45,23 @@ export async function POST(req) {
       ? `Conceptos clave ya detectados (úsalos solo si encajan con el fragmento): ${JSON.stringify(concepts)}`
       : "";
 
+    const recentHint = recent_questions?.length
+      ? `\nPreguntas ya hechas en esta clase — NO repitas la misma idea ni las reformules, busca un ángulo distinto: ${recent_questions.map((q) => `"${q}"`).join(", ")}`
+      : "";
+
+    // ~1 de cada 3 preguntas usa compound-mini, que puede buscar en la web un dato breve
+    // y verificado para variar la pregunta sin salirse del tema — el resto usa el modelo
+    // rápido de texto para no meter latencia de búsqueda en cada ciclo.
+    const useWebVariety = Math.random() < 0.33;
+    const model = useWebVariety ? "groq/compound-mini" : "openai/gpt-oss-20b";
+    const webInstruction = useWebVariety
+      ? `\nPuedes buscar en la web UN dato breve y verificado que esté ESTRECHAMENTE relacionado con este fragmento para darle variedad a la pregunta. No te salgas del tema del fragmento ni inventes datos — si no encuentras algo realmente relevante, pregunta directo sobre el fragmento como siempre.`
+      : "";
+
     const prompt = `Eres un tutor que confirma EN VIVO la comprensión de una clase.
 Fragmento reciente de lo que el profesor acaba de explicar:
 """${cleanTranscript.slice(-1500)}"""
-${conceptsHint}
+${conceptsHint}${recentHint}${webInstruction}
 
 Genera UNA pregunta de opción múltiple (A, B, C) MUY sencilla sobre la IDEA PRINCIPAL de este fragmento, para confirmar que el alumno entendió lo que se acaba de decir.
 Reglas:
@@ -64,7 +77,7 @@ Responde SOLO con JSON: {"concept":"...","question":"...","options":{"A":"...","
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const completion = await groq.chat.completions.create({
-          model: "openai/gpt-oss-20b",
+          model: attempt === 1 ? model : "openai/gpt-oss-20b",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 350,
         });

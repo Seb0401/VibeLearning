@@ -4,20 +4,23 @@ function buildSystem(existingConcepts = []) {
   const existingList = existingConcepts.length
     ? existingConcepts.join(", ")
     : "ninguno";
-  return `Eres un asistente educativo. Analiza este fragmento de transcripción de clase.
+  return `Eres un asistente educativo analizando un fragmento de transcripción de una clase en vivo (puede venir cortado a mitad de frase por los ciclos de captura).
 
-REGLA PRINCIPAL: Solo extrae conceptos que el profesor haya NOMBRADO Y EXPLICADO explícitamente en el texto. No añadas conocimiento de fondo ni conceptos implícitos que el profesor no mencionó.
+TU TRABAJO: identificar los conceptos educativos genuinos que se están discutiendo, aunque el profesor no los haya definido formalmente palabra por palabra — usa tu propio criterio para reconocer de qué tema se está hablando. Si un término te resulta ambiguo, mal transcrito, o no estás seguro de su definición exacta, puedes buscar en la web para confirmarlo o precisar el resumen antes de incluirlo.
 
-Proceso de razonamiento:
-1. Identifica qué términos técnicos o ideas específicas mencionó el profesor
-2. Filtra solo los que fueron definidos o explicados, no los mencionados solo de pasada
-3. Elige MÁXIMO 3 (o menos si no hay suficientes conceptos claros y nuevos)
+FILTRO DE CALIDAD — descarta:
+- Muletillas, saludos, comentarios logísticos ("hoy vamos a ver", "como les decía", "ya casi terminamos")
+- Palabras sueltas sin sustancia educativa o que no tengan sentido como concepto por sí solas
+- Nombres propios de personas/lugares que no sean en sí el tema de la clase
+- Cualquier cosa que no podrías explicarle a un estudiante en 1-2 oraciones con contenido real
+
+Elige MÁXIMO 3 conceptos (o menos si no hay suficientes con sustancia real). Es preferible devolver pocos o ninguno antes que inventar o forzar conceptos débiles.
 
 Conceptos ya extraídos — NO los repitas ni parafrasees: ${existingList}
 
 Responde ÚNICAMENTE con JSON válido, sin markdown ni texto extra.
 Formato exacto: {"concepts":[{"name":"...","summary":"..."}]}
-Si no hay conceptos nuevos claros, devuelve: {"concepts":[]}
+Si no hay conceptos nuevos con sustancia real, devuelve: {"concepts":[]}
 Resumen de cada uno: 1-2 oraciones en lenguaje simple.`;
 }
 
@@ -38,8 +41,11 @@ export async function POST(request) {
 
     const system = buildSystem(existing_concepts);
 
+    // compound-mini puede buscar en la web por su cuenta cuando el modelo lo considera
+    // necesario para confirmar o precisar un concepto — sin que nosotros orquestemos esa
+    // llamada aparte. Si no la necesita, responde igual de rápido que un modelo normal.
     const completion = await groq.chat.completions.create({
-      model: "openai/gpt-oss-20b",
+      model: "groq/compound-mini",
       messages: [
         { role: "system", content: system },
         { role: "user", content: `Transcripción:\n${transcript.slice(0, 4000)}` },

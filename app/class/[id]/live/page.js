@@ -253,6 +253,7 @@ export default function LiveClass() {
   const firstQuizFiredRef = useRef(false);    // dispara el primer quiz al haber transcript
   const streakRef = useRef(0);
   const maxStreakRef = useRef(0);
+  const recentQuestionsRef = useRef([]); // últimas preguntas hechas, para evitar repetición
 
   useEffect(() => {
     if (recording) {
@@ -571,6 +572,7 @@ export default function LiveClass() {
         body: JSON.stringify({
           concepts: conceptsRef.current.slice(-4),
           transcript: transcript.slice(-1500),
+          recent_questions: recentQuestionsRef.current,
         }),
       });
       const json = await res.json();
@@ -578,6 +580,7 @@ export default function LiveClass() {
         quizActiveRef.current = false;
         return;
       }
+      recentQuestionsRef.current = [...recentQuestionsRef.current, json.question].slice(-5);
       setQuiz(json);
       setQuizAnswer(null);
       // Auto-close sin respuesta tras 30s
