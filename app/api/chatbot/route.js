@@ -48,23 +48,44 @@ async function askAgent({ question, transcript, material_summary }) {
 }
 
 // Paracaídas: chatbot original con Groq. Devuelve {answer, source} o null si falla.
-async function askGroq({ question, transcript, material_summary }) {
+// Incluye visual_context (OCR/descripción de capturas) además de transcript y material,
+// para que las notas visuales sigan disponibles cuando el agente ADK no responde.
+async function askGroq({ question, transcript, material_summary, visual_context }) {
   const transcriptWords = (transcript ?? "").split(/\s+/);
   const transcriptTruncated = transcriptWords.slice(-3000).join(" ");
-  const material = material_summary?.trim() || "No se subió material.";
+  const material = material_summary?.trim() || null;
+  const visual = visual_context?.trim() || null;
+
+  const contextParts = [];
+  if (transcriptTruncated) {
+    contextParts.push(`=== TRANSCRIPCIÓN DE CLASE ===\n${transcriptTruncated}`);
+  }
+  if (material) {
+    contextParts.push(`=== MATERIAL PDF ===\n${material}`);
+  }
+  if (visual) {
+    contextParts.push(`=== NOTAS VISUALES (capturas de diapositivas, pizarrón, diagramas — incluye texto OCR extraído) ===\n${visual}`);
+  }
+  const contextBlock = contextParts.length ? contextParts.join("\n\n") : "Sin contexto disponible aún.";
 
   const prompt = `Eres un asistente educativo dentro de una clase en vivo.
-Material: """${material}"""
-Transcripción hasta ahora (últimas ~3000 palabras): """${transcriptTruncated}"""
+
+${contextBlock}
+
 Pregunta del estudiante: "${question}"
-Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máximo 2-3 oraciones, máximo 50 palabras salvo que pidan más detalle. Ve directo a la idea. Si no se puede responder con el contexto, dilo honestamente.`;
+
+INSTRUCCIONES:
+- Responde usando toda la información disponible — transcript, PDF y especialmente las notas visuales si las hay.
+- Si la respuesta está en las NOTAS VISUALES (texto OCR, descripción de imagen), úsala directamente y menciona que viene de una captura visual.
+- Texto plano, SIN markdown, SIN JSON. Máximo 2-3 oraciones, máximo 50 palabras salvo que pidan más detalle.
+- Si no se puede responder con el contexto, dilo honestamente.`;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const completion = await groq.chat.completions.create({
         model: "openai/gpt-oss-120b",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 160,
+        max_tokens: 220,
       });
 
       const rawText = completion.choices[0]?.message?.content ?? "";
@@ -88,20 +109,22 @@ Responde en texto plano, SIN markdown, SIN JSON, solo la respuesta directa. Máx
 
 export async function POST(req) {
   try {
-    const { question, material_summary, transcript } = await req.json();
+    const { question, material_summary, transcript, visual_context } = await req.json();
 
     if (!question) {
       return Response.json({ error: "missing question" }, { status: 400 });
     }
 
-    // 1) Intentamos el agente de subagentes (la feature nueva).
+    // 1) Intentamos el agente de subagentes (la feature nueva). No maneja notas
+    // visuales todavía (el agent-service no las recibe), pero es la ruta primaria.
     const agentResult = await askAgent({ question, transcript, material_summary });
     if (agentResult) {
       return Response.json(agentResult);
     }
 
-    // 2) Si el agente no respondió, paracaídas a Groq para que la demo nunca se quede muda.
-    const groqResult = await askGroq({ question, transcript, material_summary });
+    // 2) Si el agente no respondió, paracaídas a Groq — sí incluye visual_context,
+    // para que la demo nunca se quede muda y las notas visuales sigan disponibles.
+    const groqResult = await askGroq({ question, transcript, material_summary, visual_context });
     if (groqResult) {
       return Response.json(groqResult);
     }

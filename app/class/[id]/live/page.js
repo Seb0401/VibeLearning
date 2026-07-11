@@ -157,6 +157,18 @@ function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainCli
   );
 }
 
+const TYPE_BADGE = {
+  whiteboard:  { bg: "rgba(20,184,166,0.15)",  fg: "#2DD4BF", label: "Pizarrón"    },
+  slide:       { bg: "rgba(96,165,250,0.15)",   fg: "#60A5FA", label: "Diapositiva" },
+  diagram:     { bg: "rgba(124,108,248,0.15)",  fg: "#A78BFA", label: "Diagrama"    },
+  graph:       { bg: "rgba(34,197,94,0.15)",    fg: "#22C55E", label: "Gráfico"     },
+  formula:     { bg: "rgba(251,191,36,0.15)",   fg: "#FBBF24", label: "Fórmula"     },
+  table:       { bg: "rgba(249,115,22,0.15)",   fg: "#FB923C", label: "Tabla"       },
+  screenshot:  { bg: "rgba(99,102,241,0.15)",   fg: "#818CF8", label: "Captura"     },
+  photo:       { bg: "rgba(239,68,68,0.15)",    fg: "#F87171", label: "Foto"        },
+  other:       { bg: "rgba(255,255,255,0.08)",  fg: "#9CA3AF", label: "Visual"      },
+};
+
 export default function LiveClass() {
   const { id: classId } = useParams();
 
@@ -181,10 +193,14 @@ export default function LiveClass() {
   const [canvasNodes, setCanvasNodes] = useState([]);
   const [canvasLoading, setCanvasLoading] = useState(false);
   const [canvasError, setCanvasError] = useState(false);
+  const [visualNotes, setVisualNotes] = useState([]);
+  const [showCamera, setShowCamera] = useState(false);
+  const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [reportChatHistory, setReportChatHistory] = useState([]);
   const [reportChatInput, setReportChatInput] = useState("");
   const [reportChatLoading, setReportChatLoading] = useState(false);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+  const [col2Tab, setCol2Tab] = useState("transcript"); // "transcript" | "images"
   const mapCardRef = useRef(null);
 
   useEffect(() => {
@@ -218,6 +234,10 @@ export default function LiveClass() {
   const isRecordingRef = useRef(false);
   const streamRef = useRef(null);
   const chunkTimerRef = useRef(null);
+  const cameraVideoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const visualNotesRef = useRef([]);
   const reportChatEndRef = useRef(null);
   const micStreamRef = useRef(null);
   const displayStreamRef = useRef(null);
@@ -250,6 +270,10 @@ export default function LiveClass() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatLoading]);
+
+  useEffect(() => {
+    visualNotesRef.current = visualNotes;
+  }, [visualNotes]);
 
   useEffect(() => {
     reportChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -317,6 +341,7 @@ export default function LiveClass() {
 
   function scheduleChunk() {
     if (!isRecordingRef.current) return;
+    if (!streamRef.current || streamRef.current.getTracks().every(t => t.readyState === "ended")) return;
 
     const chunks = [];
     // Detect best supported MIME type (Safari doesn't support audio/webm)
@@ -494,65 +519,17 @@ export default function LiveClass() {
     if (micExpanded) setMicExpanded(false);
   }
 
+  // Cada opción dispara el análisis real con Groq Vision (captureScreen/openCamera/
+  // handleImageFile, definidas más abajo) en vez de solo mostrar la imagen sin procesar.
   async function handleCamOption(key) {
     setVisualSource(key);
     setCamExpanded(false);
-    try {
-      let dataUrl = null;
-      let label = "";
-
-      if (key === "screenshot") {
-        label = "Captura de pantalla";
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
-        await new Promise(res => setTimeout(res, 250));
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
-        stream.getTracks().forEach(t => t.stop());
-        dataUrl = canvas.toDataURL("image/png");
-
-      } else if (key === "upload") {
-        label = "Imagen subida";
-        dataUrl = await new Promise((resolve) => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "image/*";
-          input.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (!file) { resolve(null); return; }
-            const reader = new FileReader();
-            reader.onload = (ev) => resolve(ev.target.result);
-            reader.readAsDataURL(file);
-          };
-          input.click();
-        });
-
-      } else if (key === "camera") {
-        label = "Foto con cámara";
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        await new Promise(res => { video.onloadedmetadata = res; video.play(); });
-        await new Promise(res => setTimeout(res, 300));
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
-        stream.getTracks().forEach(t => t.stop());
-        dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      }
-
-      if (dataUrl) {
-        setTranscriptLines(prev => [...prev, { time: nowHMS(), type: "image", dataUrl, label }]);
-      }
-    } catch (err) {
-      if (err?.name !== "NotAllowedError" && err?.name !== "AbortError") {
-        console.error("Visual capture error:", err);
-      }
+    if (key === "screenshot") {
+      await captureScreen();
+    } else if (key === "camera") {
+      await openCamera();
+    } else if (key === "upload") {
+      fileInputRef.current?.click();
     }
   }
 
@@ -672,6 +649,7 @@ export default function LiveClass() {
           question: q,
           material_summary: materialSummary,
           transcript: transcriptRef.current,
+          visual_context: buildVisualContext(visualNotesRef.current),
         }),
       });
       const json = await res.json();
@@ -686,6 +664,169 @@ export default function LiveClass() {
   function handleChatSubmit(e) {
     e.preventDefault();
     sendChatText(chatQuestion);
+  }
+
+  function buildVisualContext(notes) {
+    if (!notes.length) return "";
+    return notes.map((note, i) => {
+      const typeLabel = TYPE_BADGE[note.content_type]?.label || "Visual";
+      let ctx = `[Imagen ${i + 1} — ${typeLabel}]`;
+      if (note.description)    ctx += `\nDescripción: ${note.description}`;
+      if (note.extracted_text) ctx += `\nTexto OCR visible: ${note.extracted_text}`;
+      if (note.key_concepts?.length) ctx += `\nConceptos clave: ${note.key_concepts.join(", ")}`;
+      if (note.gaps)           ctx += `\nInformación visual no mencionada verbalmente: ${note.gaps}`;
+      return ctx;
+    }).join("\n\n---\n\n");
+  }
+
+  // Resize + compress to JPEG max 1024px, quality 0.82 — stays well under 4MB limit
+  function compressBlob(blob) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1024;
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        if (w > MAX || h > MAX) {
+          const r = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * r);
+          h = Math.round(h * r);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  async function processImageBlob(blob, source) {
+    setAnalyzeLoading(true);
+    const previewUrl = URL.createObjectURL(blob);
+    try {
+      // Compress before sending — reduces 4K screenshots from ~8MB to ~200-400KB
+      const compressed = await compressBlob(blob);
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(compressed);
+      });
+
+      // Upload original blob to Supabase Storage — storagePath is null if upload fails
+      let storagePath = null;
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const candidatePath = `${user.id}/${classId}/${Date.now()}.jpg`;
+          const { error: uploadError } = await supabase.storage
+            .from("class-images")
+            .upload(candidatePath, compressed, { contentType: "image/jpeg" });
+          if (uploadError) {
+            console.error("[visual-notes] Storage upload failed:", uploadError.message);
+          } else {
+            storagePath = candidatePath;
+          }
+        }
+      } catch (uploadEx) {
+        console.error("[visual-notes] Storage exception:", uploadEx?.message);
+      }
+
+      // Analyze with Groq vision — drives the RAG, independent of storage success
+      const res = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: "image/jpeg",
+          transcript: transcriptRef.current.slice(-2000),
+        }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || (!json.description && !json.extracted_text && !json.key_concepts?.length)) {
+        console.error("[visual-notes] analyze-image returned no content (status", res.status, "):", json);
+      }
+
+      const newNote = {
+        id: Date.now(),
+        previewUrl,
+        storagePath,
+        source,
+        content_type:   json.content_type   || "other",
+        description:    json.description    || "",
+        extracted_text: json.extracted_text || null,
+        key_concepts:   json.key_concepts   || [],
+        gaps:           json.gaps           || null,
+      };
+      // Update ref BEFORE setState so sendChatText always reads fresh data
+      visualNotesRef.current = [...visualNotesRef.current, newNote];
+      setVisualNotes([...visualNotesRef.current]);
+    } catch (err) {
+      console.error("[visual-notes] processImageBlob error:", err?.message);
+    }
+    setAnalyzeLoading(false);
+  }
+
+  async function captureScreen() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      await new Promise((r) => { video.onloadedmetadata = r; });
+      await video.play();
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      stream.getTracks().forEach((t) => t.stop());
+      canvas.toBlob((blob) => processImageBlob(blob, "screenshot"), "image/png");
+    } catch (err) {
+      if (err.name !== "NotAllowedError") console.error("[captureScreen]", err);
+    }
+  }
+
+  async function openCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      cameraStreamRef.current = stream;
+      setShowCamera(true);
+      setTimeout(() => {
+        if (cameraVideoRef.current) cameraVideoRef.current.srcObject = stream;
+      }, 60);
+    } catch (err) {
+      alert("No se pudo acceder a la cámara: " + err.message);
+    }
+  }
+
+  function captureFromCamera() {
+    const video = cameraVideoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
+    setShowCamera(false);
+    canvas.toBlob((blob) => processImageBlob(blob, "camera"), "image/jpeg");
+  }
+
+  function closeCamera() {
+    cameraStreamRef.current?.getTracks().forEach((t) => t.stop());
+    setShowCamera(false);
+  }
+
+  function handleImageFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processImageBlob(file, "upload");
+    e.target.value = "";
   }
 
   async function finishClass() {
@@ -713,6 +854,7 @@ export default function LiveClass() {
           transcript: transcriptRef.current,
           concepts: conceptsRef.current,
           material_summary: materialSummary,
+          visual_notes: visualNotes.map(({ previewUrl, ...rest }) => rest),
           final_summary: json.final_summary,
           final_mindmap: json.final_mindmap,
           canvas_nodes: canvasNodesResult,
@@ -796,6 +938,7 @@ export default function LiveClass() {
           question: q,
           material_summary: finalData?.final_summary || "",
           transcript: transcriptRef.current,
+          visual_context: buildVisualContext(visualNotesRef.current),
         }),
       });
       const json = await res.json();
@@ -1106,9 +1249,22 @@ export default function LiveClass() {
           <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
             <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))", position: "relative", zIndex: 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Transcript en vivo</span>
+                <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 3 }}>
+                  <button
+                    onClick={() => setCol2Tab("transcript")}
+                    style={{ fontSize: "0.78rem", fontWeight: 600, borderRadius: 6, padding: "5px 12px", cursor: "pointer", border: "none", background: col2Tab === "transcript" ? "var(--accent)" : "transparent", color: col2Tab === "transcript" ? "white" : "var(--text-2)" }}
+                  >
+                    Transcript
+                  </button>
+                  <button
+                    onClick={() => setCol2Tab("images")}
+                    style={{ fontSize: "0.78rem", fontWeight: 600, borderRadius: 6, padding: "5px 12px", cursor: "pointer", border: "none", background: col2Tab === "images" ? "var(--accent)" : "transparent", color: col2Tab === "images" ? "white" : "var(--text-2)", display: "flex", alignItems: "center", gap: 5 }}
+                  >
+                    Imágenes {visualNotes.length > 0 && `(${visualNotes.length})`}
+                  </button>
+                </div>
                 {recording && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: "0.78rem", fontWeight: 600 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#22c55e", fontSize: "0.78rem", fontWeight: 600, flexShrink: 0 }}>
                     <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 1.5s infinite" }} />
                     <span>Escuchando...</span>
                   </div>
@@ -1148,40 +1304,71 @@ export default function LiveClass() {
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
-              {transcriptLines.length === 0 && (
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
-                  La transcripción aparecerá aquí<br />cuando inicies la clase
-                </p>
-              )}
-              {transcriptLines.map((line, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                  <div style={{ flexShrink: 0, paddingTop: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: line.type === "image" ? "#A78BFA" : "var(--accent)" }} />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 4 }}>{line.time}</span>
-                    {line.type === "image" ? (
-                      <div>
-                        <span style={{ fontSize: "0.71rem", color: "#A78BFA", fontWeight: 600, display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}>
-                          📷 {line.label}
-                        </span>
-                        <img
-                          src={line.dataUrl}
-                          alt={line.label}
-                          style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid rgba(167,139,250,0.3)", display: "block" }}
-                        />
-                      </div>
-                    ) : (
+            {col2Tab === "transcript" ? (
+              <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
+                {transcriptLines.length === 0 && (
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
+                    La transcripción aparecerá aquí<br />cuando inicies la clase
+                  </p>
+                )}
+                {transcriptLines.map((line, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                    <div style={{ flexShrink: 0, paddingTop: 6 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 4 }}>{line.time}</span>
                       <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
                         <HighlightedText text={line.text} conceptNames={conceptNames} />
                       </span>
-                    )}
+                    </div>
                   </div>
+                ))}
+                <div ref={transcriptEndRef} />
+              </div>
+            ) : (
+              <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
+                {visualNotes.length === 0 && !analyzeLoading && (
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
+                    Captura pantalla, cámara o sube un archivo<br />con el botón morado de arriba
+                  </p>
+                )}
+                {analyzeLoading && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, color: "var(--accent)", fontSize: "0.8rem", fontWeight: 600 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block", animation: "pulse 1.5s infinite" }} />
+                    Analizando imagen...
+                  </div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {visualNotes.map((note) => {
+                    const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
+                    return (
+                      <div key={note.id} style={{ borderRadius: 10, border: "1px solid var(--border)", background: "rgba(255,255,255,0.02)", overflow: "hidden" }}>
+                        <div style={{ position: "relative" }}>
+                          <img src={note.previewUrl} alt="" style={{ width: "100%", height: 120, objectFit: "cover", display: "block" }} />
+                          <span style={{ position: "absolute", top: 6, left: 6, fontSize: "0.65rem", fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", borderRadius: 99, padding: "3px 8px", border: `1px solid ${tb.fg}40` }}>{tb.label}</span>
+                        </div>
+                        <div style={{ padding: "9px 10px" }}>
+                          <p style={{ fontSize: "0.76rem", color: "var(--text-2)", lineHeight: 1.5, marginBottom: (note.extracted_text || note.gaps) ? 6 : 0 }}>{note.description}</p>
+                          {note.extracted_text && (
+                            <div style={{ background: "rgba(124,108,248,0.06)", border: "1px solid rgba(124,108,248,0.14)", borderRadius: 6, padding: "5px 8px", marginBottom: note.gaps ? 6 : 0 }}>
+                              <span style={{ fontSize: "0.66rem", fontWeight: 700, color: "var(--accent)" }}>OCR: </span>
+                              <span style={{ fontSize: "0.66rem", color: "var(--text-2)", fontFamily: "monospace", lineHeight: 1.4 }}>{note.extracted_text.length > 160 ? note.extracted_text.slice(0, 160) + "…" : note.extracted_text}</span>
+                            </div>
+                          )}
+                          {note.gaps && (
+                            <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 6, padding: "5px 8px" }}>
+                              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--yellow)" }}>⚠ Gap: </span>
+                              <span style={{ fontSize: "0.68rem", color: "var(--text-2)" }}>{note.gaps}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-              <div ref={transcriptEndRef} />
-            </div>
+              </div>
+            )}
 
           </div>
 
@@ -1430,6 +1617,29 @@ export default function LiveClass() {
 
         </div>
       </div>
+
+      <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageFile} style={{ display: "none" }} />
+
+      {/* ── CAMERA MODAL ────────────────────────────────────────────────────── */}
+      {showCamera && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "var(--card)", border: "1px solid var(--border-strong)", borderRadius: 20, padding: 24, width: 480, maxWidth: "92vw" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <span style={{ fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 7 }}>📷 Tomar foto</span>
+              <button onClick={closeCamera} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 6, color: "var(--text-2)", cursor: "pointer", fontSize: 18, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+            </div>
+            <video ref={cameraVideoRef} autoPlay playsInline muted style={{ width: "100%", borderRadius: 12, background: "#000", display: "block", maxHeight: 320, objectFit: "cover" }} />
+            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+              <button onClick={captureFromCamera} className="btn-accent" style={{ flex: 1, background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "11px", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                📸 Capturar
+              </button>
+              <button onClick={closeCamera} className="btn-ghost" style={{ flex: 1, background: "transparent", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "11px", fontWeight: 500, fontSize: 14, cursor: "pointer" }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }

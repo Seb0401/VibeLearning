@@ -33,8 +33,33 @@ const QUICK_ACTIONS = [
 ];
 const OPTION_KEYS = ["A", "B", "C", "D"];
 
+const TYPE_BADGE = {
+  whiteboard:  { fg: "#2DD4BF", label: "Pizarrón"    },
+  slide:       { fg: "#60A5FA", label: "Diapositiva" },
+  diagram:     { fg: "#A78BFA", label: "Diagrama"    },
+  graph:       { fg: "#22C55E", label: "Gráfico"     },
+  formula:     { fg: "#FBBF24", label: "Fórmula"     },
+  table:       { fg: "#FB923C", label: "Tabla"       },
+  screenshot:  { fg: "#818CF8", label: "Captura"     },
+  photo:       { fg: "#F87171", label: "Foto"        },
+  other:       { fg: "#9CA3AF", label: "Visual"      },
+};
+
+function buildVisualContext(notes) {
+  if (!notes?.length) return "";
+  return notes.map((note, i) => {
+    const typeLabel = TYPE_BADGE[note.content_type]?.label || "Visual";
+    let ctx = `[Imagen ${i + 1} — ${typeLabel}]`;
+    if (note.description)    ctx += `\nDescripción: ${note.description}`;
+    if (note.extracted_text) ctx += `\nTexto OCR visible: ${note.extracted_text}`;
+    if (note.key_concepts?.length) ctx += `\nConceptos clave: ${note.key_concepts.join(", ")}`;
+    if (note.gaps)           ctx += `\nInformación visual no mencionada verbalmente: ${note.gaps}`;
+    return ctx;
+  }).join("\n\n---\n\n");
+}
+
 export default function ClassPageClient({ cls }) {
-  const { transcript, concepts = [], material_summary, final_summary, final_mindmap, canvas_nodes = [] } = cls.data ?? {};
+  const { transcript, concepts = [], material_summary, final_summary, final_mindmap, canvas_nodes = [], visual_notes = [] } = cls.data ?? {};
   const duration = estimateDuration(transcript);
 
   const [quizTab, setQuizTab]     = useState(0);
@@ -131,7 +156,7 @@ export default function ClassPageClient({ cls }) {
       const r = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, material_summary: material_summary || "", transcript: transcript || "" }),
+        body: JSON.stringify({ question: q, material_summary: material_summary || "", transcript: transcript || "", visual_context: buildVisualContext(visual_notes) }),
       });
       const data = await r.json();
       setMessages(prev => [...prev, { role: "ai", content: data.answer || "Sin respuesta.", time: fmtTime(new Date()) }]);
@@ -417,6 +442,42 @@ export default function ClassPageClient({ cls }) {
           {concepts.length > 0 && (
             <div style={{ padding: "10px 22px 14px", borderTop: "1px solid var(--border)", textAlign: "center", flexShrink: 0 }}>
               <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500 }}>{concepts.length} conceptos clave</span>
+            </div>
+          )}
+
+          {/* Visual notes strip */}
+          {visual_notes.length > 0 && (
+            <div style={{ borderTop: "1px solid var(--border)", padding: "12px 22px 14px", flexShrink: 0 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 0 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Notas visuales ({visual_notes.length})
+              </p>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+                {visual_notes.map((note, i) => {
+                  const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
+                  return (
+                    <div key={i} style={{ flexShrink: 0, width: 120, borderRadius: 8, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                      {note.imageUrl ? (
+                        <div style={{ position: "relative" }}>
+                          <img src={note.imageUrl} alt="" style={{ width: "100%", height: 70, objectFit: "cover", display: "block" }} />
+                          <span style={{ position: "absolute", top: 3, left: 3, fontSize: 9, fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", borderRadius: 99, padding: "1px 5px" }}>{tb.label}</span>
+                        </div>
+                      ) : (
+                        <div style={{ height: 70, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 9, color: tb.fg, fontWeight: 700 }}>{tb.label}</span>
+                        </div>
+                      )}
+                      <div style={{ padding: "5px 7px" }}>
+                        <p style={{ fontSize: 9, color: "var(--text-2)", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{note.description}</p>
+                        {note.gaps && <p style={{ fontSize: 9, color: "#FBBF24", marginTop: 3, fontWeight: 600 }}>⚠ Gap visual</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
