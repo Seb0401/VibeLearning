@@ -6,6 +6,7 @@ import Icon from "./Icon";
 import ThemeToggle from "./ThemeToggle";
 import { NAV_ITEMS, NAV_GROUP_ORDER, isItemActive, resolveVisible } from "./navConfig";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "./Avatar";
 
 // Barra inferior en móvil: las páginas fijas + "Nueva clase" + "Más" (hoja con el resto).
 const TABS = [
@@ -69,6 +70,14 @@ export default function MobileTabBar({ sidebarPages, userEmail }) {
         <div className="sheet-backdrop" onClick={() => setOpen(false)}>
           <div role="dialog" aria-modal="true" aria-label="Más opciones" className="sheet fade-up" onClick={(e) => e.stopPropagation()}>
             <div className="sheet__handle" />
+            <Link href="/dashboard/perfil" onClick={() => setOpen(false)} className="sheet__profile">
+              <Avatar size={44} />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Mi perfil</span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</span>
+              </span>
+              <Icon name="chevron-right" size={18} />
+            </Link>
             {NAV_GROUP_ORDER.map((group) => {
               const items = NAV_ITEMS.filter((i) => i.group === group && visible.has(i.key));
               if (!items.length) return null;

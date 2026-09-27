@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { NAV_ITEMS, NAV_GROUP_ORDER, isItemActive, resolveVisible } from "./navConfig";
 import BrandLogo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
+import Avatar from "./Avatar";
 
 function Svg({ size = 18, children }) {
   return (
@@ -41,7 +42,7 @@ function Logo({ size = 30 }) {
 }
 
 /* ── Modal: elegir qué páginas aparecen en el sidebar ──────────────────── */
-function CustomizeModal({ visible, onClose, onSaved }) {
+export function CustomizeModal({ visible, onClose, onSaved }) {
   const [draft, setDraft]   = useState(() => new Set(visible));
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
@@ -137,7 +138,6 @@ export default function Sidebar({ userName, userEmail, sidebarPages }) {
   const [open, setOpen]           = useState(false);
   const [customizing, setCustomizing] = useState(false);
   const [visible, setVisible]     = useState(() => resolveVisible(sidebarPages));
-  const initial  = (userName || "A")[0].toUpperCase();
 
   // Guarda la zona horaria del navegador para que las páginas del servidor muestren tu hora local.
   useEffect(() => {
@@ -238,15 +238,16 @@ export default function Sidebar({ userName, userEmail, sidebarPages }) {
         <div style={{ padding: "8px 10px 12px" }}>
           <div style={{ padding: "0 2px 10px" }}><ThemeToggle /></div>
           <div style={{ height: 1, background: "var(--border)", marginBottom: 8 }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px" }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #A78BFA)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initial}</div>
+          <Link href="/dashboard/perfil" onClick={() => setOpen(false)} title="Ver perfil" className="nav-item" aria-current={pathname === "/dashboard/perfil" ? "page" : undefined}
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, textDecoration: "none", background: pathname === "/dashboard/perfil" ? "var(--accent-dim)" : "transparent" }}>
+            <Avatar size={32} />
             <div style={{ minWidth: 0, flex: 1 }}>
               <p style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</p>
               {userEmail && (
                 <p title={userEmail} style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</p>
               )}
             </div>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}

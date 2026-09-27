@@ -28,14 +28,14 @@ export function LogoMark({ size = 32 }) {
   );
 }
 
-export default function Logo({ size = 30, variant = "full", textSize }) {
+export default function Logo({ size = 30, variant = "full", textSize, light = false }) {
   const fs = textSize || Math.round(size * 0.62);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.28) }}>
       <LogoMark size={size} />
       {variant === "full" && (
-        <span style={{ fontWeight: 800, fontSize: fs, letterSpacing: "-0.03em", lineHeight: 1, color: "var(--text)" }}>
-          vibe<span className="text-grad">learning</span>
+        <span style={{ fontWeight: 800, fontSize: fs, letterSpacing: "-0.03em", lineHeight: 1, color: light ? "#fff" : "var(--text)" }}>
+          vibe<span className={light ? "text-grad-light" : "text-grad"}>learning</span>
         </span>
       )}
     </span>

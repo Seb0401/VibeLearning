@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import BrandLogo from "@/components/Logo";
 import Mascot from "@/components/Mascot";
@@ -54,12 +55,21 @@ const LABEL = {
   marginBottom: 7, letterSpacing: "0.06em", textTransform: "uppercase",
 };
 
-export default function LoginPage() {
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPage />
+    </Suspense>
+  );
+}
+
+function LoginPage() {
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd]   = useState(false);
-  const [mode, setMode]         = useState("signin");
+  const [mode, setMode]         = useState(() => (searchParams.get("mode") === "signup" ? "signup" : "signin"));
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
