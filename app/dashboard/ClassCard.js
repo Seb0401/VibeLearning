@@ -5,6 +5,17 @@ import { createClient } from "@/lib/supabase/client";
 
 /* ── CSS injected once ────────────────────────────────────────────────── */
 const CSS = `
+  @media (max-width: 600px) {
+    .cc-done { display: none !important; }
+    .cc-bar  { display: none !important; }
+    .cc-title {
+      white-space: normal !important;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.35;
+    }
+  }
   @keyframes cc-menu {
     from { opacity:0; transform:translateY(-8px) scale(.96); }
     to   { opacity:1; transform:translateY(0)    scale(1);   }
@@ -290,7 +301,7 @@ export default function ClassCard({ c, idx }) {
                 </button>
               </form>
             ) : (
-              <h3 style={{
+              <h3 className="cc-title" title={c.title} style={{
                 flex: 1, minWidth: 0, margin: 0,
                 fontSize: 14, fontWeight: 600, color: "var(--text)",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -301,7 +312,7 @@ export default function ClassCard({ c, idx }) {
 
             {/* Completada pill */}
             {!renaming && !deleting && (
-              <span style={{
+              <span className="cc-done" style={{
                 display: "inline-flex", alignItems: "center", gap: 5,
                 fontSize: 11, fontWeight: 600, color: "#22C55E",
                 background: "rgba(34,197,94,.09)",

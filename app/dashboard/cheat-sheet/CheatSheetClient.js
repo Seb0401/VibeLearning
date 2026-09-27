@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import AppIcon, { IconBadge } from "@/components/Icon";
 
 function fmtDate(str) {
-  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: "UTC" });
+  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
 
 function Checkbox({ on }) {
@@ -292,7 +292,7 @@ export default function CheatSheetClient({ classes }) {
               <ReactMarkdown components={{
                 h2: ({children}) => <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", marginTop: 24, marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid var(--border)" }}>{children}</h2>,
                 h3: ({children}) => <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginTop: 16, marginBottom: 6 }}>{children}</h3>,
-                ul: ({children}) => <ul style={{ paddingLeft: 20, marginTop: 6, marginBottom: 12 }}>{children}</ul>,
+                ul: ({children}) => <ul style={{ paddingLeft: 20, marginTop: 6, marginBottom: 12, listStyle: "disc" }}>{children}</ul>,
                 li: ({children}) => <li style={{ color: "var(--text-2)", marginBottom: 4, fontSize: 13 }}>{children}</li>,
                 strong: ({children}) => <strong style={{ color: "var(--text)", fontWeight: 600 }}>{children}</strong>,
                 p: ({children}) => <p style={{ color: "var(--text-2)", marginBottom: 8, fontSize: 13 }}>{children}</p>,

@@ -12,8 +12,8 @@ export default function SummaryMarkdown({ text }) {
         h3: ({ children }) => <h3 style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", margin: "9px 0 4px" }}>{children}</h3>,
         p: ({ children }) => <p style={{ margin: "0 0 9px", lineHeight: 1.7 }}>{children}</p>,
         strong: ({ children }) => <strong style={{ color: "var(--text)", fontWeight: 600 }}>{children}</strong>,
-        ul: ({ children }) => <ul style={{ paddingLeft: 18, margin: "0 0 9px" }}>{children}</ul>,
-        ol: ({ children }) => <ol style={{ paddingLeft: 18, margin: "0 0 9px" }}>{children}</ol>,
+        ul: ({ children }) => <ul style={{ paddingLeft: 20, margin: "0 0 9px", listStyle: "disc" }}>{children}</ul>,
+        ol: ({ children }) => <ol style={{ paddingLeft: 20, margin: "0 0 9px", listStyle: "decimal" }}>{children}</ol>,
         li: ({ children }) => <li style={{ marginBottom: 4 }}>{children}</li>,
         code: ({ children }) => <code style={{ background: "rgba(124,108,248,0.1)", color: "var(--accent)", borderRadius: 4, padding: "1px 5px", fontSize: "0.87em" }}>{children}</code>,
       }}

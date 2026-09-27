@@ -283,7 +283,7 @@ export default function ClassPageClient({ cls }) {
       </div>
 
       {/* ── 3 COLUMNS ── */}
-      <div className="class-grid">
+      <div className="class-grid class-grid--auto">
 
         {/* ── LEFT: RESUMEN + QUIZ ── */}
         <div style={{ ...COL, borderRight: "1px solid var(--border)" }}>
@@ -558,7 +558,7 @@ export default function ClassPageClient({ cls }) {
         </div>
 
         {/* ── RIGHT: AGENTE DE ESTUDIO ── */}
-        <div style={COL}>
+        <div className="col-chat" style={COL}>
           <div style={PANEL_HDR}>
             <div style={HDR_ICON}>
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import ClassCard from "./ClassCard";
+import ClassDayList from "./ClassDayList";
 import CoursesWidget from "@/components/CoursesWidget";
 
 function Icon({ size = 16, children }) {
@@ -63,35 +63,6 @@ function timeSince(dateStr) {
   return m === 1 ? "hace 1 mes" : `hace ${m} meses`;
 }
 
-function groupByDay(classes) {
-  const now  = new Date();
-  const todayStart     = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).getTime();
-  const yesterdayStart = todayStart - 86400000;
-  const weekStart      = todayStart - 6 * 86400000;
-
-  const seen = new Map();
-  for (const c of classes) {
-    const d  = new Date(c.created_at);
-    const ds = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())).getTime();
-
-    let label;
-    if (ds === todayStart) {
-      label = "Hoy";
-    } else if (ds === yesterdayStart) {
-      label = "Ayer";
-    } else if (ds >= weekStart) {
-      const raw = d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short", timeZone: "UTC" });
-      label = raw.charAt(0).toUpperCase() + raw.slice(1);
-    } else {
-      label = d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-    }
-
-    if (!seen.has(label)) seen.set(label, []);
-    seen.get(label).push(c);
-  }
-  return [...seen.entries()].map(([label, items]) => ({ label, items }));
-}
-
 /* ── Page ──────────────────────────────────────────────────────────────── */
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -113,7 +84,6 @@ export default async function Dashboard() {
   const withPdf    = classes.filter(c => c.data?.material_summary);
   const totalPdfs  = withPdf.length;
   const recentPdfs = withPdf.slice(0, 3);
-  const dayGroups  = groupByDay(classes);
 
   return (
     <div className="dash-page">
@@ -171,27 +141,7 @@ export default async function Dashboard() {
             </div>
           )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {dayGroups.map(({ label, items }) => (
-              <div key={label}>
-                {/* Day header */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text-3)", letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                    {label}
-                  </span>
-                  <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                  <span style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "nowrap" }}>
-                    {items.length} {items.length === 1 ? "clase" : "clases"}
-                  </span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {items.map((c, i) => (
-                    <ClassCard key={c.id} c={c} idx={i} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ClassDayList classes={classes} />
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────────────── */}

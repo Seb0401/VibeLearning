@@ -33,7 +33,7 @@ function buildAnkiCSV(concepts) {
 }
 
 function fmtDate(str) {
-  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
 }
 
 const EXPORT_TYPES = [

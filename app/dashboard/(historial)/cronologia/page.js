@@ -2,14 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import AppIcon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
+import { getUserTimeZone } from "@/lib/timezone";
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
-function groupByMonth(classes) {
+function groupByMonth(classes, tz) {
+  const keyFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: tz });
   const map = new Map();
   for (const c of classes) {
     const d   = new Date(c.created_at);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-    const lbl = d.toLocaleDateString("es-MX", { month: "long", year: "numeric", timeZone: "UTC" });
+    const key = keyFmt.format(d);
+    const lbl = d.toLocaleDateString("es-MX", { month: "long", year: "numeric", timeZone: tz });
     const label = lbl.charAt(0).toUpperCase() + lbl.slice(1);
     if (!map.has(key)) map.set(key, { key, label, classes: [] });
     map.get(key).classes.push(c);
@@ -40,14 +42,14 @@ function getMilestones(classes) {
   return map;
 }
 
-function fmtDay(dateStr) {
+function fmtDay(dateStr, tz) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  return d.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: tz });
 }
 
-function fmtTime(dateStr) {
+function fmtTime(dateStr, tz) {
   const d = new Date(dateStr);
-  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
+  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz });
 }
 
 function estimateDur(transcript) {
@@ -63,13 +65,14 @@ export default async function Cronologia() {
     .from("classes").select("*").neq("title", "Clase en progreso...").order("created_at", { ascending: false });
 
   const classes = raw || [];
+  const tz           = await getUserTimeZone();
   const milestones   = getMilestones(classes);
-  const monthGroups  = groupByMonth(classes);
+  const monthGroups  = groupByMonth(classes, tz);
 
   const totalConcepts = classes.reduce((s, c) => s + (c.data?.concepts?.length || 0), 0);
   const withPDF       = classes.filter(c => c.data?.material_summary).length;
   const firstDate     = classes.length
-    ? new Date(classes[classes.length - 1].created_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+    ? new Date(classes[classes.length - 1].created_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone: tz })
     : null;
 
   const S = {
@@ -196,9 +199,9 @@ export default async function Cronologia() {
                           {c.title}
                         </p>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>{fmtDay(c.created_at)}</span>
+                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>{fmtDay(c.created_at, tz)}</span>
                           <span style={{ fontSize: 11, color: "var(--text-3)" }}>·</span>
-                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>{fmtTime(c.created_at)}</span>
+                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>{fmtTime(c.created_at, tz)}</span>
                           {dur && <>
                             <span style={{ fontSize: 11, color: "var(--text-3)" }}>·</span>
                             <span style={{ fontSize: 11, color: "var(--text-3)" }}>{dur}</span>

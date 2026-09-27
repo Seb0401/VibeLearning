@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -17,8 +17,8 @@ function Svg({ size = 18, children }) {
 const ICONS = {
   home:     <Svg><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></Svg>,
   stats:    <Svg><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></Svg>,
-  timeline: <Svg><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></Svg>,
-  repaso:   <Svg><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Svg>,
+  timeline: <Svg><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/><polyline points="12 7 12 12 15.5 14"/></Svg>,
+  repaso:   <Svg><rect x="2" y="7" width="14" height="15" rx="2"/><path d="M6 3h12a2 2 0 0 1 2 2v13"/><path d="m6.5 14.5 2 2 4-4"/></Svg>,
   exam:     <Svg><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="16 13 12 17 8 13"/><line x1="12" y1="17" x2="12" y2="10"/></Svg>,
   cheat:    <Svg><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></Svg>,
   map:      <Svg><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></Svg>,
@@ -50,6 +50,13 @@ function CustomizeModal({ visible, onClose, onSaved }) {
   const [draft, setDraft]   = useState(() => new Set(visible));
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
+
+  // Cerrar con Escape
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function toggle(key) {
     setDraft(prev => {
@@ -136,6 +143,16 @@ export default function Sidebar({ userName, userEmail, sidebarPages }) {
   const [customizing, setCustomizing] = useState(false);
   const [visible, setVisible]     = useState(() => resolveVisible(sidebarPages));
   const initial  = (userName || "A")[0].toUpperCase();
+
+  // Guarda la zona horaria del navegador para que las páginas del servidor muestren tu hora local.
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && !document.cookie.includes(`tz=${encodeURIComponent(tz)}`)) {
+        document.cookie = `tz=${encodeURIComponent(tz)}; path=/; max-age=31536000; samesite=lax`;
+      }
+    } catch {}
+  }, []);
 
   const visibleSet = new Set(visible);
   // Si el usuario está en una página oculta, igual la mostramos para que no pierda la ubicación.

@@ -230,7 +230,7 @@ export default async function Estadisticas() {
       {classes.length > 0 && (
         <>
           {/* ── KPI grid ──────────────────────────────────────────────── */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(165px, 1fr))", gap: 14 }}>
             <StatCard
               icon={<IcoGradCap s={18} />}
               iconBg="rgba(124,108,248,0.15)" iconColor="#7C6CF8"
@@ -310,7 +310,7 @@ export default async function Estadisticas() {
                 return (
                   <div key={i} style={{
                     flex: 1, display: "flex", flexDirection: "column",
-                    alignItems: "center", gap: 6, minWidth: 0,
+                    alignItems: "center", justifyContent: "flex-end", gap: 6, minWidth: 0, height: "100%",
                   }}>
                     <span style={{
                       fontSize: 11, fontWeight: 700, color: isLast ? "var(--accent)" : (w.count > 0 ? "var(--text-2)" : "transparent"),
@@ -318,7 +318,7 @@ export default async function Estadisticas() {
                       {w.count > 0 ? w.count : ""}
                     </span>
                     <div style={{
-                      width: "100%", height: `${pct}%`,
+                      width: "100%", height: `${pct}%`, maxWidth: 56, minHeight: 4,
                       background: w.count === 0
                         ? "rgba(255,255,255,0.05)"
                         : isLast

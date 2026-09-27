@@ -385,3 +385,10 @@ button:disabled { cursor: not-allowed; }
 @media (max-width: 700px) {
   .app-main div:has(> div > h1) { flex-wrap: wrap; gap: 14px; }
 }
+
+/* Clase guardada en pantallas angostas: las columnas crecen con su contenido; el chat mantiene altura fija */
+@media (max-width: 1100px) {
+  .class-grid--auto > :not(.col-chat) { height: auto; overflow: visible !important; }
+  .class-grid--auto > :not(.col-chat) > [style*="overflow-y"] { overflow: visible !important; }
+  .class-grid--auto > .col-chat { height: 600px; overflow: hidden !important; }
+}

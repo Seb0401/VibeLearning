@@ -11,7 +11,7 @@ function load() { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } c
 function persist(v) { localStorage.setItem(SK, JSON.stringify(v)); }
 
 function fmtDate(str) {
-  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: "UTC" });
+  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
 
 export default function CursosClient({ classes }) {
