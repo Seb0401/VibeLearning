@@ -3,8 +3,11 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-ROOT = r"C:\Users\Sebastian\Desktop\Hackathons\Nexia\VibeLearning"
-S = os.path.dirname(os.path.abspath(__file__))
+# Recorta las poses de MASCOTA.png (raíz del repo) y las guarda en public/mascot/.
+# Uso: python scripts/extract-mascot.py   (requiere Pillow, numpy y scipy)
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+S = os.path.join(ROOT, ".mascot-preview")   # hojas de muestra para revisar el recorte
+os.makedirs(os.path.join(S, "shots"), exist_ok=True)
 OUT = os.path.join(ROOT, "public", "mascot")
 os.makedirs(OUT, exist_ok=True)
 

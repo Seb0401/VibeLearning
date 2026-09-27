@@ -43,3 +43,8 @@ next-env.d.ts
 .venv/
 __pycache__/
 *.pyc
+
+# imágenes de referencia de diseño (fuente de public/mascot)
+/UI.png
+/MASCOTA.png
+/.mascot-preview/
