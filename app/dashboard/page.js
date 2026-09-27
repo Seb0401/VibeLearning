@@ -63,19 +63,6 @@ function conceptName(c) {
 }
 
 /* ── Piezas de la página ───────────────────────────────────────────────── */
-function Kpi({ icon, color, label, value, hint }) {
-  return (
-    <div className="ui-card ui-card--sm" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <IconBadge name={icon} color={color} size={40} />
-      <div style={{ minWidth: 0 }}>
-        <p style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>{value}</p>
-        <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>{label}</p>
-        {hint && <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{hint}</p>}
-      </div>
-    </div>
-  );
-}
-
 function ContinueCard({ cls, now }) {
   const subj = getSubject(cls.title);
   const concepts = (cls.data?.concepts || []).map(conceptName).filter(Boolean);
@@ -136,28 +123,24 @@ function ContinueCard({ cls, now }) {
   );
 }
 
-const QUICK_ACTIONS = [
-  { href: "/dashboard/biblioteca",   icon: "upload",    color: "var(--blue)", label: "Subir PDF",       hint: "Material para el chatbot" },
-  { href: "/dashboard/evaluaciones", icon: "clipboard", color: "var(--violet)", label: "Generar examen",  hint: "Con tus clases" },
-  { href: "/dashboard/cheat-sheet",  icon: "file-text", color: "var(--yellow)", label: "Cheat sheet",     hint: "Resumen de una página" },
-  { href: "/dashboard/mapa-global",  icon: "network",   color: "var(--green)", label: "Mapa global",     hint: "Todos tus conceptos" },
+const BIG_ACTIONS = [
+  { href: "/class/new",            icon: "mic",       tone: "red",    label: "Grabar clase",  hint: "Transcribe en vivo y detecta los conceptos" },
+  { href: "/dashboard/biblioteca", icon: "file-text", tone: "violet", label: "Subir material", hint: "Tu PDF como contexto para el chatbot" },
+  { href: "/dashboard/repaso",     icon: "cards",     tone: "green",  label: "Repasos",        hint: "Flashcards y quizzes de tus clases" },
+  { href: "/dashboard/cursos",     icon: "calendar",  tone: "orange", label: "Mi espacio",     hint: "Cursos, notas y agenda" },
 ];
 
-function QuickActions() {
+function BigActions() {
   return (
-    <Card title="Acciones rápidas">
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-        {QUICK_ACTIONS.map((a) => (
-          <Link key={a.href} href={a.href} className="quick-action">
-            <IconBadge name={a.icon} color={a.color} size={34} />
-            <span style={{ minWidth: 0 }}>
-              <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{a.label}</span>
-              <span style={{ display: "block", fontSize: 11, color: "var(--text-3)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.hint}</span>
-            </span>
-          </Link>
-        ))}
-      </div>
-    </Card>
+    <div className="big-actions">
+      {BIG_ACTIONS.map((a) => (
+        <Link key={a.href} href={a.href} className="big-action">
+          <span className={`big-action__icon big-action__icon--${a.tone}`}><Icon name={a.icon} size={26} strokeWidth={2} /></span>
+          <span className="big-action__label">{a.label}</span>
+          <span className="big-action__hint">{a.hint}</span>
+        </Link>
+      ))}
+    </div>
   );
 }
 
@@ -191,21 +174,32 @@ function RecentLibrary({ items, total }) {
   );
 }
 
-function MotivationCard({ streak, weekClasses, accuracy }) {
+function MotivationBanner({ streak, weekClasses, accuracy, totalConcepts, quizTotals }) {
   const msg =
     streak >= 2 ? { title: `¡${streak} días seguidos!`, text: "Vas muy bien. Una clase más hoy y mantienes la racha." } :
     accuracy !== null && accuracy >= 80 ? { title: "¡Buen trabajo!", text: `Llevas ${accuracy}% de aciertos en tus quizzes. Sigue así.` } :
     weekClasses > 0 ? { title: "¡Tú puedes!", text: "Un poco de esfuerzo hoy, grandes resultados mañana." } :
     { title: "¡Te extrañamos!", text: "Graba una clase hoy y retoma tu racha de estudio." };
   const pose = streak >= 2 || (accuracy !== null && accuracy >= 80) ? "logro" : "tu-puedes";
+  const chips = [
+    { icon: "flame",     label: `${streak} ${streak === 1 ? "día" : "días"} de racha` },
+    { icon: "book",      label: `${weekClasses} ${weekClasses === 1 ? "clase" : "clases"} esta semana` },
+    { icon: "lightbulb", label: `${totalConcepts} conceptos` },
+    { icon: "target",    label: accuracy !== null ? `${accuracy}% de aciertos (${quizTotals.correct}/${quizTotals.total})` : "Sin preguntas aún" },
+  ];
   return (
-    <div className="motivation-card">
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <p style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>{msg.title}</p>
-        <p style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>{msg.text}</p>
+    <section className="hero-banner">
+      <div style={{ minWidth: 0, flex: 1, position: "relative" }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.02em" }}>{msg.title}</h2>
+        <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6, lineHeight: 1.55, maxWidth: 420 }}>{msg.text}</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+          {chips.map((c) => (
+            <span key={c.label} className="hero-chip"><Icon name={c.icon} size={13} /> {c.label}</span>
+          ))}
+        </div>
       </div>
-      <Mascot pose={pose} size={96} halo={false} />
-    </div>
+      <Mascot pose={pose} size={150} halo={false} priority style={{ marginRight: 8 }} />
+    </section>
   );
 }
 
@@ -282,13 +276,8 @@ export default async function Dashboard() {
         <Onboarding />
       ) : (
         <>
-          {/* ── KPIs ───────────────────────────────────────────────────── */}
-          <div className="kpi-row">
-            <Kpi icon="book"      color="#7C6CF8" label="Clases esta semana" value={weekClasses} hint={`${classes.length} en total`} />
-            <Kpi icon="lightbulb" color="#FBBF24" label="Conceptos aprendidos" value={totalConcepts} />
-            <Kpi icon="target"    color="#22C55E" label="Aciertos en quiz" value={accuracy !== null ? `${accuracy}%` : "—"} hint={quizTotals.total ? `${quizTotals.correct}/${quizTotals.total} respuestas` : "Sin preguntas aún"} />
-            <Kpi icon="flame"     color="#F97316" label="Racha" value={`${streak} ${streak === 1 ? "día" : "días"}`} hint={streak > 0 ? "¡Sigue así!" : "Graba una clase hoy"} />
-          </div>
+          <MotivationBanner streak={streak} weekClasses={weekClasses} accuracy={accuracy} totalConcepts={totalConcepts} quizTotals={quizTotals} />
+          <BigActions />
 
           {/* ── CONTENT ────────────────────────────────────────────────── */}
           <div className="dash-grid">
@@ -307,9 +296,7 @@ export default async function Dashboard() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
-              <MotivationCard streak={streak} weekClasses={weekClasses} accuracy={accuracy} />
               <ReviewTodayCard cards={reviewKeys} />
-              <QuickActions />
               <CoursesWidget classes={classes} />
               <RecentLibrary items={withPdf.slice(0, 3)} total={withPdf.length} />
             </div>
