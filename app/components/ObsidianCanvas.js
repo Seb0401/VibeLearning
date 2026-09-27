@@ -379,6 +379,7 @@ export default function ObsidianCanvas({ nodes }) {
                 </div>
 
                 {/* Imagen Unsplash directamente en la tarjeta del nodo */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagen externa de Unsplash */}
                 <img
                   src={`https://source.unsplash.com/280x100/?${encodeURIComponent(node.image_query || node.label)}`}
                   alt={node.label}
@@ -598,6 +599,7 @@ export default function ObsidianCanvas({ nodes }) {
               }}
             >
               {!imageErrors[selectedNode.id] && (
+                // eslint-disable-next-line @next/next/no-img-element -- imagen externa de Unsplash
                 <img
                   src={`https://source.unsplash.com/400x200/?${encodeURIComponent(selectedNode.image_query || selectedNode.label)}`}
                   alt={selectedNode.label}

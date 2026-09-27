@@ -21,7 +21,8 @@ Conceptos ya extraídos — NO los repitas ni parafrasees: ${existingList}
 Responde ÚNICAMENTE con JSON válido, sin markdown ni texto extra.
 Formato exacto: {"concepts":[{"name":"...","summary":"..."}]}
 Si no hay conceptos nuevos con sustancia real, devuelve: {"concepts":[]}
-Resumen de cada uno: 1-2 oraciones en lenguaje simple.`;
+Resumen de cada uno: 1-2 oraciones en lenguaje simple.
+IDIOMA: escribe "name" y "summary" SIEMPRE en español, en el mismo idioma de la clase.`;
 }
 
 function parseConceptsJSON(raw) {
@@ -30,6 +31,26 @@ function parseConceptsJSON(raw) {
   const end = text.lastIndexOf("}");
   if (start !== -1 && end !== -1) text = text.slice(start, end + 1);
   return JSON.parse(text);
+}
+
+const CONCEPT_MODELS = ["groq/compound-mini", "openai/gpt-oss-20b"];
+
+function isModelUnavailable(err) {
+  const code = err?.error?.error?.code || err?.error?.code;
+  return err?.status === 404 || code === "model_not_found" || code === "model_decommissioned";
+}
+
+async function createWithFallback(params) {
+  let lastErr;
+  for (const model of CONCEPT_MODELS) {
+    try {
+      return await groq.chat.completions.create({ ...params, model });
+    } catch (err) {
+      if (!isModelUnavailable(err)) throw err;
+      lastErr = err;
+    }
+  }
+  throw lastErr;
 }
 
 export async function POST(request) {
@@ -42,15 +63,14 @@ export async function POST(request) {
     const system = buildSystem(existing_concepts);
 
     // compound-mini puede buscar en la web por su cuenta cuando el modelo lo considera
-    // necesario para confirmar o precisar un concepto — sin que nosotros orquestemos esa
-    // llamada aparte. Si no la necesita, responde igual de rápido que un modelo normal.
-    const completion = await groq.chat.completions.create({
-      model: "groq/compound-mini",
+    // necesario para confirmar o precisar un concepto. No todas las cuentas de Groq tienen
+    // acceso a él: si no está disponible, usamos gpt-oss-20b.
+    const completion = await createWithFallback({
       messages: [
         { role: "system", content: system },
         { role: "user", content: `Transcripción:\n${transcript.slice(0, 4000)}` },
       ],
-      max_tokens: 400,
+      max_tokens: 1000,
       temperature: 0.3,
     });
 
@@ -68,7 +88,7 @@ export async function POST(request) {
           { role: "assistant", content: raw },
           { role: "user", content: "El JSON anterior no es válido. Devuelve SOLO el JSON corregido." },
         ],
-        max_tokens: 400,
+        max_tokens: 1000,
         temperature: 0,
       });
       const raw2 = repair.choices?.[0]?.message?.content ?? "";

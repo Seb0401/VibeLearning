@@ -194,6 +194,7 @@ export default function ExamenesClient({ classes }) {
               <input ref={mainRef} type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={e => handleExamFile(e.target.files[0])} />
               {examPreview ? (
                 <div>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local (data:) del examen */}
                   <img src={examPreview} alt="preview" style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, objectFit: "contain" }} />
                   <p style={{ fontSize: 11, color: "#22C55E", marginTop: 8, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="check" size={12} strokeWidth={2.25} /> {examFile.name}</p>
                   <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Haz clic para cambiar</p>
