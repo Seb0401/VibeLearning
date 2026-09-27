@@ -62,7 +62,7 @@ export default function PomodoroPage() {
 
   async function loadConcept() {
     const { data } = await sb.current.from("classes")
-      .select("title,data").order("created_at", { ascending: false }).limit(10);
+      .select("title,data").neq("title", "Clase en progreso...").order("created_at", { ascending: false }).limit(10);
     const pool = (data || []).filter(c => c.data?.concepts?.length > 0);
     if (!pool.length) return;
     const cls = pool[Math.floor(Math.random() * pool.length)];

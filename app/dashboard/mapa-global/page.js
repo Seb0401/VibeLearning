@@ -16,7 +16,7 @@ export default async function MapaGlobal() {
   const supabase = await createClient();
   const { data: raw } = await supabase
     .from("classes")
-    .select("id, title, data")
+    .select("id, title, data").neq("title", "Clase en progreso...")
     .order("created_at", { ascending: false });
 
   const classes  = raw || [];

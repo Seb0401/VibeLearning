@@ -7,9 +7,9 @@ export default async function DashboardLayout({ children }) {
   const userName = user?.email?.split("@")[0] || "Alumno";
 
   return (
-    <div style={{ display: "flex", flex: 1, minHeight: "100vh" }}>
-      <Sidebar userName={userName} />
-      <main style={{ flex: 1, overflow: "auto", background: "var(--bg)" }}>
+    <div className="app-shell">
+      <Sidebar userName={userName} userEmail={user?.email} sidebarPages={user?.user_metadata?.sidebar_pages} />
+      <main className="app-main">
         {children}
       </main>
     </div>

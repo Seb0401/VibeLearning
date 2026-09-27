@@ -5,7 +5,7 @@ export default async function ExportarPage() {
   const supabase = await createClient();
   const { data: raw } = await supabase
     .from("classes")
-    .select("id, title, created_at, data")
+    .select("id, title, created_at, data").neq("title", "Clase en progreso...")
     .order("created_at", { ascending: false });
 
   const classes = (raw || []).map(c => ({

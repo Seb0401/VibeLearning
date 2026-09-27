@@ -201,6 +201,15 @@ export default function LiveClass() {
   const [reportChatLoading, setReportChatLoading] = useState(false);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [col2Tab, setCol2Tab] = useState("transcript"); // "transcript" | "images"
+  const [toast, setToast] = useState(null); // { msg, type: "error" | "success" }
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const toastTimerRef = useRef(null);
+
+  function showToast(msg, type = "error") {
+    clearTimeout(toastTimerRef.current);
+    setToast({ msg, type });
+    toastTimerRef.current = setTimeout(() => setToast(null), 6000);
+  }
   const mapCardRef = useRef(null);
 
   useEffect(() => {
@@ -422,7 +431,7 @@ export default function LiveClass() {
         const audioTracks = displayStream.getAudioTracks();
         if (!audioTracks.length) {
           displayStream.getTracks().forEach((t) => t.stop());
-          alert("No se capturó audio. Al compartir, selecciona una pestaña y activa 'Compartir audio de la pestaña'.");
+          showToast("No se capturó audio. Al compartir, selecciona una pestaña y activa «Compartir audio de la pestaña».");
           return;
         }
         displayStreamRef.current = displayStream;
@@ -475,7 +484,7 @@ export default function LiveClass() {
 
       // El ciclo de quiz arranca en cuanto haya suficiente transcript (ver scheduleChunk / startQuizTimer)
     } catch (err) {
-      alert("No se pudo acceder al audio: " + err.message);
+      showToast("No se pudo acceder al audio: " + err.message);
     }
   }
 
@@ -629,13 +638,24 @@ export default function LiveClass() {
   async function uploadPDF(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = "";
     const formData = new FormData();
     formData.append("pdf", file);
+    setPdfUploading(true);
     try {
       const res = await fetch("/api/upload-material", { method: "POST", body: formData });
       const json = await res.json();
-      if (!json.skip && json.summary) setMaterialSummary(json.summary);
-    } catch {}
+      if (!json.skip && json.summary) {
+        setMaterialSummary(json.summary);
+        showToast(`PDF «${file.name}» listo: el chatbot ya puede usarlo.`, "success");
+      } else {
+        showToast(json.skip ? "El servicio de IA está saturado. Intenta subir el PDF en unos segundos." : "No se pudo procesar el PDF.");
+      }
+    } catch {
+      showToast("No se pudo subir el PDF. Revisa tu conexión.");
+    } finally {
+      setPdfUploading(false);
+    }
   }
 
   async function sendChatText(text) {
@@ -804,7 +824,7 @@ export default function LiveClass() {
         if (cameraVideoRef.current) cameraVideoRef.current.srcObject = stream;
       }, 60);
     } catch (err) {
-      alert("No se pudo acceder a la cámara: " + err.message);
+      showToast("No se pudo acceder a la cámara: " + err.message);
     }
   }
 
@@ -842,7 +862,11 @@ export default function LiveClass() {
         body: JSON.stringify({ transcript: transcriptRef.current, concepts: conceptsRef.current }),
       });
       const json = await res.json();
-      if (json.skip) { setFinishing(false); return; }
+      if (json.skip) {
+        setFinishing(false);
+        showToast("El servicio de IA está saturado. Espera unos segundos y vuelve a finalizar la clase.");
+        return;
+      }
       setFinalData({
         ...json,
         score,
@@ -865,8 +889,10 @@ export default function LiveClass() {
           quiz_stats: quizStats,
         },
       }).eq("id", classId);
-    } catch {
+    } catch (err) {
+      console.error("[finish-class]", err);
       setFinishing(false);
+      showToast("No se pudo finalizar la clase. Inténtalo de nuevo.");
     }
   }
 
@@ -906,7 +932,6 @@ export default function LiveClass() {
   }
 
   const conceptNames = concepts.map((c) => c.name);
-  const progressPct = Math.min(100, Math.round((concepts.length / 16) * 100));
   const streakMultiplier = getStreakMultiplier(streak);
   const accuracy = quizStats.total > 0
     ? Math.round((quizStats.correct / quizStats.total) * 100)
@@ -967,10 +992,10 @@ export default function LiveClass() {
       : null;
 
     return (
-      <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", overflow: "hidden" }}>
+      <div className="class-view" style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", overflow: "hidden" }}>
 
         {/* ── HEADER ── */}
-        <header style={{ height: 56, flexShrink: 0, background: "#11111f", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 1.25rem", gap: "1rem" }}>
+        <header className="class-topbar" style={{ height: 56, flexShrink: 0, background: "var(--sidebar)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 1.25rem", gap: "1rem" }}>
           <VibeLearningLogo />
           <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)", fontSize: 11, fontWeight: 600, borderRadius: 99, padding: "3px 10px", flexShrink: 0 }}>
@@ -995,13 +1020,13 @@ export default function LiveClass() {
         </header>
 
         {/* ── BODY ── */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div className="class-body report-body" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
           {/* MAIN REPORT AREA */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
             {/* Metrics row */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, padding: "14px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
+            <div className="metrics-row" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, padding: "14px 16px", flexShrink: 0, borderBottom: "1px solid var(--border)" }}>
               {[
                 { icon: <RI s={15}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></RI>, bg: "rgba(124,108,248,0.12)", fg: "var(--accent)", label: "Conceptos", val: concepts.length || 0 },
                 { icon: <RI s={15}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></RI>, bg: "rgba(96,165,250,0.12)", fg: "#60A5FA", label: "Duración", val: durationFmt || "—" },
@@ -1020,7 +1045,7 @@ export default function LiveClass() {
             </div>
 
             {/* Summary + MindMap */}
-            <div style={{ height: "560px", display: "flex", flexShrink: 0, padding: "14px 16px", gap: 12 }}>
+            <div className="report-row" style={{ height: "560px", display: "flex", flexShrink: 0, padding: "14px 16px", gap: 12 }}>
 
               {/* AI Summary */}
               {finalData.final_summary && (
@@ -1106,7 +1131,7 @@ export default function LiveClass() {
           </div>
 
           {/* RIGHT PANEL: CHATBOT */}
-          <div style={{ width: 360, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", background: "var(--card)", overflow: "hidden" }}>
+          <div className="report-chat" style={{ width: 360, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", background: "var(--card)", overflow: "hidden" }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✨</div>
@@ -1137,7 +1162,7 @@ export default function LiveClass() {
               {reportChatLoading && (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 12 }}>
                   <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "0.85rem" }}>🧠</div>
-                  <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "8px 14px", color: "var(--text-muted)", fontSize: "0.83rem", letterSpacing: 3 }}>···</div>
+                  <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "10px 14px" }}><span className="typing-dots" aria-label="Pensando"><span /><span /><span /></span></div>
                 </div>
               )}
               <div ref={reportChatEndRef} />
@@ -1149,18 +1174,21 @@ export default function LiveClass() {
                   value={reportChatInput}
                   onChange={(e) => setReportChatInput(e.target.value)}
                   placeholder="Pregunta sobre la clase..."
-                  style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 12px", color: "var(--text)", fontSize: "0.83rem", outline: "none" }}
+                  className="input"
+                  style={{ flex: 1, background: "var(--surface)", borderRadius: 10, padding: "8px 12px", fontSize: "0.83rem" }}
                 />
                 <button
                   type="submit"
                   disabled={reportChatLoading || !reportChatInput.trim()}
-                  style={{ width: 36, height: 36, borderRadius: 10, background: "var(--accent)", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", opacity: reportChatLoading || !reportChatInput.trim() ? 0.45 : 1, flexShrink: 0 }}
+                  aria-label="Enviar pregunta"
+                  className="btn-accent"
+                  style={{ width: 36, height: 36, borderRadius: 10, background: "var(--accent)", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: reportChatLoading || !reportChatInput.trim() ? 0.45 : 1, flexShrink: 0 }}
                 >
-                  ▶
+                  <RI s={15}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></RI>
                 </button>
               </form>
               <p style={{ fontSize: "0.67rem", color: "var(--text-muted)", marginTop: 7, textAlign: "center" }}>
-                Aula AI puede cometer errores. Verifica la información importante.
+                VibeLearning puede cometer errores. Verifica la información importante.
               </p>
             </div>
           </div>
@@ -1175,7 +1203,7 @@ export default function LiveClass() {
 
   // ─── LIVE CLASS VIEW ───────────────────────────────────────────────────────
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", color: "var(--text)", overflow: "hidden" }}>
+    <div className="class-view" style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", color: "var(--text)", overflow: "hidden" }}>
 
       {/* Score flash overlay */}
       {scoreFlash && (
@@ -1187,23 +1215,22 @@ export default function LiveClass() {
       )}
 
       {/* ── HEADER ── */}
-      <header style={{ height: 56, flexShrink: 0, background: "#11111f", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 1.5rem", gap: "1.25rem" }}>
+      <header className="class-topbar" style={{ height: 56, flexShrink: 0, background: "var(--sidebar)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 1.5rem", gap: "1.25rem" }}>
         <VibeLearningLogo />
 
         <div style={{ width: 1, height: 20, background: "var(--border)", flexShrink: 0 }} />
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 15 }}>📘</span>
           <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Clase en vivo</span>
         </div>
 
         {recording && (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-            <span style={{ color: "#22c55e", fontSize: "0.82rem", fontWeight: 600 }}>
-              {audioSource === "mic" ? "🎤 Grabando" : audioSource === "system" ? "🖥️ Capturando tab" : "🔀 Mic + Tab"}
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block", animation: "pulse 1.5s infinite" }} />
+            <span style={{ color: "#f87171", fontSize: "0.82rem", fontWeight: 600 }}>
+              {audioSource === "mic" ? "Grabando" : audioSource === "system" ? "Capturando tab" : "Mic + Tab"}
             </span>
-            <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>{formatTimer(elapsed)}</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>{formatTimer(elapsed)}</span>
           </div>
         )}
 
@@ -1220,33 +1247,28 @@ export default function LiveClass() {
           </div>
         )}
 
-        {materialSummary && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--text-muted)", fontSize: "0.82rem" }}>
-            <span>📄</span><span>PDF cargado</span>
-          </div>
-        )}
-
-        <label style={{ cursor: "pointer" }}>
-          <input type="file" accept=".pdf" onChange={uploadPDF} style={{ display: "none" }} />
-          <span style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 12px", fontSize: "0.8rem", color: "var(--text)", cursor: "pointer", userSelect: "none" }}>
-            {materialSummary ? "✓ PDF" : "+ PDF"}
-          </span>
+        <label className="btn-ghost" title={materialSummary ? "Reemplazar el PDF de la clase" : "Sube el PDF de la clase para que el chatbot lo use"} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, background: materialSummary ? "rgba(34,197,94,0.08)" : "var(--surface)", border: `1px solid ${materialSummary ? "rgba(34,197,94,0.25)" : "var(--border)"}`, borderRadius: 8, padding: "6px 12px", fontSize: "0.8rem", color: materialSummary ? "#22C55E" : "var(--text)", userSelect: "none", fontWeight: 500 }}>
+          <input type="file" accept=".pdf" onChange={uploadPDF} disabled={pdfUploading} style={{ display: "none" }} />
+          {pdfUploading ? <span className="spinner" style={{ width: 13, height: 13 }} /> : <RI s={14}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></RI>}
+          {pdfUploading ? "Procesando PDF…" : materialSummary ? "PDF cargado" : "Subir PDF"}
         </label>
 
         <button
           onClick={finishClass}
           disabled={finishing}
-          style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 16px", color: "white", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", opacity: finishing ? 0.7 : 1 }}
+          className="btn-accent"
+          style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "7px 16px", color: "white", fontWeight: 600, fontSize: "0.85rem", cursor: finishing ? "not-allowed" : "pointer", opacity: finishing ? 0.7 : 1, display: "inline-flex", alignItems: "center", gap: 7 }}
         >
-          {finishing ? "Guardando..." : "Finalizar clase"}
+          {finishing && <span className="spinner" style={{ width: 14, height: 14 }} />}
+          {finishing ? "Generando resumen…" : "Finalizar clase"}
         </button>
       </header>
 
       {/* ── BODY ── */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div className="class-body" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
         {/* 3-column grid */}
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "hidden", minHeight: 0 }}>
+        <div className="class-grid">
 
           {/* ── COL 2: TRANSCRIPT ── */}
           <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
@@ -1382,7 +1404,9 @@ export default function LiveClass() {
                 <span style={{ fontSize: 15 }}>✨</span>
                 <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Chatbot RAG</span>
               </div>
-              <span style={{ color: "var(--text-muted)", cursor: "pointer", fontSize: "1.1rem", letterSpacing: 2 }}>···</span>
+              {materialSummary && (
+                <span style={{ fontSize: "0.72rem", color: "#22C55E", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 99, padding: "2px 9px", fontWeight: 600 }}>Con PDF</span>
+              )}
             </div>
 
             <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 0" }}>
@@ -1405,7 +1429,7 @@ export default function LiveClass() {
               {chatLoading && (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 14 }}>
                   <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "0.9rem" }}>🧠</div>
-                  <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "9px 14px", color: "var(--text-muted)", fontSize: "0.83rem", letterSpacing: 3 }}>···</div>
+                  <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "11px 14px" }}><span className="typing-dots" aria-label="Pensando"><span /><span /><span /></span></div>
                 </div>
               )}
               <div ref={chatEndRef} />
@@ -1423,6 +1447,7 @@ export default function LiveClass() {
                     <button
                       key={text}
                       onClick={() => sendChatText(text)}
+                      className="chip-btn"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", fontSize: "0.74rem", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                     >
                       {icon} {text}
@@ -1438,14 +1463,18 @@ export default function LiveClass() {
                   value={chatQuestion}
                   onChange={(e) => setChatQuestion(e.target.value)}
                   placeholder="Escribe tu pregunta..."
-                  style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 12px", color: "var(--text)", fontSize: "0.83rem", outline: "none" }}
+                  aria-label="Pregunta para el chatbot"
+                  className="input"
+                  style={{ flex: 1, background: "var(--surface)", borderRadius: 10, padding: "8px 12px", fontSize: "0.83rem" }}
                 />
                 <button
                   type="submit"
                   disabled={chatLoading || !chatQuestion.trim()}
-                  style={{ width: 36, height: 36, borderRadius: 10, background: "var(--accent)", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", opacity: chatLoading || !chatQuestion.trim() ? 0.45 : 1, flexShrink: 0 }}
+                  aria-label="Enviar pregunta"
+                  className="btn-accent"
+                  style={{ width: 36, height: 36, borderRadius: 10, background: "var(--accent)", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: chatLoading || !chatQuestion.trim() ? 0.45 : 1, flexShrink: 0 }}
                 >
-                  ▶
+                  <RI s={15}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></RI>
                 </button>
               </form>
               <p style={{ fontSize: "0.67rem", color: "var(--text-muted)", marginTop: 7, textAlign: "center" }}>
@@ -1579,7 +1608,12 @@ export default function LiveClass() {
                   return (
                     <div
                       key={i}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
                       onClick={() => setExpandedConcept(isExpanded ? null : i)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedConcept(isExpanded ? null : i); } }}
+                      className="fade-up"
                       style={{ borderRadius: 10, border: `1px solid ${isExpanded ? "var(--accent)" : "var(--border)"}`, background: isExpanded ? "rgba(124,109,242,0.08)" : "var(--surface)", padding: "10px 12px", marginBottom: 8, cursor: "pointer", transition: "border-color 0.15s" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1596,7 +1630,7 @@ export default function LiveClass() {
                             onClick={(e) => { e.stopPropagation(); sendChatText(`Dame un ejemplo de ${c.name}`); }}
                             style={{ background: "none", border: "1px solid var(--border)", borderRadius: 6, padding: "3px 8px", color: "var(--text-muted)", fontSize: "0.74rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                           >
-                            �? Ver ejemplo
+                            💡 Ver ejemplo
                           </button>
                         </div>
                       )}
@@ -1607,13 +1641,16 @@ export default function LiveClass() {
 
               <div style={{ padding: "14px 16px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Progreso de la clase</span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--accent)", fontWeight: 700 }}>{progressPct}%</span>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Aciertos en active recall</span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--accent)", fontWeight: 700 }}>{accuracy !== null ? `${accuracy}%` : "—"}</span>
                 </div>
                 <div style={{ height: 5, background: "var(--border)", borderRadius: 10, overflow: "hidden" }}>
-                  <div style={{ height: "100%", background: "var(--accent)", width: `${progressPct}%`, borderRadius: 10, transition: "width 0.5s" }} />
+                  <div style={{ height: "100%", background: "var(--accent)", width: `${accuracy ?? 0}%`, borderRadius: 10, transition: "width 0.5s" }} />
                 </div>
-                <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 5 }}>{concepts.length} de 16 conceptos cubiertos</p>
+                <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", marginTop: 5 }}>
+                  {concepts.length} {concepts.length === 1 ? "concepto detectado" : "conceptos detectados"}
+                  {quizStats.total > 0 ? ` · ${quizStats.correct}/${quizStats.total} respuestas correctas` : " · aún sin preguntas"}
+                </p>
               </div>
             </section>
           </div>
@@ -1622,6 +1659,15 @@ export default function LiveClass() {
       </div>
 
       <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageFile} style={{ display: "none" }} />
+
+      {toast && (
+        <div role={toast.type === "error" ? "alert" : "status"} className="fade-up"
+          style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 400, maxWidth: "min(460px, calc(100vw - 32px))", display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "var(--card)", border: `1px solid ${toast.type === "error" ? "rgba(239,68,68,0.35)" : "rgba(34,197,94,0.35)"}`, boxShadow: "0 16px 40px rgba(0,0,0,0.45)" }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 6, flexShrink: 0, background: toast.type === "error" ? "#EF4444" : "#22C55E" }} />
+          <p style={{ fontSize: "0.83rem", lineHeight: 1.5, color: "var(--text)", flex: 1 }}>{toast.msg}</p>
+          <button type="button" onClick={() => setToast(null)} aria-label="Cerrar aviso" className="link-muted" style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+        </div>
+      )}
 
       {/* ── CAMERA MODAL ────────────────────────────────────────────────────── */}
       {showCamera && (

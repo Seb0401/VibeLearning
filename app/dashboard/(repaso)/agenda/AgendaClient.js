@@ -44,7 +44,7 @@ export default function AgendaClient({ cardMap, classLog }) {
   const [repaso,      setRepaso]      = useState({});
   const [weekStart,   setWeekStart]   = useState(() => getMondayOf(new Date()));
   const [selDay,      setSelDay]      = useState(null);   // Date obj
-  const [notifState,  setNotifState]  = useState("unknown"); // "granted"|"denied"|"default"|"unknown"
+  const [notifState,  setNotifState]  = useState("unknown"); // "granted"|"denied"|"default"|"unknown"|"unsupported"
 
   useEffect(() => {
     setRepaso(loadRepaso());
@@ -70,7 +70,7 @@ export default function AgendaClient({ cardMap, classLog }) {
   function nextWeek() { setWeekStart(d => addDays(d, 7)); setSelDay(null); }
 
   async function requestNotif() {
-    if (!("Notification" in window)) { alert("Tu navegador no soporta notificaciones"); return; }
+    if (!("Notification" in window)) { setNotifState("unsupported"); return; }
     const perm = await Notification.requestPermission();
     setNotifState(perm);
     if (perm === "granted") {
@@ -219,9 +219,9 @@ export default function AgendaClient({ cardMap, classLog }) {
                   {selCards.length > 10 && <p style={{ fontSize: 12, color: "var(--text-3)", textAlign: "center" }}>+{selCards.length - 10} más</p>}
                 </div>
                 <Link href="/dashboard/repaso">
-                  <button style={{ marginTop: 12, background: "var(--accent)", color: "white", border: "none", borderRadius: 9, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                  <span style={{ display: "inline-block", marginTop: 12, background: "var(--accent)", color: "white", border: "none", borderRadius: 9, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                     Ir a Repaso →
-                  </button>
+                  </span>
                 </Link>
               </div>
             ) : (
@@ -255,9 +255,9 @@ export default function AgendaClient({ cardMap, classLog }) {
           </div>
           {todayCards.length > 0 && (
             <Link href="/dashboard/repaso">
-              <button style={{ marginTop: 14, width: "100%", background: "var(--accent)", color: "white", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <span style={{ display: "inline-block", marginTop: 14, width: "100%", background: "var(--accent)", color: "white", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Repasar ahora ({todayCards.length})
-              </button>
+              </span>
             </Link>
           )}
         </div>
@@ -275,6 +275,10 @@ export default function AgendaClient({ cardMap, classLog }) {
                 Recibirás un recordatorio cuando abras la app con conceptos pendientes.
               </p>
             </div>
+          ) : notifState === "unsupported" ? (
+            <p style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.6 }}>
+              Tu navegador no soporta notificaciones. Puedes revisar tus repasos pendientes en este calendario.
+            </p>
           ) : notifState === "denied" ? (
             <div>
               <p style={{ fontSize: 13, color: "#EF4444", fontWeight: 500, marginBottom: 6 }}>Notificaciones bloqueadas</p>

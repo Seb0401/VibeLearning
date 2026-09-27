@@ -83,16 +83,16 @@ body {
 .btn-accent {
   transition: background 150ms ease, box-shadow 150ms ease, transform 100ms ease;
 }
-.btn-accent:hover {
+.btn-accent:hover:not(:disabled) {
   background: var(--accent-hover) !important;
   box-shadow: 0 4px 20px rgba(124, 108, 248, 0.38) !important;
 }
-.btn-accent:active { transform: scale(0.98); }
+.btn-accent:active:not(:disabled) { transform: scale(0.98); }
 
 .btn-ghost {
   transition: background 150ms ease, border-color 150ms ease;
 }
-.btn-ghost:hover {
+.btn-ghost:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
@@ -124,3 +124,250 @@ body {
 }
 
 
+
+/* ── Base polish ──────────────────────────────────────────────────────── */
+:root { color-scheme: dark; }
+::selection { background: rgba(124, 108, 248, 0.35); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+button:disabled { cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Inputs ───────────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-input);
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+.input::placeholder { color: var(--text-3); }
+.input:hover  { border-color: rgba(255, 255, 255, 0.14); }
+.input:focus  {
+  border-color: rgba(124, 108, 248, 0.55);
+  box-shadow: 0 0 0 3px rgba(124, 108, 248, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+.input:focus-visible { outline: none; }
+
+/* ── Chips / pills ────────────────────────────────────────────────────── */
+.chip-btn {
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.chip-btn:hover:not(:disabled) {
+  background: rgba(124, 108, 248, 0.12) !important;
+  border-color: rgba(124, 108, 248, 0.35) !important;
+  color: var(--text) !important;
+}
+
+.link-muted { transition: color 150ms ease; }
+.link-muted:hover { color: var(--text) !important; }
+
+/* ── Loaders ──────────────────────────────────────────────────────────── */
+@keyframes vl-spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: vl-spin 700ms linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.spinner-lg {
+  width: 34px;
+  height: 34px;
+  border-width: 3px;
+  border-color: var(--border-strong);
+  border-top-color: var(--accent);
+}
+
+@keyframes vl-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.typing-dots { display: inline-flex; gap: 4px; align-items: center; height: 16px; }
+.typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-3);
+  animation: vl-dot 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes vl-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: vl-fade-up 260ms ease-out both; }
+
+/* ── Layout: dashboard ────────────────────────────────────────────────── */
+.dash-page {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .dash-page { padding: 24px 16px; gap: 28px; }
+}
+
+/* ── Layout: sidebar (drawer en móvil) ────────────────────────────────── */
+.app-shell { display: flex; flex: 1; min-height: 100vh; }
+.app-main  { flex: 1; min-width: 0; overflow: auto; background: var(--bg); }
+.mobile-topbar { display: none; }
+.sidebar-backdrop { display: none; }
+
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 16px;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .sidebar {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+  }
+  .sidebar.is-open { transform: none; }
+  .sidebar-backdrop.is-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 50;
+  }
+}
+
+/* ── Layout: vistas de clase de 3 columnas ────────────────────────────── */
+.class-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  min-height: 0;
+}
+@media (max-width: 1100px) {
+  .class-view  { height: auto !important; min-height: 100vh; overflow: visible !important; }
+  .class-body  { overflow: visible !important; }
+  .class-grid  { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .class-grid > * {
+    height: 640px;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .class-topbar { height: auto !important; min-height: 54px; flex-wrap: wrap; padding-top: 8px !important; padding-bottom: 8px !important; row-gap: 8px !important; }
+  .metrics-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; }
+}
+
+/* ── Secciones unificadas con pestañas ────────────────────────────────── */
+.section-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.section-tabs {
+  padding: 24px 48px 0;
+  flex-shrink: 0;
+}
+.section-tablist {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.section-tab {
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+.section-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+.section-tab.is-active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(124, 108, 248, 0.3);
+}
+.section-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.section-content > * { flex-shrink: 0; }
+/* La página ya tiene su propio padding superior grande; lo reducimos bajo las pestañas. */
+.section-content > div:first-child { padding-top: 24px !important; }
+
+/* ── Páginas del dashboard en móvil ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .section-shell { height: calc(100dvh - 56px); }
+  .app-main [style*="40px 48px"] { padding: 24px 16px !important; }
+  .section-tabs { padding: 16px 16px 0; }
+  .app-main [style*="calc(100vh - 1px)"] { height: auto !important; min-height: calc(100dvh - 56px); flex-wrap: wrap; }
+}
+
+/* ── Resumen final de la clase (responsive) ───────────────────────────── */
+@media (max-width: 1100px) {
+  .report-body { flex-direction: column; }
+  .report-body > * { overflow: visible !important; }
+  .report-row  { flex-direction: column; height: auto !important; }
+  .report-row > * { flex: none !important; height: 460px; }
+  .report-chat {
+    width: 100% !important;
+    height: 560px;
+    border-left: none !important;
+    border-top: 1px solid var(--border);
+    overflow: hidden !important;
+  }
+}

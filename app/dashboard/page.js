@@ -97,27 +97,29 @@ export default async function Dashboard() {
   const supabase = await createClient();
   const [{ data: { user } }, { data: raw }] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.from("classes").select("*").order("created_at", { ascending: false }),
+    supabase.from("classes").select("*").neq("title", "Clase en progreso...").order("created_at", { ascending: false }),
   ]);
 
   const classes    = raw || [];
   const rawName    = user?.email?.split("@")[0] || "alumno";
   const name       = rawName.charAt(0).toUpperCase() + rawName.slice(1);
   const lastClass  = classes[0] ?? null;
-  const lastPct    = lastClass
-    ? Math.min(100, Math.round(((lastClass.data?.concepts?.length || 0) / 12) * 100))
-    : 0;
+  const lastQuiz   = lastClass?.data?.quiz_stats;
+  const lastPct    = lastQuiz?.total > 0 ? Math.round((lastQuiz.correct / lastQuiz.total) * 100) : null;
+  const lastConceptCount = lastClass?.data?.concepts?.length || 0;
   const lastConcept = lastClass
     ? (lastClass.data?.concepts?.[0]?.name || lastClass.data?.concepts?.[0] || null)
     : null;
-  const recentPdfs = classes.filter(c => c.data?.material_summary).slice(0, 3);
+  const withPdf    = classes.filter(c => c.data?.material_summary);
+  const totalPdfs  = withPdf.length;
+  const recentPdfs = withPdf.slice(0, 3);
   const dayGroups  = groupByDay(classes);
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "40px" }}>
+    <div className="dash-page">
 
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="dash-header">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
             Bienvenido de nuevo, {name} 👋
@@ -127,7 +129,7 @@ export default async function Dashboard() {
           </p>
         </div>
         <Link href="/class/new" style={{ textDecoration: "none" }}>
-          <button className="btn-accent" style={{
+          <span className="btn-accent" style={{
             display: "flex", alignItems: "center", gap: 7,
             background: "var(--accent)", color: "white", border: "none",
             borderRadius: "var(--radius-btn)", padding: "10px 20px",
@@ -135,15 +137,15 @@ export default async function Dashboard() {
           }}>
             <IcoPlay s={15} />
             Iniciar clase
-          </button>
+          </span>
         </Link>
       </div>
 
       {/* ── CONTENT ROW ────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+      <div className="dash-grid">
 
         {/* ── LEFT: CLASSES BY DAY ─────────────────────────────────────── */}
-        <div style={{ flex: "0 0 65%", minWidth: 0 }}>
+        <div style={{ minWidth: 0 }}>
           <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 20 }}>
             Clases
           </h2>
@@ -153,9 +155,19 @@ export default async function Dashboard() {
               background: "var(--card)", border: "1px solid var(--border)",
               borderRadius: "var(--radius-card)", padding: "48px", textAlign: "center",
             }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
-              <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Aún no tienes clases</p>
-              <p style={{ fontSize: 13, color: "var(--text-2)" }}>Inicia tu primera clase y empieza a aprender con IA.</p>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <IcoSparkles s={26} />
+              </div>
+              <p style={{ fontWeight: 600, fontSize: 16, color: "var(--text)", marginBottom: 6 }}>Aún no tienes clases</p>
+              <p style={{ fontSize: 13, color: "var(--text-2)", maxWidth: 360, margin: "0 auto 20px", lineHeight: 1.6 }}>
+                Inicia una clase y VibeLearning la transcribirá en vivo, extraerá los conceptos clave y te hará preguntas para reforzarlos.
+              </p>
+              <Link href="/class/new" style={{ textDecoration: "none", display: "inline-block" }}>
+                <span className="btn-accent" style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "var(--accent)", color: "white", borderRadius: "var(--radius-btn)", padding: "10px 20px", fontWeight: 600, fontSize: 14 }}>
+                  <IcoPlay s={14} />
+                  Iniciar mi primera clase
+                </span>
+              </Link>
             </div>
           )}
 
@@ -183,7 +195,7 @@ export default async function Dashboard() {
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────────────── */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
 
           {/* Continue learning */}
           {lastClass ? (
@@ -216,18 +228,26 @@ export default async function Dashboard() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 500 }}>Cobertura de conceptos</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>{lastPct}%</span>
+              {lastPct !== null ? (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 500 }}>
+                      Aciertos en el quiz · {lastQuiz.correct}/{lastQuiz.total}
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>{lastPct}%</span>
+                  </div>
+                  <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${lastPct}%`, background: "linear-gradient(90deg, var(--accent), #A78BFA)", borderRadius: 99 }} />
+                  </div>
                 </div>
-                <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${lastPct}%`, background: "linear-gradient(90deg, var(--accent), #A78BFA)", borderRadius: 99 }} />
-                </div>
-              </div>
+              ) : (
+                <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 20 }}>
+                  {lastConceptCount} {lastConceptCount === 1 ? "concepto" : "conceptos"} · sin preguntas respondidas
+                </p>
+              )}
 
               <Link href={`/class/${lastClass.id}`} style={{ textDecoration: "none", display: "block" }}>
-                <button className="btn-accent" style={{
+                <span className="btn-accent" style={{
                   width: "100%", background: "var(--accent)", color: "white",
                   border: "none", borderRadius: "var(--radius-btn)",
                   padding: "12px 16px", fontWeight: 600, fontSize: 14, cursor: "pointer",
@@ -235,7 +255,7 @@ export default async function Dashboard() {
                 }}>
                   <IcoPlay s={15} />
                   Continuar aprendiendo
-                </button>
+                </span>
               </Link>
             </div>
           ) : (
@@ -244,7 +264,7 @@ export default async function Dashboard() {
                 Inicia tu primera clase para ver tu progreso aquí.
               </p>
               <Link href="/class/new" style={{ textDecoration: "none", display: "block" }}>
-                <button className="btn-accent" style={{
+                <span className="btn-accent" style={{
                   width: "100%", background: "var(--accent)", color: "white",
                   border: "none", borderRadius: "var(--radius-btn)",
                   padding: "11px 16px", fontWeight: 600, fontSize: 14, cursor: "pointer",
@@ -252,7 +272,7 @@ export default async function Dashboard() {
                 }}>
                   <IcoPlay s={15} />
                   Iniciar primera clase
-                </button>
+                </span>
               </Link>
             </div>
           )}
@@ -300,11 +320,11 @@ export default async function Dashboard() {
                     </Link>
                   );
                 })}
-                {classes.length > 3 && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px 12px", color: "var(--text-3)", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-                    <span>+{classes.length} recursos guardados</span>
+                {totalPdfs > recentPdfs.length && (
+                  <Link href="/dashboard/biblioteca" className="link-muted" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px 12px", color: "var(--text-3)", fontSize: 12, fontWeight: 500, textDecoration: "none" }}>
+                    <span>+{totalPdfs - recentPdfs.length} materiales más</span>
                     <IcoChevRight s={13} />
-                  </div>
+                  </Link>
                 )}
               </div>
             )}

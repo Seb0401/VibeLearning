@@ -58,7 +58,7 @@ function estimateDur(transcript) {
 export default async function Cronologia() {
   const supabase = await createClient();
   const { data: raw } = await supabase
-    .from("classes").select("*").order("created_at", { ascending: false });
+    .from("classes").select("*").neq("title", "Clase en progreso...").order("created_at", { ascending: false });
 
   const classes = raw || [];
   const milestones   = getMilestones(classes);
@@ -89,7 +89,7 @@ export default async function Cronologia() {
   };
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 36, minHeight: "100vh" }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 36 }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>

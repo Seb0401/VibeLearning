@@ -55,7 +55,7 @@ export default function Repaso() {
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const { data: cls } = await supabase.from("classes").select("id, title, data").order("created_at", { ascending: false });
+      const { data: cls } = await supabase.from("classes").select("id, title, data").neq("title", "Clase en progreso...").order("created_at", { ascending: false });
       const cards = [];
       for (const c of (cls || [])) {
         for (const concept of (c.data?.concepts || [])) {
@@ -129,7 +129,7 @@ export default function Repaso() {
   if (loading) return <div style={{ padding: "40px 48px" }}><p style={{ color: "var(--text-2)" }}>Cargando…</p></div>;
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", gap: 28, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", gap: 28, height: "100%", boxSizing: "border-box" }}>
 
       {/* ── LEFT: Flashcard ─────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>

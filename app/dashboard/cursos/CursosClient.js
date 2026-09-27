@@ -163,14 +163,14 @@ export default function CursosClient({ classes }) {
               {curClasses.length > 0 && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <Link href="/dashboard/repaso" style={{ textDecoration: "none" }}>
-                    <button style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
+                    <span style={{ display: "inline-block", background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
                       Repasar →
-                    </button>
+                    </span>
                   </Link>
                   <Link href="/dashboard/evaluaciones" style={{ textDecoration: "none" }}>
-                    <button style={{ background: "var(--accent-dim)", border: "1px solid rgba(124,108,248,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}>
+                    <span style={{ display: "inline-block", background: "var(--accent-dim)", border: "1px solid rgba(124,108,248,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}>
                       Evaluar →
-                    </button>
+                    </span>
                   </Link>
                 </div>
               )}

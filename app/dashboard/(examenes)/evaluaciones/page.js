@@ -5,7 +5,7 @@ export default async function Evaluaciones() {
   const supabase = await createClient();
   const { data: raw } = await supabase
     .from("classes")
-    .select("id, title, data, created_at")
+    .select("id, title, data, created_at").neq("title", "Clase en progreso...")
     .order("created_at", { ascending: false });
 
   return <EvaluacionesClient classes={raw || []} />;

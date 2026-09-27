@@ -146,7 +146,7 @@ export default async function Estadisticas() {
   const supabase = await createClient();
   const { data: raw } = await supabase
     .from("classes")
-    .select("*")
+    .select("*").neq("title", "Clase en progreso...")
     .order("created_at", { ascending: false });
 
   const classes = raw || [];
@@ -196,7 +196,7 @@ export default async function Estadisticas() {
           </p>
         </div>
         <Link href="/class/new" style={{ textDecoration: "none" }}>
-          <button className="btn-accent" style={{
+          <span className="btn-accent" style={{
             display: "flex", alignItems: "center", gap: 7,
             background: "var(--accent)", color: "white", border: "none",
             borderRadius: "var(--radius-btn)", padding: "10px 20px",
@@ -204,7 +204,7 @@ export default async function Estadisticas() {
           }}>
             <IcoPlay s={14} />
             Nueva clase
-          </button>
+          </span>
         </Link>
       </div>
 
@@ -222,13 +222,13 @@ export default async function Estadisticas() {
             Completa al menos una clase para ver tus estadísticas.
           </p>
           <Link href="/class/new" style={{ textDecoration: "none" }}>
-            <button className="btn-accent" style={{
+            <span className="btn-accent" style={{ display: "inline-block",
               background: "var(--accent)", color: "white", border: "none",
               borderRadius: "var(--radius-btn)", padding: "11px 24px",
               fontWeight: 600, fontSize: 14, cursor: "pointer",
             }}>
               Iniciar clase
-            </button>
+            </span>
           </Link>
         </div>
       )}

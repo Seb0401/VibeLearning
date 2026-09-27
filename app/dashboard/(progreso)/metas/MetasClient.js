@@ -58,7 +58,7 @@ export default function MetasClient({ stats }) {
   const completedGoals = goals.filter(g => { const { current, total } = computeProgress(g.type, g.target, stats); return current >= total; });
 
   return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "100%", boxSizing: "border-box" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>

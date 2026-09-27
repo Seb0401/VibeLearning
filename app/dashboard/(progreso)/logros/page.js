@@ -78,7 +78,7 @@ function Badge({ emoji, name, desc, xp, unlocked, progress }) {
 
 export default async function LogrosPage() {
   const supabase = await createClient();
-  const { data: raw } = await supabase.from("classes").select("*").order("created_at", { ascending: false });
+  const { data: raw } = await supabase.from("classes").select("*").neq("title", "Clase en progreso...").order("created_at", { ascending: false });
   const classes = raw || [];
 
   const words = c => (c.data?.transcript || "").trim().split(/\s+/).filter(Boolean).length;

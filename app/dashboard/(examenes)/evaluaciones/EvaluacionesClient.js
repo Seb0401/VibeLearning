@@ -80,7 +80,7 @@ export default function EvaluacionesClient({ classes }) {
 
   /* ── Setup ── */
   if (phase === "setup") return (
-    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "100%", boxSizing: "border-box" }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>Evaluaciones</h1>
         <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>Genera un examen con IA a partir de tus clases.</p>
@@ -229,7 +229,7 @@ export default function EvaluacionesClient({ classes }) {
 
   /* ── Exam ── */
   if (phase === "exam") return (
-    <div style={{ padding: "40px 48px", display: "flex", gap: 24, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", gap: 24, height: "100%", boxSizing: "border-box" }}>
 
       {/* Questions */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", minWidth: 0 }}>
@@ -290,7 +290,7 @@ export default function EvaluacionesClient({ classes }) {
 
   /* ── Results ── */
   if (phase === "results") return (
-    <div style={{ padding: "40px 48px", display: "flex", gap: 28, height: "calc(100vh - 1px)", boxSizing: "border-box" }}>
+    <div style={{ padding: "40px 48px", display: "flex", gap: 28, height: "100%", boxSizing: "border-box" }}>
 
       {/* Per-question review */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", minWidth: 0 }}>

@@ -23,7 +23,7 @@ export default async function Metas() {
   const supabase = await createClient();
   const { data: raw } = await supabase
     .from("classes")
-    .select("id, created_at, data")
+    .select("id, created_at, data").neq("title", "Clase en progreso...")
     .order("created_at", { ascending: false });
 
   const classes = raw || [];

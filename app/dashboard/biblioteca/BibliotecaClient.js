@@ -477,9 +477,9 @@ export default function BibliotecaClient({ classes }) {
                 <IcoUpload s={13} /> Subir PDF
               </button>
               <Link href="/class/new" style={{ textDecoration: "none" }}>
-                <button className="btn-accent" style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "9px 18px", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                <span className="btn-accent" style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "9px 18px", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                   <IcoPlay s={13} /> Nueva clase
-                </button>
+                </span>
               </Link>
             </div>
           </div>

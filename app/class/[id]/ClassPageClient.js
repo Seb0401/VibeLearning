@@ -25,13 +25,11 @@ function fmtTime(date) {
   return date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-const QUIZ_TABS = ["5 preguntas rápidas", "Modo examen", "Solo fallados"];
 const QUICK_ACTIONS = [
   { label: "Explicado más simple", icon: <><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></> },
   { label: "Dame un ejemplo",       icon: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></> },
   { label: "Hazme un repaso",        icon: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></> },
 ];
-const OPTION_KEYS = ["A", "B", "C", "D"];
 
 const TYPE_BADGE = {
   whiteboard:  { fg: "#2DD4BF", label: "Pizarrón"    },
@@ -62,7 +60,6 @@ export default function ClassPageClient({ cls }) {
   const { transcript, concepts = [], material_summary, final_summary, final_mindmap, canvas_nodes = [], visual_notes = [] } = cls.data ?? {};
   const duration = estimateDuration(transcript);
 
-  const [quizTab, setQuizTab]     = useState(0);
   const [quizQ, setQuizQ]         = useState(null);
   const [selected, setSelected]   = useState(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -127,6 +124,39 @@ export default function ClassPageClient({ cls }) {
     } else {
       await document.exitFullscreen();
     }
+  }
+
+  const [quizScore, setQuizScore] = useState({ correct: 0, total: 0 });
+  const [leftTab, setLeftTab] = useState("summary"); // "summary" | "transcript"
+
+  const wordTotal = transcript ? transcript.trim().split(/\s+/).filter(Boolean).length : 0;
+  // El transcript llega como texto corrido: lo partimos en párrafos de ~5 oraciones para que se lea mejor.
+  const transcriptParagraphs = (() => {
+    if (!transcript) return [];
+    const byLines = transcript.split(/\n{2,}/).map(t => t.trim()).filter(Boolean);
+    if (byLines.length > 1) return byLines;
+    const sentences = transcript.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [transcript];
+    const out = [];
+    for (let i = 0; i < sentences.length; i += 5) out.push(sentences.slice(i, i + 5).join(" ").trim());
+    return out;
+  })();
+
+  const createdLabel = new Date(cls.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+
+  function answerQuiz(key) {
+    if (selected || !quizQ) return;
+    setSelected(key);
+    setQuizScore(prev => ({ correct: prev.correct + (key === quizQ.correct ? 1 : 0), total: prev.total + 1 }));
+  }
+
+  function downloadTranscript() {
+    const blob = new Blob([transcript || ""], { type: "text/plain;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `${(cls.title || "clase").replace(/[\\/:*?"<>|]+/g, "").trim() || "clase"}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function generateQuiz() {
@@ -204,6 +234,11 @@ export default function ClassPageClient({ cls }) {
       <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
     </svg>
   );
+  const SPARKLE_SM = (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/>
+    </svg>
+  );
   const BOT_ICON = (size = 16) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <rect width="18" height="10" x="3" y="11" rx="2"/>
@@ -215,15 +250,15 @@ export default function ClassPageClient({ cls }) {
   );
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", overflow: "hidden" }}>
+    <div className="class-view" style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)", overflow: "hidden" }}>
 
       {/* ── TOP BAR ── */}
-      <div style={{ height: 54, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px", borderBottom: "1px solid var(--border)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href="/dashboard" style={{ textDecoration: "none", color: "var(--text-3)", display: "flex", alignItems: "center", padding: 4 }}>
+      <div className="class-topbar" style={{ height: 54, gap: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <Link href="/dashboard" aria-label="Volver al dashboard" className="link-muted" style={{ textDecoration: "none", color: "var(--text-3)", display: "flex", alignItems: "center", padding: 4 }}>
             <RI s={15}><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></RI>
           </Link>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", maxWidth: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span title={cls.title} style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", maxWidth: 400, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {cls.title}
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)", fontSize: 11, fontWeight: 600, borderRadius: 99, padding: "3px 10px", flexShrink: 0 }}>
@@ -233,33 +268,59 @@ export default function ClassPageClient({ cls }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <Link href="/dashboard" style={{ textDecoration: "none" }}>
-            <button className="btn-ghost" style={{ background: "transparent", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "7px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+            <span className="btn-ghost" style={{ display: "inline-block", background: "transparent", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "7px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
               Dashboard
-            </button>
+            </span>
           </Link>
           {transcript && (
-            <a href={`data:text/plain;charset=utf-8,${encodeURIComponent(transcript)}`} download={`${cls.title}.txt`} style={{ textDecoration: "none" }}>
-              <button className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <button onClick={downloadTranscript} className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                 <RI s={13}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></RI>
                 Transcript
               </button>
-            </a>
           )}
         </div>
       </div>
 
       {/* ── 3 COLUMNS ── */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", overflow: "hidden" }}>
+      <div className="class-grid">
 
         {/* ── LEFT: RESUMEN + QUIZ ── */}
         <div style={{ ...COL, borderRight: "1px solid var(--border)" }}>
           <div style={PANEL_HDR}>
-            <div style={HDR_ICON}>
-              {SPARKLE}
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: 0 }}>Resumen inteligente</h2>
+            <div role="tablist" aria-label="Contenido de la clase" style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
+              {[["summary", "Resumen"], ["transcript", "Transcript"]].map(([key, label]) => {
+                const active = leftTab === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setLeftTab(key)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, borderRadius: 8, padding: "5px 12px", cursor: "pointer", border: "none", background: active ? "var(--accent)" : "transparent", color: active ? "white" : "var(--text-2)" }}
+                  >
+                    {key === "summary" && SPARKLE_SM}
+                    {label}
+                  </button>
+                );
+              })}
             </div>
+            {leftTab === "transcript" && wordTotal > 0 && (
+              <span style={{ fontSize: 11, color: "var(--text-3)" }}>{wordTotal.toLocaleString("es-MX")} palabras</span>
+            )}
           </div>
 
+          {leftTab === "transcript" ? (
+            <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px 24px" }}>
+              {transcript ? (
+                transcriptParagraphs.map((para, i) => (
+                  <p key={i} style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.8, marginBottom: 14 }}>{para}</p>
+                ))
+              ) : (
+                <p style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", marginTop: 40 }}>Esta clase no tiene transcript guardado.</p>
+              )}
+            </div>
+          ) : (
           <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
 
             {/* Summary */}
@@ -283,9 +344,15 @@ export default function ClassPageClient({ cls }) {
                   {concepts.length} conceptos
                 </span>
               )}
+              {visual_notes.length > 0 && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--card)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 500, borderRadius: 99, padding: "5px 12px" }}>
+                  <RI s={11}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></RI>
+                  {visual_notes.length} {visual_notes.length === 1 ? "imagen" : "imágenes"}
+                </span>
+              )}
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--card)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 500, borderRadius: 99, padding: "5px 12px" }}>
-                <RI s={11}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></RI>
-                Nivel: Intermedio
+                <RI s={11}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></RI>
+                {createdLabel}
               </span>
             </div>
 
@@ -294,23 +361,16 @@ export default function ClassPageClient({ cls }) {
               <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden" }}>
                 {/* Quiz header */}
                 <div style={{ padding: "14px 18px 12px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
-                    <RI s={14}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></RI>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Generador de quiz</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {QUIZ_TABS.map((tab, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setQuizTab(i)}
-                        style={{
-                          fontSize: 11, fontWeight: 600, borderRadius: 99, padding: "4px 11px",
-                          cursor: "pointer", border: "none",
-                          background: quizTab === i ? "var(--accent)" : "rgba(255,255,255,0.06)",
-                          color: quizTab === i ? "white" : "var(--text-2)",
-                        }}
-                      >{tab}</button>
-                    ))}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 7 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <RI s={14}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></RI>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Practica esta clase</span>
+                    </div>
+                    {quizScore.total > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)", background: "rgba(255,255,255,0.05)", borderRadius: 99, padding: "3px 10px" }}>
+                        {quizScore.correct}/{quizScore.total} correctas
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -318,17 +378,24 @@ export default function ClassPageClient({ cls }) {
                 <div style={{ padding: "14px 18px" }}>
                   {quizQ ? (
                     <>
+                      {quizQ.concept && (
+                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 9px", marginBottom: 8 }}>
+                          {quizQ.concept}
+                        </span>
+                      )}
                       <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", lineHeight: 1.55, marginBottom: 12 }}>
                         {quizQ.question}
                       </p>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 14 }}>
-                        {OPTION_KEYS.map(key => {
+                      <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 7, marginBottom: 14 }}>
+                        {Object.keys(quizQ.options || {}).map(key => {
                           const { base, letter } = optionStyle(key);
                           const showCheck = selected !== null && quizQ.correct === key;
                           return (
                             <button
                               key={key}
-                              onClick={() => { if (!selected) setSelected(key); }}
+                              onClick={() => answerQuiz(key)}
+                              disabled={selected !== null}
+                              className={selected ? undefined : "chip-btn"}
                               style={{ ...base, borderRadius: 10, padding: "9px 11px", display: "flex", alignItems: "center", gap: 8, cursor: selected ? "default" : "pointer", textAlign: "left" }}
                             >
                               <span style={{ ...letter, width: 22, height: 22, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
@@ -340,9 +407,14 @@ export default function ClassPageClient({ cls }) {
                         })}
                       </div>
                       {selected && (
-                        <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 12, color: selected === quizQ.correct ? "#22C55E" : "#EF4444" }}>
-                          {selected === quizQ.correct ? "¡Correcto! 🎉" : `Incorrecto. La respuesta correcta era ${quizQ.correct}.`}
-                        </p>
+                        <div className="fade-up" style={{ marginBottom: 12 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: selected === quizQ.correct ? "#22C55E" : "#EF4444" }}>
+                            {selected === quizQ.correct ? "¡Correcto! 🎉" : `Incorrecto. La respuesta correcta era ${quizQ.correct}.`}
+                          </p>
+                          {quizQ.explanation && (
+                            <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.55, marginTop: 4 }}>{quizQ.explanation}</p>
+                          )}
+                        </div>
                       )}
                     </>
                   ) : (
@@ -361,13 +433,14 @@ export default function ClassPageClient({ cls }) {
                       opacity: quizLoading ? 0.65 : 1,
                     }}
                   >
-                    {SPARKLE}
-                    {quizLoading ? "Generando..." : "Generar quiz"}
+                    {quizLoading ? <span className="spinner" style={{ width: 14, height: 14 }} /> : SPARKLE}
+                    {quizLoading ? "Generando..." : quizQ ? "Siguiente pregunta" : "Generar pregunta"}
                   </button>
                 </div>
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* ── CENTER: MAPA MENTAL + MAPA DE CONOCIMIENTO ── */}
@@ -382,7 +455,7 @@ export default function ClassPageClient({ cls }) {
                   <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: 0 }}>Mapa mental</h2>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={toggleFullscreen} style={{ background: isFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} style={{ background: isFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
                     {isFullscreen
                       ? <RI s={13}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></RI>
                       : <RI s={13}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></RI>
@@ -408,7 +481,7 @@ export default function ClassPageClient({ cls }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,108,248,0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>🗺️</div>
                     <div>
-                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>🗺️ Mapa de conocimiento</h2>
+                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Mapa de conocimiento</h2>
                       <p style={{ fontSize: 10, color: "var(--text-3)" }}>Explora los conceptos y sus relaciones de manera interactiva</p>
                     </div>
                   </div>
@@ -543,7 +616,7 @@ export default function ClassPageClient({ cls }) {
                   {BOT_ICON(12)}
                 </div>
                 <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "4px 14px 14px 14px", padding: "10px 14px" }}>
-                  <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0, fontStyle: "italic" }}>Pensando...</p>
+                  <span className="typing-dots" aria-label="Pensando"><span /><span /><span /></span>
                 </div>
               </div>
             )}
@@ -556,6 +629,8 @@ export default function ClassPageClient({ cls }) {
               <button
                 key={i}
                 onClick={() => sendMessage(label)}
+                disabled={chatLoading}
+                className="chip-btn"
                 style={{ fontSize: 11, fontWeight: 500, color: "var(--text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 99, padding: "5px 11px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}
               >
                 <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
@@ -571,11 +646,15 @@ export default function ClassPageClient({ cls }) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Escribe tu pregunta sobre esta clase..."
-              style={{ flex: 1, background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-input)", color: "var(--text)", fontSize: 13, padding: "9px 13px", outline: "none" }}
+              aria-label="Pregunta para el agente de estudio"
+              className="input"
+              style={{ flex: 1, background: "var(--card)", fontSize: 13, padding: "9px 13px" }}
             />
             <button
               onClick={() => sendMessage()}
               disabled={chatLoading || !input.trim()}
+              aria-label="Enviar pregunta"
+              className="btn-accent"
               style={{
                 background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)",
                 width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center",
