@@ -7,6 +7,7 @@ import ObsidianCanvas from "@/app/components/ObsidianCanvas";
 import { createClient } from "@/lib/supabase/client";
 import AppIcon from "@/components/Icon";
 import StorageImage from "@/components/StorageImage";
+import QuizCard from "@/components/QuizCard";
 
 function RI({ s = 16, children }) {
   return (
@@ -202,28 +203,6 @@ export default function ClassPageClient({ cls }) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
-  function optionStyle(key) {
-    const isSelected = selected === key;
-    const isCorrect  = quizQ?.correct === key;
-    const revealed   = selected !== null;
-    if (!revealed) return {
-      base:   { background: "var(--tint-2)", border: "1px solid var(--border)", color: "var(--text-2)" },
-      letter: { background: "var(--tint-3)", color: "var(--text-3)" },
-    };
-    if (isCorrect) return {
-      base:   { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", color: "var(--green)" },
-      letter: { background: "rgba(34,197,94,0.15)", color: "var(--green)" },
-    };
-    if (isSelected) return {
-      base:   { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.35)", color: "var(--red)" },
-      letter: { background: "rgba(239,68,68,0.15)", color: "var(--red)" },
-    };
-    return {
-      base:   { background: "var(--tint-1)", border: "1px solid var(--border)", color: "var(--text-3)", opacity: 0.45 },
-      letter: { background: "var(--tint-2)", color: "var(--text-3)" },
-    };
-  }
-
   const COL = { display: "flex", flexDirection: "column", overflow: "hidden" };
   const PANEL_HDR = {
     padding: "18px 22px 14px", flexShrink: 0,
@@ -379,47 +358,9 @@ export default function ClassPageClient({ cls }) {
                 {/* Quiz body */}
                 <div style={{ padding: "14px 18px" }}>
                   {quizQ ? (
-                    <>
-                      {quizQ.concept && (
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 600, color: "var(--accent)", background: "var(--accent-dim)", borderRadius: 99, padding: "2px 9px", marginBottom: 8 }}>
-                          {quizQ.concept}
-                        </span>
-                      )}
-                      <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", lineHeight: 1.55, marginBottom: 12 }}>
-                        {quizQ.question}
-                      </p>
-                      <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 7, marginBottom: 14 }}>
-                        {Object.keys(quizQ.options || {}).map(key => {
-                          const { base, letter } = optionStyle(key);
-                          const showCheck = selected !== null && quizQ.correct === key;
-                          return (
-                            <button
-                              key={key}
-                              onClick={() => answerQuiz(key)}
-                              disabled={selected !== null}
-                              className={selected ? undefined : "chip-btn"}
-                              style={{ ...base, borderRadius: 10, padding: "9px 11px", display: "flex", alignItems: "center", gap: 8, cursor: selected ? "default" : "pointer", textAlign: "left" }}
-                            >
-                              <span style={{ ...letter, width: 22, height: 22, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-                                {showCheck ? <AppIcon name="check" size={13} strokeWidth={2.5} /> : key}
-                              </span>
-                              <span style={{ fontSize: 12, lineHeight: 1.35 }}>{quizQ.options[key]}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {selected && (
-                        <div className="fade-up" style={{ marginBottom: 12 }}>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: selected === quizQ.correct ? "#22C55E" : "#EF4444", display: "flex", alignItems: "center", gap: 6 }}>
-                            <AppIcon name={selected === quizQ.correct ? "check-circle" : "x-circle"} size={14} />
-                            {selected === quizQ.correct ? "¡Correcto!" : `Incorrecto. La respuesta correcta era ${quizQ.correct}.`}
-                          </p>
-                          {quizQ.explanation && (
-                            <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.55, marginTop: 4 }}>{quizQ.explanation}</p>
-                          )}
-                        </div>
-                      )}
-                    </>
+                    <div style={{ marginBottom: 14 }}>
+                      <QuizCard key={quizQ.question} question={quizQ} compact onAnswer={(ok, key) => answerQuiz(key)} />
+                    </div>
                   ) : (
                     <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.55, marginBottom: 12 }}>
                       {quizLoading ? "Generando pregunta..." : "Presiona el botón para practicar con los conceptos de esta clase."}
