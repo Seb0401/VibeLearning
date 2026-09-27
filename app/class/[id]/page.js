@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ClassPageClient from "./ClassPageClient";
+import MobileTabBar from "@/components/MobileTabBar";
 
 export default async function ClassPage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const { data: cls } = await supabase
     .from("classes")
     .select("*")
@@ -30,5 +32,10 @@ export default async function ClassPage({ params }) {
     data: { ...cls.data, visual_notes: notesWithUrls },
   };
 
-  return <ClassPageClient cls={processedCls} />;
+  return (
+    <>
+      <ClassPageClient cls={processedCls} />
+      <MobileTabBar sidebarPages={user?.user_metadata?.sidebar_pages} userEmail={user?.email} />
+    </>
+  );
 }

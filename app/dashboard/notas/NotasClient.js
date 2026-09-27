@@ -100,7 +100,7 @@ export default function NotasClient({ classes: initialClasses }) {
               value={filter}
               onChange={e => setFilter(e.target.value)}
               style={{
-                width: "100%", background: "rgba(255,255,255,0.05)",
+                width: "100%", background: "var(--tint-2)",
                 border: "1px solid var(--border)", borderRadius: 10,
                 padding: "8px 12px", fontSize: 13, color: "var(--text)",
                 outline: "none", boxSizing: "border-box",

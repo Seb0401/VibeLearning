@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
+import MobileTabBar from "@/components/MobileTabBar";
 
 export default async function DashboardLayout({ children }) {
   const supabase = await createClient();
@@ -9,6 +10,7 @@ export default async function DashboardLayout({ children }) {
   return (
     <div className="app-shell">
       <Sidebar userName={userName} userEmail={user?.email} sidebarPages={user?.user_metadata?.sidebar_pages} />
+      <MobileTabBar sidebarPages={user?.user_metadata?.sidebar_pages} userEmail={user?.email} />
       <main className="app-main">
         {children}
       </main>

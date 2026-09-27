@@ -221,7 +221,7 @@ export default async function Estadisticas() {
       {/* Empty state */}
       {classes.length === 0 && (
         <EmptyState
-          icon="bar-chart"
+          mascot="tu-puedes"
           title="Aún no hay datos"
           text="Completa al menos una clase para ver tus estadísticas."
           action={{ href: "/class/new", label: "Iniciar clase" }}
@@ -294,7 +294,7 @@ export default async function Estadisticas() {
               </div>
               {classes.length > 0 && (
                 <span style={{
-                  fontSize: 11.5, fontWeight: 600, color: "#22C55E",
+                  fontSize: 11.5, fontWeight: 600, color: "var(--green)",
                   background: "rgba(34,197,94,0.10)", borderRadius: 99,
                   padding: "4px 12px", border: "1px solid rgba(34,197,94,0.2)",
                 }}>
@@ -321,7 +321,7 @@ export default async function Estadisticas() {
                     <div style={{
                       width: "100%", height: `${pct}%`, maxWidth: 56, minHeight: 4,
                       background: w.count === 0
-                        ? "rgba(255,255,255,0.05)"
+                        ? "var(--tint-2)"
                         : isLast
                           ? "linear-gradient(180deg, #7C6CF8, #A78BFA)"
                           : "rgba(124,108,248,0.40)",
@@ -386,7 +386,7 @@ export default async function Estadisticas() {
                             <span style={{ fontSize: 12, fontWeight: 600, color: col.fg }}>{pct}%</span>
                           </div>
                         </div>
-                        <div style={{ height: 5, background: "rgba(255,255,255,0.05)", borderRadius: 99 }}>
+                        <div style={{ height: 5, background: "var(--tint-2)", borderRadius: 99 }}>
                           <div style={{
                             height: "100%", width: `${pct}%`,
                             background: col.fg, borderRadius: 99,
@@ -425,7 +425,7 @@ export default async function Estadisticas() {
                       }}>
                         {name}
                       </span>
-                      <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 99 }}>
+                      <div style={{ flex: 1, height: 6, background: "var(--tint-2)", borderRadius: 99 }}>
                         <div style={{
                           height: "100%", width: `${pct}%`,
                           background: isBest

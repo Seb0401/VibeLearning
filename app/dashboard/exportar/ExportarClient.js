@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import Mascot from "@/components/Mascot";
 
 function Svg({ size = 16, children }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
@@ -43,7 +44,7 @@ const EXPORT_TYPES = [
     name: "Flashcards para Anki",
     desc: "CSV listo para importar en Anki. Formato: pregunta / respuesta.",
     ext: ".csv",
-    color: "#60A5FA",
+    color: "var(--blue)",
     needs: c => c.concepts.length > 0,
     build: c => buildAnkiCSV(c.concepts),
     filename: c => `${c.title}_flashcards.csv`,
@@ -55,7 +56,7 @@ const EXPORT_TYPES = [
     name: "Transcripción completa",
     desc: "El texto completo de la clase grabada en formato .txt.",
     ext: ".txt",
-    color: "#A78BFA",
+    color: "var(--violet)",
     needs: c => !!c.transcript,
     build: c => `${c.title}\n${"=".repeat(c.title.length)}\n${fmtDate(c.created_at)}\n\n${c.transcript}`,
     filename: c => `${c.title}_transcript.txt`,
@@ -67,7 +68,7 @@ const EXPORT_TYPES = [
     name: "Resumen high-yield",
     desc: "El resumen final generado por IA en formato .txt.",
     ext: ".txt",
-    color: "#22C55E",
+    color: "var(--green)",
     needs: c => !!c.summary,
     build: c => `${c.title} — Resumen\n${fmtDate(c.created_at)}\n\n${c.summary}`,
     filename: c => `${c.title}_resumen.txt`,
@@ -79,7 +80,7 @@ const EXPORT_TYPES = [
     name: "Mapa mental (Markdown)",
     desc: "El mapa mental en formato Markdown compatible con Obsidian y otros.",
     ext: ".md",
-    color: "#FBBF24",
+    color: "var(--yellow)",
     needs: c => !!c.mindmap,
     build: c => `# Mapa mental: ${c.title}\n\n${c.mindmap}`,
     filename: c => `${c.title}_mapa_mental.md`,
@@ -91,7 +92,7 @@ const EXPORT_TYPES = [
     name: "Conceptos JSON",
     desc: "Lista de conceptos con sus definiciones en formato JSON.",
     ext: ".json",
-    color: "#EF4444",
+    color: "var(--red)",
     needs: c => c.concepts.length > 0,
     build: c => JSON.stringify({ title: c.title, date: c.created_at, concepts: c.concepts }, null, 2),
     filename: c => `${c.title}_conceptos.json`,
@@ -132,7 +133,7 @@ export default function ExportarClient({ classes }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar…"
-            style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 12px", fontSize: 12, color: "var(--text)", outline: "none", boxSizing: "border-box" }}
+            style={{ width: "100%", background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 12px", fontSize: 12, color: "var(--text)", outline: "none", boxSizing: "border-box" }}
           />
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
@@ -185,7 +186,7 @@ export default function ExportarClient({ classes }) {
                 const done = dled.has(t.id);
                 return (
                   <div key={t.id} style={{
-                    background: "var(--card)", border: `1px solid ${available ? "var(--border)" : "rgba(255,255,255,0.04)"}`,
+                    background: "var(--card)", border: `1px solid ${available ? "var(--border)" : "var(--tint-2)"}`,
                     borderRadius: "var(--radius-card)", padding: "20px 22px",
                     opacity: available ? 1 : 0.4,
                   }}>
@@ -201,7 +202,7 @@ export default function ExportarClient({ classes }) {
                       disabled={!available}
                       style={{
                         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                        background: done ? "rgba(34,197,94,0.12)" : available ? `${t.color}15` : "rgba(255,255,255,0.03)",
+                        background: done ? "rgba(34,197,94,0.12)" : available ? `${t.color}15` : "var(--tint-1)",
                         border: `1px solid ${done ? "rgba(34,197,94,0.25)" : available ? t.color + "30" : "var(--border)"}`,
                         borderRadius: 9, padding: "9px 14px", fontSize: 12, fontWeight: 600,
                         color: done ? "#22C55E" : available ? t.color : "var(--text-3)",
@@ -223,7 +224,7 @@ export default function ExportarClient({ classes }) {
 
             {/* Anki instructions */}
             <div style={{ background: "rgba(96,165,250,0.05)", border: "1px solid rgba(96,165,250,0.15)", borderRadius: "var(--radius-card)", padding: "16px 20px" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#60A5FA", marginBottom: 6 }}>Cómo importar en Anki</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "var(--blue)", marginBottom: 6 }}>Cómo importar en Anki</p>
               <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.65 }}>
                 Descarga el CSV de flashcards y en Anki ve a <strong>Archivo › Importar</strong> y selecciona el archivo. Las columnas ya están configuradas y el mazo se llamará <strong>VibeLearning</strong>.
               </p>
@@ -232,7 +233,7 @@ export default function ExportarClient({ classes }) {
         ) : (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center" }}>
-              <IconBadge name="package" size={56} style={{ margin: "0 auto 16px" }} />
+              <Mascot pose="menu" size={140} style={{ margin: "0 auto 12px" }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Selecciona una clase</p>
               <p style={{ fontSize: 13, color: "var(--text-2)" }}>Elige una clase de la izquierda para ver las opciones de exportación</p>
             </div>

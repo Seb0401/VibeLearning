@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import Mascot from "@/components/Mascot";
 
 function Svg({ size = 16, children }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
@@ -43,8 +44,8 @@ function FileZone({ label, file, onFile, accept, hint }) {
       onDrop={onDrop}
       onClick={() => ref.current?.click()}
       style={{
-        background: drag ? "rgba(124,108,248,0.08)" : "rgba(255,255,255,0.02)",
-        border: `1.5px dashed ${drag ? "var(--accent)" : file ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.12)"}`,
+        background: drag ? "rgba(124,108,248,0.08)" : "var(--tint-1)",
+        border: `1.5px dashed ${drag ? "var(--accent)" : file ? "rgba(34,197,94,0.4)" : "var(--tint-4)"}`,
         borderRadius: 10, padding: "14px 16px",
         cursor: "pointer", transition: "all 180ms",
         display: "flex", alignItems: "center", gap: 12,
@@ -160,7 +161,7 @@ export default function ExamenesClient({ classes }) {
   const PARTIAL_CT   = result?.questions?.filter(q => q.is_correct === null).length  ?? 0;
 
   const FIELD_STYLE = {
-    width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+    width: "100%", background: "var(--tint-2)", border: "1px solid var(--border)",
     borderRadius: 9, padding: "8px 12px", fontSize: 13, color: "var(--text)",
     outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
@@ -185,8 +186,8 @@ export default function ExamenesClient({ classes }) {
               onDrop={onMainDrop}
               onClick={() => mainRef.current?.click()}
               style={{
-                background: dragging ? "rgba(124,108,248,0.08)" : examFile ? "rgba(34,197,94,0.04)" : "rgba(255,255,255,0.02)",
-                border: `2px dashed ${dragging ? "var(--accent)" : examFile ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.1)"}`,
+                background: dragging ? "rgba(124,108,248,0.08)" : examFile ? "rgba(34,197,94,0.04)" : "var(--tint-1)",
+                border: `2px dashed ${dragging ? "var(--accent)" : examFile ? "rgba(34,197,94,0.4)" : "var(--tint-4)"}`,
                 borderRadius: 12, padding: examPreview ? "12px" : "28px 20px",
                 cursor: "pointer", textAlign: "center", transition: "all 180ms",
               }}
@@ -196,13 +197,13 @@ export default function ExamenesClient({ classes }) {
                 <div>
                   {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local (data:) del examen */}
                   <img src={examPreview} alt="preview" style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, objectFit: "contain" }} />
-                  <p style={{ fontSize: 11, color: "#22C55E", marginTop: 8, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="check" size={12} strokeWidth={2.25} /> {examFile.name}</p>
+                  <p style={{ fontSize: 11, color: "var(--green)", marginTop: 8, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="check" size={12} strokeWidth={2.25} /> {examFile.name}</p>
                   <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Haz clic para cambiar</p>
                 </div>
               ) : examFile ? (
                 <div>
                   <IconBadge name="file-text" color="#22C55E" size={44} style={{ margin: "0 auto 10px" }} />
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#22C55E", marginBottom: 4 }}>{examFile.name}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "var(--green)", marginBottom: 4 }}>{examFile.name}</p>
                   <p style={{ fontSize: 11, color: "var(--text-3)" }}>Haz clic para cambiar</p>
                 </div>
               ) : (
@@ -216,7 +217,7 @@ export default function ExamenesClient({ classes }) {
               )}
             </div>
             {examFile && (
-              <button onClick={() => handleExamFile(null)} style={{ marginTop: 8, width: "100%", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, padding: "6px", fontSize: 12, color: "#EF4444", cursor: "pointer" }}>
+              <button onClick={() => handleExamFile(null)} style={{ marginTop: 8, width: "100%", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, padding: "6px", fontSize: 12, color: "var(--red)", cursor: "pointer" }}>
                 Quitar archivo
               </button>
             )}
@@ -232,11 +233,11 @@ export default function ExamenesClient({ classes }) {
               </p>
               <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Opcional — mejora la calificación</p>
             </div>
-            {hasInstr && <span style={{ fontSize: 10, background: "rgba(34,197,94,0.1)", color: "#22C55E", borderRadius: 4, padding: "2px 8px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AppIcon name="check" size={11} strokeWidth={2.5} /> Incluidas</span>}
+            {hasInstr && <span style={{ fontSize: 10, background: "rgba(34,197,94,0.1)", color: "var(--green)", borderRadius: 4, padding: "2px 8px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AppIcon name="check" size={11} strokeWidth={2.5} /> Incluidas</span>}
           </div>
           <div style={{ padding: 14 }}>
             {/* Mode toggle */}
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", borderRadius: 9, padding: 3, marginBottom: 12 }}>
+            <div style={{ display: "flex", background: "var(--tint-2)", borderRadius: 9, padding: 3, marginBottom: 12 }}>
               {[{ id: "text", label: "Texto / Pegar" }, { id: "pdf", label: "PDF" }].map(({ id, label }) => (
                 <button key={id} onClick={() => setInstrMode(id)} style={{
                   flex: 1, background: instrMode === id ? "var(--accent)" : "transparent",
@@ -310,8 +311,8 @@ export default function ExamenesClient({ classes }) {
 
         {error && (
           <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "12px 14px" }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#EF4444", marginBottom: 4 }}>Error al analizar</p>
-            <p style={{ fontSize: 12, color: "#EF4444", opacity: 0.8 }}>{error}</p>
+            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--red)", marginBottom: 4 }}>Error al analizar</p>
+            <p style={{ fontSize: 12, color: "var(--red)", opacity: 0.8 }}>{error}</p>
           </div>
         )}
       </div>
@@ -334,7 +335,7 @@ export default function ExamenesClient({ classes }) {
         {!result && !loading && (
           <div style={{ flex: 1, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center", maxWidth: 380, padding: "0 20px" }}>
-              <IconBadge name="clipboard" size={56} style={{ margin: "0 auto 16px" }} />
+              <Mascot pose="repasar" size={140} style={{ margin: "0 auto 12px" }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
                 Sube tu examen para analizarlo
               </p>
@@ -380,7 +381,7 @@ export default function ExamenesClient({ classes }) {
                   ))}
                 </div>
                 {result.total_questions > 0 && (
-                  <div style={{ height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 99, marginBottom: 12 }}>
+                  <div style={{ height: 6, background: "var(--tint-3)", borderRadius: 99, marginBottom: 12 }}>
                     <div style={{ height: "100%", width: `${(CORRECT_CT / result.total_questions) * 100}%`, background: gradeColor, borderRadius: 99 }} />
                   </div>
                 )}
@@ -391,12 +392,12 @@ export default function ExamenesClient({ classes }) {
             {/* Topics to review */}
             {result.topics_to_review?.length > 0 && (
               <div style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "var(--radius-card)", padding: "14px 18px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#EF4444", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
                   Temas a repasar
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {result.topics_to_review.map((t, i) => (
-                    <span key={i} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 99, padding: "4px 12px", fontSize: 12, fontWeight: 500, color: "#EF4444" }}>{t}</span>
+                    <span key={i} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 99, padding: "4px 12px", fontSize: 12, fontWeight: 500, color: "var(--red)" }}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -410,7 +411,7 @@ export default function ExamenesClient({ classes }) {
                 </p>
                 <button
                   onClick={() => setExpandedQ(expandedQ.size === 0 ? new Set(result.questions.map((_, i) => i)) : new Set())}
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 7, padding: "5px 12px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}
+                  style={{ background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 7, padding: "5px 12px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}
                 >
                   {expandedQ.size === 0 ? "Expandir todo" : "Colapsar todo"}
                 </button>
@@ -419,10 +420,10 @@ export default function ExamenesClient({ classes }) {
               {(result.questions || []).map((q, i) => {
                 const isExp = expandedQ.has(i);
                 const st = q.is_correct === true
-                  ? { Icon: IcoCheck, color: "#22C55E", bg: "rgba(34,197,94,0.08)", badge: "CORRECTA",   badgeBg: "rgba(34,197,94,0.1)",   badgeColor: "#22C55E" }
+                  ? { Icon: IcoCheck, color: "var(--green)", bg: "rgba(34,197,94,0.08)", badge: "CORRECTA",   badgeBg: "rgba(34,197,94,0.1)",   badgeColor: "#22C55E" }
                   : q.is_correct === false
-                    ? { Icon: IcoX,     color: "#EF4444", bg: "rgba(239,68,68,0.08)",  badge: "INCORRECTA",  badgeBg: "rgba(239,68,68,0.1)",   badgeColor: "#EF4444" }
-                    : { Icon: IcoHelp,  color: "#FBBF24", bg: "rgba(251,191,36,0.08)", badge: "PARCIAL",    badgeBg: "rgba(251,191,36,0.1)",  badgeColor: "#FBBF24" };
+                    ? { Icon: IcoX,     color: "var(--red)", bg: "rgba(239,68,68,0.08)",  badge: "INCORRECTA",  badgeBg: "rgba(239,68,68,0.1)",   badgeColor: "#EF4444" }
+                    : { Icon: IcoHelp,  color: "var(--yellow)", bg: "rgba(251,191,36,0.08)", badge: "PARCIAL",    badgeBg: "rgba(251,191,36,0.1)",  badgeColor: "#FBBF24" };
 
                 return (
                   <div key={i} style={{ borderBottom: i < (result.questions.length - 1) ? "1px solid var(--border)" : "none" }}>
@@ -448,14 +449,14 @@ export default function ExamenesClient({ classes }) {
                     {isExp && (
                       <div style={{ padding: "2px 18px 16px 56px", display: "flex", flexDirection: "column", gap: 8 }}>
                         {q.student_answer && (
-                          <div style={{ background: q.is_correct === false ? "rgba(239,68,68,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${q.is_correct === false ? "rgba(239,68,68,0.15)" : "var(--border)"}`, borderRadius: 9, padding: "10px 14px" }}>
+                          <div style={{ background: q.is_correct === false ? "rgba(239,68,68,0.05)" : "var(--tint-1)", border: `1px solid ${q.is_correct === false ? "rgba(239,68,68,0.15)" : "var(--border)"}`, borderRadius: 9, padding: "10px 14px" }}>
                             <p style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Respuesta del estudiante</p>
                             <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>{q.student_answer}</p>
                           </div>
                         )}
                         {q.correct_answer && (
                           <div style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 9, padding: "10px 14px" }}>
-                            <p style={{ fontSize: 10, fontWeight: 700, color: "#22C55E", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Respuesta correcta</p>
+                            <p style={{ fontSize: 10, fontWeight: 700, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Respuesta correcta</p>
                             <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>{q.correct_answer}</p>
                           </div>
                         )}

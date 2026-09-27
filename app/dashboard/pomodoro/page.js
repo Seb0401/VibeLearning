@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Mascot from "@/components/Mascot";
 
 const PRESETS = [
   { label: "Clásico",  name: "25 / 5 min",  work: 25*60, short: 5*60,  long: 15*60, sessions: 4 },
@@ -16,7 +17,7 @@ function Ring({ pct, color, size = 240 }) {
   const circ = 2 * Math.PI * r;
   return (
     <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={10}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--tint-2)" strokeWidth={10}/>
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
         strokeLinecap="round"
         strokeDasharray={String(circ)}
@@ -158,6 +159,8 @@ export default function PomodoroPage() {
             </span>
           </div>
 
+          <Mascot pose={phase === "work" ? "enfoque" : "descanso"} size={120} float={running} />
+
           {/* Ring + time */}
           <div style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Ring pct={pct} color={color} size={240} />
@@ -176,7 +179,7 @@ export default function PomodoroPage() {
             {Array.from({ length: P.sessions }).map((_, i) => (
               <div key={i} style={{
                 width: 10, height: 10, borderRadius: "50%",
-                background: i < session ? color : "rgba(255,255,255,0.08)",
+                background: i < session ? color : "var(--tint-4)",
                 boxShadow: i < session ? `0 0 8px ${color}80` : "none",
                 transition: "all 300ms ease",
               }}/>
@@ -186,7 +189,7 @@ export default function PomodoroPage() {
           {/* Controls */}
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <button onClick={reset} style={{
-              background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)",
+              background: "var(--tint-2)", border: "1px solid var(--border)",
               borderRadius: 11, padding: "10px 20px", color: "var(--text-2)",
               fontSize: 13, fontWeight: 500, cursor: "pointer",
             }}>
@@ -201,7 +204,7 @@ export default function PomodoroPage() {
               {running ? "Pausar" : "Iniciar"}
             </button>
             <button onClick={skip} style={{
-              background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)",
+              background: "var(--tint-2)", border: "1px solid var(--border)",
               borderRadius: 11, padding: "10px 20px", color: "var(--text-2)",
               fontSize: 13, fontWeight: 500, cursor: "pointer",
             }}>
@@ -215,7 +218,7 @@ export default function PomodoroPage() {
               background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)",
               borderRadius: 14, padding: "16px 28px", maxWidth: 420, textAlign: "center",
             }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: "#22C55E", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: "var(--green)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
                 Concepto del descanso · {concept.cls}
               </p>
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: concept.summary ? 6 : 0 }}>
@@ -241,7 +244,7 @@ export default function PomodoroPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {PRESETS.map((p, i) => (
                 <button key={p.name} onClick={() => switchPreset(i)} style={{
-                  background: pi === i ? "var(--accent-dim)" : "rgba(255,255,255,0.02)",
+                  background: pi === i ? "var(--accent-dim)" : "var(--tint-1)",
                   border: `1px solid ${pi === i ? "rgba(124,108,248,0.3)" : "var(--border)"}`,
                   borderRadius: 10, padding: "11px 14px",
                   display: "flex", justifyContent: "space-between", alignItems: "center",

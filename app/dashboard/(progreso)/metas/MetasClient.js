@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { IconBadge } from "@/components/Icon";
 import { useStoredJSON, writeStoredJSON } from "@/lib/useStoredJSON";
+import Mascot from "@/components/Mascot";
 
 function Icon({ size = 16, children }) {
   return (
@@ -83,7 +84,7 @@ export default function MetasClient({ stats }) {
               <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Nueva meta</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {GOAL_TEMPLATES.map(tmpl => (
-                  <label key={tmpl.type} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, background: newType === tmpl.type ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", border: `1px solid ${newType === tmpl.type ? "rgba(124,108,248,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
+                  <label key={tmpl.type} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, background: newType === tmpl.type ? "var(--accent-dim)" : "var(--tint-1)", border: `1px solid ${newType === tmpl.type ? "rgba(124,108,248,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
                     <input type="radio" name="goalType" value={tmpl.type} checked={newType === tmpl.type} onChange={() => onTemplateChange(tmpl.type)} style={{ accentColor: "var(--accent)" }} />
                     <IconBadge name={tmpl.icon} color={GOAL_COLORS[tmpl.type].fg} size={32} />
                     <div>
@@ -101,7 +102,7 @@ export default function MetasClient({ stats }) {
                   <input type="number" value={newTarget} min={GOAL_TEMPLATES.find(t => t.type === newType)?.min ?? 1} max={GOAL_TEMPLATES.find(t => t.type === newType)?.max ?? 100} onChange={e => setNewTarget(Number(e.target.value))} className="input" style={{ fontSize: 15, fontWeight: 600 }} />
                 </div>
                 <button onClick={addGoal} className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Guardar</button>
-                <button onClick={() => setAdding(false)} className="btn-ghost" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 16px", fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                <button onClick={() => setAdding(false)} className="btn-ghost" style={{ background: "var(--tint-3)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 16px", fontSize: 14, cursor: "pointer" }}>Cancelar</button>
               </div>
             </div>
           )}
@@ -110,7 +111,7 @@ export default function MetasClient({ stats }) {
           {goals.length === 0 && !adding && (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "48px 32px", textAlign: "center", maxWidth: 400, width: "100%" }}>
-                <IconBadge name="target" size={56} style={{ margin: "0 auto 16px" }} />
+                <Mascot pose="tu-puedes" size={140} style={{ margin: "0 auto 12px" }} />
                 <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8, fontSize: 16 }}>Sin metas activas</p>
                 <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 24 }}>Define una meta y el progreso se calcula automáticamente.</p>
                 <button onClick={() => setAdding(true)} className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "11px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -148,7 +149,7 @@ export default function MetasClient({ stats }) {
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-3)", marginBottom: 5 }}>
                         <span>Progreso</span><span style={{ color: col.fg, fontWeight: 600 }}>{pct}%</span>
                       </div>
-                      <div style={{ height: 7, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
+                      <div style={{ height: 7, background: "var(--tint-3)", borderRadius: 99 }}>
                         <div style={{ height: "100%", width: `${pct}%`, background: col.fg, borderRadius: 99, transition: "width 600ms ease" }} />
                       </div>
                     </div>
@@ -167,12 +168,12 @@ export default function MetasClient({ stats }) {
                 const tmpl = GOAL_TEMPLATES.find(t => t.type === g.type);
                 return (
                   <div key={g.id} style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: "var(--radius-card)", padding: "14px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(34,197,94,0.12)", color: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(34,197,94,0.12)", color: "var(--green)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <IcoCheck s={15} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{g.label}</p>
-                      <p style={{ fontSize: 11, color: "#22C55E", marginTop: 2 }}>{current}/{total} {g.unit} · Meta alcanzada</p>
+                      <p style={{ fontSize: 11, color: "var(--green)", marginTop: 2 }}>{current}/{total} {g.unit} · Meta alcanzada</p>
                     </div>
                     <button onClick={() => removeGoal(g.id)} aria-label={`Eliminar meta ${g.label}`} title="Eliminar meta" className="link-muted" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}><IcoTrash s={14} /></button>
                   </div>
@@ -189,11 +190,11 @@ export default function MetasClient({ stats }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[
                 { icon: "graduation", label: "Clases esta semana", value: stats.weekClasses,   color: "#7C6CF8", unit: "clases"   },
-                { icon: "lightbulb",  label: "Conceptos este mes", value: stats.monthConcepts, color: "#FBBF24", unit: "conceptos"},
-                { icon: "file-text",  label: "PDFs este mes",      value: stats.monthPdfs,     color: "#60A5FA", unit: "PDFs"     },
-                { icon: "flame",      label: "Racha actual",       value: stats.streak,        color: "#F97316", unit: "días"     },
+                { icon: "lightbulb",  label: "Conceptos este mes", value: stats.monthConcepts, color: "var(--yellow)", unit: "conceptos"},
+                { icon: "file-text",  label: "PDFs este mes",      value: stats.monthPdfs,     color: "var(--blue)", unit: "PDFs"     },
+                { icon: "flame",      label: "Racha actual",       value: stats.streak,        color: "var(--orange)", unit: "días"     },
               ].map(({ icon, label, value, color, unit }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "var(--tint-1)", borderRadius: 12, border: "1px solid var(--border)" }}>
                   <IconBadge name={icon} color={color} size={36} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 11, color: "var(--text-3)" }}>{label}</p>
@@ -210,7 +211,7 @@ export default function MetasClient({ stats }) {
               {GOAL_TEMPLATES.map(tmpl => {
                 const col = GOAL_COLORS[tmpl.type];
                 return (
-                  <button key={tmpl.type} onClick={() => { setNewType(tmpl.type); setNewTarget(tmpl.default); setAdding(true); }} className="chip-btn" style={{ textAlign: "left", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", color: "var(--text-3)" }}>
+                  <button key={tmpl.type} onClick={() => { setNewType(tmpl.type); setNewTarget(tmpl.default); setAdding(true); }} className="chip-btn" style={{ textAlign: "left", background: "var(--tint-1)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", color: "var(--text-3)" }}>
                     <IconBadge name={tmpl.icon} color={col.fg} size={30} />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{tmpl.label}</p>

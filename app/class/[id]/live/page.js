@@ -13,6 +13,7 @@ import Toast from "./_components/Toast";
 import CameraModal from "./_components/CameraModal";
 import LiveStyles from "./_components/LiveStyles";
 import FinalReport from "./_components/FinalReport";
+import Mascot from "@/components/Mascot";
 
 export default function LiveClass() {
   const { id: classId } = useParams();
@@ -857,7 +858,8 @@ export default function LiveClass() {
       {/* Score flash overlay */}
       {scoreFlash && (
         <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 9999, pointerEvents: "none", animation: "scoreFlash 2s ease-out forwards" }}>
-          <div style={{ background: "linear-gradient(135deg,#7c6df2,#a78bfa)", borderRadius: 16, padding: "16px 28px", boxShadow: "0 8px 32px rgba(124,108,248,0.5)", textAlign: "center" }}>
+          <div style={{ background: "var(--accent-grad)", borderRadius: 20, padding: "10px 26px 14px", boxShadow: "0 8px 32px rgba(124,108,248,0.5)", textAlign: "center" }}>
+            <Mascot pose="logro" size={84} halo={false} style={{ margin: "-38px auto 2px" }} />
             <p style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", margin: 0, letterSpacing: "-0.02em" }}>{scoreFlash}</p>
           </div>
         </div>

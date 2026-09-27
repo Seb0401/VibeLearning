@@ -68,6 +68,10 @@ const P = {
   hourglass:  <><path d="M5 22h14M5 2h14" /><path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22" /><path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2" /></>,
 
   // ── Medios / captura ─────────────────────────────────────────────────
+  sun:        <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></>,
+  moon:       <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
+  "more":     <><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></>,
+  home:       <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></>,
   mic:        <><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="18" x2="12" y2="22" /></>,
   "mic-off":  <><line x1="2" y1="2" x2="22" y2="22" /><path d="M18.9 13.3A7 7 0 0 0 19 12v-2" /><path d="M5 10v2a7 7 0 0 0 11.6 5.3" /><path d="M15 9.3V5a3 3 0 0 0-5.7-1.3" /><path d="M9 9v3a3 3 0 0 0 5.1 2.1" /><line x1="12" y1="19" x2="12" y2="22" /></>,
   monitor:    <><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></>,
@@ -117,7 +121,7 @@ export function IconBadge({ name, color = "var(--accent)", size = 44, iconSize, 
         width: size, height: size, borderRadius: "50%", flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         color: c,
-        background: locked ? "rgba(255,255,255,0.04)" : `color-mix(in srgb, ${color} 14%, transparent)`,
+        background: locked ? "var(--tint-2)" : `color-mix(in srgb, ${color} 14%, transparent)`,
         border: `1px solid ${locked ? "var(--border)" : `color-mix(in srgb, ${color} 30%, transparent)`}`,
         ...style,
       }}

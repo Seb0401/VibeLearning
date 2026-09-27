@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import { useStoredJSON, writeStoredJSON } from "@/lib/useStoredJSON";
+import Mascot from "@/components/Mascot";
 
 const COLORS = ["#7C6CF8", "#22C55E", "#60A5FA", "#FBBF24", "#EF4444", "#A78BFA"];
 const SK = "cursos_v1";
@@ -80,11 +81,11 @@ export default function CursosClient({ classes }) {
               onChange={e => setNewTitle(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") createCourse(); if (e.key === "Escape") { setCreating(false); setNewTitle(""); } }}
               placeholder="Nombre del curso…"
-              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid var(--accent)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "var(--text)", outline: "none", boxSizing: "border-box", marginBottom: 8 }}
+              style={{ width: "100%", background: "var(--tint-2)", border: "1px solid var(--accent)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "var(--text)", outline: "none", boxSizing: "border-box", marginBottom: 8 }}
             />
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={createCourse} className="btn-accent" style={{ flex: 1, background: "var(--accent)", color: "white", border: "none", borderRadius: 7, padding: "7px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Crear</button>
-              <button onClick={() => { setCreating(false); setNewTitle(""); }} aria-label="Cancelar" title="Cancelar" className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 7, padding: "7px 10px", color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}><AppIcon name="x" size={14} /></button>
+              <button onClick={() => { setCreating(false); setNewTitle(""); }} aria-label="Cancelar" title="Cancelar" className="btn-ghost" style={{ background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 7, padding: "7px 10px", color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}><AppIcon name="x" size={14} /></button>
             </div>
           </div>
         )}
@@ -136,7 +137,7 @@ export default function CursosClient({ classes }) {
                 onChange={e => patch(cur.id, { title: e.target.value })}
                 style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 18, fontWeight: 700, color: "var(--text)" }}
               />
-              <button onClick={() => deleteCourse(cur.id)} style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 14px", fontSize: 12, color: "#EF4444", cursor: "pointer", flexShrink: 0 }}>
+              <button onClick={() => deleteCourse(cur.id)} style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "6px 14px", fontSize: 12, color: "var(--red)", cursor: "pointer", flexShrink: 0 }}>
                 Eliminar
               </button>
             </div>
@@ -145,7 +146,7 @@ export default function CursosClient({ classes }) {
               onChange={e => patch(cur.id, { description: e.target.value })}
               placeholder="Descripción del curso (opcional)…"
               rows={2}
-              style={{ width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "var(--text-2)", resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              style={{ width: "100%", background: "var(--tint-1)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "var(--text-2)", resize: "none", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
             />
 
             {/* Stats + quick links */}
@@ -161,7 +162,7 @@ export default function CursosClient({ classes }) {
               {curClasses.length > 0 && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <Link href="/dashboard/repaso" style={{ textDecoration: "none" }}>
-                    <span className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
+                    <span className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
                       <AppIcon name="repeat" size={13} /> Repasar
                     </span>
                   </Link>
@@ -183,7 +184,7 @@ export default function CursosClient({ classes }) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar clases…"
-                style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 12px", fontSize: 12, color: "var(--text)", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 12px", fontSize: 12, color: "var(--text)", outline: "none", boxSizing: "border-box" }}
               />
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px" }}>
@@ -218,7 +219,7 @@ export default function CursosClient({ classes }) {
       ) : (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
           <div style={{ textAlign: "center", maxWidth: 300 }}>
-            <IconBadge name="folder" size={56} style={{ margin: "0 auto 16px" }} />
+            <Mascot pose="biblioteca" size={140} style={{ margin: "0 auto 12px" }} />
             <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Organiza tus clases en cursos</p>
             <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
               Crea cursos para agrupar clases relacionadas, llevar un progreso y navegar más fácil.

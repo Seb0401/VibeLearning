@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import MindMap from "@/components/MindMap";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import Mascot from "@/components/Mascot";
 
 function Icon({ size = 16, children }) {
   return (
@@ -33,7 +34,7 @@ function MiniBar({ label, value, max, color }) {
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-3)" }}>
         <span>{label}</span><span style={{ fontWeight: 600, color }}>{value}</span>
       </div>
-      <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
+      <div style={{ height: 4, background: "var(--tint-3)", borderRadius: 99 }}>
         <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 99, transition: "width 500ms ease" }} />
       </div>
     </div>
@@ -141,7 +142,7 @@ export default function Repaso() {
             <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 5 }}>{allCards.length} conceptos · {masteredCount} dominados</p>
           </div>
           {(phase === "done" || totalDone > 0) && (
-            <button onClick={resetSession} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "9px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+            <button onClick={resetSession} style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--tint-3)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "9px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
               <IcoRefresh s={14} /> Reiniciar
             </button>
           )}
@@ -153,7 +154,7 @@ export default function Repaso() {
               <span>{totalDone} de {totalDue} completados</span>
               <span style={{ color: pct === 100 ? "var(--green)" : "var(--accent)", fontWeight: 600 }}>{pct}%</span>
             </div>
-            <div style={{ height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
+            <div style={{ height: 5, background: "var(--tint-3)", borderRadius: 99 }}>
               <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--accent), #A78BFA)", borderRadius: 99, transition: "width 400ms ease" }} />
             </div>
             {totalDone > 0 && (
@@ -168,7 +169,7 @@ export default function Repaso() {
         {phase === "done" && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "56px 48px", textAlign: "center", maxWidth: 460, width: "100%" }}>
-              <IconBadge name={totalDone > 0 ? "trophy" : "check-circle"} color={totalDone > 0 ? "#FBBF24" : "#22C55E"} size={64} style={{ margin: "0 auto 20px" }} />
+              <Mascot pose={totalDone > 0 ? "completado" : "logro"} size={160} float style={{ margin: "0 auto 16px" }} />
               {totalDone > 0 ? (
                 <><p style={{ fontWeight: 700, fontSize: 20, color: "var(--text)", marginBottom: 10 }}>¡Sesión completada!</p>
                 <p style={{ fontSize: 14, color: "var(--text-2)" }}>{sessionStats.correct} correctas · {sessionStats.incorrect} a repasar pronto</p></>
@@ -187,7 +188,7 @@ export default function Repaso() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{current.classTitle}</span>
               {prog[current.key] && (
-                <span style={{ fontSize: 11, color: "var(--text-3)", background: "rgba(255,255,255,0.05)", borderRadius: 99, padding: "3px 10px", border: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 11, color: "var(--text-3)", background: "var(--tint-2)", borderRadius: 99, padding: "3px 10px", border: "1px solid var(--border)" }}>
                   Caja {prog[current.key]?.box ?? 0} / 5
                 </span>
               )}
@@ -225,13 +226,13 @@ export default function Repaso() {
                   <div>
                     <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 12, textAlign: "center" }}>¿Cómo te fue?</p>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={getReinforcement} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#EF4444", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <button onClick={getReinforcement} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "var(--red)", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         <IcoX s={14} /> No sabía
                       </button>
-                      <button onClick={() => rate("hard")} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)", color: "#FBBF24", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <button onClick={() => rate("hard")} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.08)", color: "var(--yellow)", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         <IcoZap s={14} /> Difícil
                       </button>
-                      <button onClick={() => rate("easy")} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(34,197,94,0.3)", background: "rgba(34,197,94,0.08)", color: "#22C55E", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <button onClick={() => rate("easy")} style={{ flex: 1, padding: "14px 8px", border: "1px solid rgba(34,197,94,0.3)", background: "rgba(34,197,94,0.08)", color: "var(--green)", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         <IcoCheck s={14} /> Fácil
                       </button>
                     </div>
@@ -269,8 +270,8 @@ export default function Repaso() {
           <div style={{ marginTop: 14, padding: "12px 0 0", borderTop: "1px solid var(--border)", display: "flex", gap: 10 }}>
             {[
               { label: "Total",     value: allCards.length, color: "var(--accent)" },
-              { label: "Pendientes",value: dueCount,        color: "#FBBF24"       },
-              { label: "Dominados", value: masteredCount,   color: "#22C55E"       },
+              { label: "Pendientes",value: dueCount,        color: "var(--yellow)"       },
+              { label: "Dominados", value: masteredCount,   color: "var(--green)"       },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ textAlign: "center", flex: 1 }}>
                 <p style={{ fontSize: 18, fontWeight: 700, color, letterSpacing: "-0.02em" }}>{value}</p>

@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import BrandLogo from "@/components/Logo";
+import Mascot from "@/components/Mascot";
+import AppIcon from "@/components/Icon";
 
 function GoogleIcon() {
   return (
@@ -110,32 +113,48 @@ export default function LoginPage() {
         background: "radial-gradient(circle, rgba(167,139,250,0.05), transparent 70%)",
         bottom: "5%", left: "-8%", pointerEvents: "none" }} />
 
+      <div className="login-shell">
+      {/* Panel de marca (se oculta en móvil) */}
+      <aside className="login-brand" aria-hidden="true">
+        <BrandLogo size={46} textSize={34} />
+        <p style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", marginTop: 16, lineHeight: 1.4 }}>
+          Graba · Transcribe · Aprende
+        </p>
+        <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 4 }}>Todo en un solo lugar.</p>
+        <Mascot pose="hola" size={260} float priority style={{ margin: "26px 0 10px" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+          {[
+            ["mic", "Transcripción de tu clase en vivo"],
+            ["zap", "Preguntas de active recall mientras aprendes"],
+            ["sparkles", "Resumen y mapa mental al terminar"],
+          ].map(([icon, text]) => (
+            <span key={text} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--text-2)", fontWeight: 600 }}>
+              <span style={{ width: 30, height: 30, borderRadius: 10, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <AppIcon name={icon} size={15} />
+              </span>
+              {text}
+            </span>
+          ))}
+        </div>
+      </aside>
+
       <main className="fade-up" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 400 }}>
         {/* Card */}
         <div style={{
-          background: "rgba(23,23,33,0.90)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--card-glass)",
+          border: "1px solid var(--tint-4)",
           borderRadius: 24,
           padding: "clamp(28px, 6vw, 40px) clamp(22px, 6vw, 36px)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
+          boxShadow: "var(--login-card-shadow)",
         }}>
 
           {/* Logo + title */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
-            <div style={{
-              width: 54, height: 54, borderRadius: 16,
-              background: "linear-gradient(135deg, #7C6CF8 0%, #A78BFA 100%)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 8px 28px rgba(124,108,248,0.45)", marginBottom: 16,
-            }}>
-              <svg width="27" height="27" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
-            </div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.03em", marginBottom: 6 }}>
-              VibeLearning
+            <div className="login-card-mascot"><Mascot pose="hola" size={96} priority /></div>
+            <h1 style={{ marginBottom: 8 }}>
+              <BrandLogo size={34} textSize={25} />
             </h1>
             <p style={{ fontSize: 13, color: "var(--text-2)", textAlign: "center", lineHeight: 1.5 }}>
               {isSignin ? "Bienvenido de nuevo. Inicia sesión para continuar." : "Crea tu cuenta gratis y empieza a aprender con IA."}
@@ -143,7 +162,7 @@ export default function LoginPage() {
           </div>
 
           {/* Mode switch */}
-          <div role="tablist" aria-label="Modo de acceso" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 20 }}>
+          <div role="tablist" aria-label="Modo de acceso" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: 4, background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 20 }}>
             {[["signin", "Iniciar sesión"], ["signup", "Crear cuenta"]].map(([key, label]) => {
               const active = mode === key;
               return (
@@ -177,8 +196,8 @@ export default function LoginPage() {
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
               padding: "11px 16px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background: "var(--tint-2)",
+              border: "1px solid var(--tint-4)",
               borderRadius: 12, color: "var(--text)", fontSize: 14, fontWeight: 500,
               cursor: busy ? "not-allowed" : "pointer", marginBottom: 20,
               opacity: busy && !googleLoading ? 0.6 : 1,
@@ -190,11 +209,11 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ flex: 1, height: 1, background: "var(--tint-3)" }} />
             <span style={{ fontSize: 12, color: "var(--text-3)", flexShrink: 0, letterSpacing: "0.03em" }}>
               o con tu email
             </span>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ flex: 1, height: 1, background: "var(--tint-3)" }} />
           </div>
 
           {/* Form */}
@@ -253,7 +272,7 @@ export default function LoginPage() {
                 padding: "10px 14px",
                 background: "rgba(239,68,68,0.08)",
                 border: "1px solid rgba(239,68,68,0.22)",
-                borderRadius: 10, color: "#F87171", fontSize: 13, lineHeight: 1.5,
+                borderRadius: 10, color: "var(--red)", fontSize: 13, lineHeight: 1.5,
               }}>
                 {error}
               </div>
@@ -286,6 +305,7 @@ export default function LoginPage() {
           Transcripción en vivo · Active recall · Resumen y mapa mental con IA
         </p>
       </main>
+      </div>
     </div>
   );
 }

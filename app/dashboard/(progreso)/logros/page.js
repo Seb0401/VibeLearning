@@ -1,15 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import Icon, { IconBadge } from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
+import Mascot from "@/components/Mascot";
 
 const XP_PER_LEVEL = 500;
 
 const CAT = {
   Clases:    { color: "#7C6CF8", metric: "classes",  unit: "clases"    },
-  Conceptos: { color: "#FBBF24", metric: "concepts", unit: "conceptos" },
-  PDF:       { color: "#60A5FA", metric: "pdfs",     unit: "PDFs"      },
-  Racha:     { color: "#F97316", metric: "streak",   unit: "días"      },
-  Tiempo:    { color: "#22C55E", metric: "hours",    unit: "horas"     },
+  Conceptos: { color: "var(--yellow)", metric: "concepts", unit: "conceptos" },
+  PDF:       { color: "var(--blue)", metric: "pdfs",     unit: "PDFs"      },
+  Racha:     { color: "var(--orange)", metric: "streak",   unit: "días"      },
+  Tiempo:    { color: "var(--green)", metric: "hours",    unit: "horas"     },
 };
 
 const ACHIEVEMENTS = [
@@ -67,7 +68,7 @@ function Badge({ icon, name, desc, xp, cat, goal, value, unlocked }) {
   const pct = Math.round((current / goal) * 100);
   return (
     <div className={unlocked ? "card-lift" : undefined} style={{
-      background: unlocked ? "var(--card)" : "rgba(255,255,255,0.02)",
+      background: unlocked ? "var(--card)" : "var(--tint-1)",
       border: `1px solid ${unlocked ? `color-mix(in srgb, ${color} 30%, transparent)` : "var(--border)"}`,
       borderRadius: "var(--radius-card)",
       padding: "20px 16px 16px",
@@ -90,7 +91,7 @@ function Badge({ icon, name, desc, xp, cat, goal, value, unlocked }) {
             <span>{current}/{goal} {unit}</span>
             <span>+{xp} XP</span>
           </div>
-          <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+          <div style={{ height: 4, background: "var(--tint-3)", borderRadius: 99, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${pct}%`, background: color, opacity: 0.7, borderRadius: 99 }} />
           </div>
         </div>
@@ -128,7 +129,7 @@ export default async function LogrosPage() {
     { label: "PDFs",      value: stats.pdfs,                                  icon: "file-text", color: CAT.PDF.color       },
     { label: "Horas",     value: stats.hours.toFixed(1),                      icon: "clock",     color: CAT.Tiempo.color    },
     { label: "Racha",     value: `${stats.streak} d`,                         icon: "flame",     color: CAT.Racha.color     },
-    { label: "Logros",    value: `${unlocked.length}/${ACHIEVEMENTS.length}`, icon: "trophy",    color: "#A78BFA"           },
+    { label: "Logros",    value: `${unlocked.length}/${ACHIEVEMENTS.length}`, icon: "trophy",    color: "var(--violet)"           },
   ];
 
   return (
@@ -158,8 +159,9 @@ export default async function LogrosPage() {
                 {XP_PER_LEVEL - xpInLevel} XP para el siguiente nivel
               </p>
             </div>
+            <Mascot pose="logro" size={104} halo={false} style={{ marginLeft: "auto" }} />
           </div>
-          <div style={{ height: 8, background: "rgba(255,255,255,0.07)", borderRadius: 99 }}>
+          <div style={{ height: 8, background: "var(--tint-3)", borderRadius: 99 }}>
             <div style={{ height: "100%", width: `${xpPct * 100}%`, background: "linear-gradient(90deg, var(--accent), #A78BFA)", borderRadius: 99, transition: "width 0.8s ease" }}/>
           </div>
         </div>
@@ -209,7 +211,7 @@ export default async function LogrosPage() {
       )}
 
       {classes.length === 0 && (
-        <EmptyState icon="trophy" title="Empieza a desbloquear logros" text="Graba tu primera clase para empezar a sumar XP." action={{ href: "/class/new", label: "Iniciar clase" }} />
+        <EmptyState mascot="logro" title="Empieza a desbloquear logros" text="Graba tu primera clase para empezar a sumar XP." action={{ href: "/class/new", label: "Iniciar clase" }} />
       )}
     </div>
   );

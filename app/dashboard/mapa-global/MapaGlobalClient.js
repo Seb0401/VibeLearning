@@ -2,6 +2,7 @@
 import { useState } from "react";
 import MindMap from "@/components/MindMap";
 import { IconBadge } from "@/components/Icon";
+import Mascot from "@/components/Mascot";
 
 function Icon({ size = 16, children }) {
   return (
@@ -62,7 +63,7 @@ export default function MapaGlobalClient({ classes, markdown }) {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", flexShrink: 0 }}>
         <button onClick={() => setSelected(null)} style={{
           padding: "5px 14px", borderRadius: 99, border: "none",
-          background: !selected ? "var(--accent)" : "rgba(255,255,255,0.06)",
+          background: !selected ? "var(--accent)" : "var(--tint-3)",
           color: !selected ? "white" : "var(--text-2)",
           fontSize: 12, fontWeight: !selected ? 600 : 400, cursor: "pointer",
         }}>
@@ -71,7 +72,7 @@ export default function MapaGlobalClient({ classes, markdown }) {
         {classes.map(c => (
           <button key={c.id} onClick={() => setSelected(c.id === selected ? null : c.id)} style={{
             padding: "5px 14px", borderRadius: 99, border: "none",
-            background: selected === c.id ? "var(--accent)" : "rgba(255,255,255,0.06)",
+            background: selected === c.id ? "var(--accent)" : "var(--tint-3)",
             color: selected === c.id ? "white" : "var(--text-2)",
             fontSize: 12, fontWeight: selected === c.id ? 600 : 400, cursor: "pointer",
             maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -88,7 +89,7 @@ export default function MapaGlobalClient({ classes, markdown }) {
           background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)",
         }}>
           <div style={{ textAlign: "center" }}>
-            <IconBadge name="network" size={56} style={{ margin: "0 auto 14px" }} />
+            <Mascot pose="procesando" size={140} style={{ margin: "0 auto 10px" }} />
             <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Sin conceptos aún</p>
             <p style={{ fontSize: 13, color: "var(--text-2)" }}>Completa clases para construir tu mapa de conocimiento.</p>
           </div>

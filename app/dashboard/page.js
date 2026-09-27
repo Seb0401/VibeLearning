@@ -7,18 +7,19 @@ import CoursesWidget from "@/components/CoursesWidget";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Icon, { IconBadge } from "@/components/Icon";
+import Mascot from "@/components/Mascot";
 
 const RECENT_LIMIT = 5;
 
 /* ── Materia (icono + color) según el título ───────────────────────────── */
 function getSubject(title) {
   const t = (title || "").toLowerCase();
-  if (t.match(/machine.?learn|neural|deep.?learn|\bml\b|\bia\b|intelig/)) return { icon: "sparkles",   color: "#60A5FA" };
-  if (t.match(/cálculo|calculo|ecuaci|integr|derivad|serie|taylor|álgebra|algebra|matem/)) return { icon: "sigma", color: "#A78BFA" };
-  if (t.match(/base.*dato|sql|database|datos|normaliz/)) return { icon: "archive", color: "#22C55E" };
-  if (t.match(/program|código|codigo|oop|objeto|herencia|polimorf/)) return { icon: "zap", color: "#FBBF24" };
+  if (t.match(/machine.?learn|neural|deep.?learn|\bml\b|\bia\b|intelig/)) return { icon: "sparkles",   color: "var(--blue)" };
+  if (t.match(/cálculo|calculo|ecuaci|integr|derivad|serie|taylor|álgebra|algebra|matem/)) return { icon: "sigma", color: "var(--violet)" };
+  if (t.match(/base.*dato|sql|database|datos|normaliz/)) return { icon: "archive", color: "var(--green)" };
+  if (t.match(/program|código|codigo|oop|objeto|herencia|polimorf/)) return { icon: "zap", color: "var(--yellow)" };
   if (t.match(/biolog|fotos|célula|celula|quím|quim|físic|fisic/)) return { icon: "microscope", color: "#2DD4BF" };
-  return { icon: "book-open", color: "#60A5FA" };
+  return { icon: "book-open", color: "var(--blue)" };
 }
 
 /* ── Helpers ───────────────────────────────────────────────────────────── */
@@ -107,7 +108,7 @@ function ContinueCard({ cls, now }) {
         {concepts.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 16 }}>
             {concepts.slice(0, 6).map((c) => (
-              <span key={c} style={{ fontSize: 11.5, color: "var(--text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border-strong)", borderRadius: 99, padding: "3px 10px" }}>{c}</span>
+              <span key={c} style={{ fontSize: 11.5, color: "var(--text-2)", background: "var(--tint-2)", border: "1px solid var(--border-strong)", borderRadius: 99, padding: "3px 10px" }}>{c}</span>
             ))}
             {concepts.length > 6 && <span style={{ fontSize: 11.5, color: "var(--text-3)", padding: "3px 4px" }}>+{concepts.length - 6}</span>}
           </div>
@@ -124,7 +125,7 @@ function ContinueCard({ cls, now }) {
                 <span style={{ color: "var(--text-2)" }}>Aciertos en el quiz · {quiz.correct}/{quiz.total}</span>
                 <span style={{ color: "var(--accent-hover)", fontWeight: 700 }}>{pct}%</span>
               </div>
-              <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{ height: 6, background: "var(--tint-3)", borderRadius: 99, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--accent), #A78BFA)", borderRadius: 99 }} />
               </div>
             </div>
@@ -136,10 +137,10 @@ function ContinueCard({ cls, now }) {
 }
 
 const QUICK_ACTIONS = [
-  { href: "/dashboard/biblioteca",   icon: "upload",    color: "#60A5FA", label: "Subir PDF",       hint: "Material para el chatbot" },
-  { href: "/dashboard/evaluaciones", icon: "clipboard", color: "#A78BFA", label: "Generar examen",  hint: "Con tus clases" },
-  { href: "/dashboard/cheat-sheet",  icon: "file-text", color: "#FBBF24", label: "Cheat sheet",     hint: "Resumen de una página" },
-  { href: "/dashboard/mapa-global",  icon: "network",   color: "#22C55E", label: "Mapa global",     hint: "Todos tus conceptos" },
+  { href: "/dashboard/biblioteca",   icon: "upload",    color: "var(--blue)", label: "Subir PDF",       hint: "Material para el chatbot" },
+  { href: "/dashboard/evaluaciones", icon: "clipboard", color: "var(--violet)", label: "Generar examen",  hint: "Con tus clases" },
+  { href: "/dashboard/cheat-sheet",  icon: "file-text", color: "var(--yellow)", label: "Cheat sheet",     hint: "Resumen de una página" },
+  { href: "/dashboard/mapa-global",  icon: "network",   color: "var(--green)", label: "Mapa global",     hint: "Todos tus conceptos" },
 ];
 
 function QuickActions() {
@@ -190,22 +191,40 @@ function RecentLibrary({ items, total }) {
   );
 }
 
+function MotivationCard({ streak, weekClasses, accuracy }) {
+  const msg =
+    streak >= 2 ? { title: `¡${streak} días seguidos!`, text: "Vas muy bien. Una clase más hoy y mantienes la racha." } :
+    accuracy !== null && accuracy >= 80 ? { title: "¡Buen trabajo!", text: `Llevas ${accuracy}% de aciertos en tus quizzes. Sigue así.` } :
+    weekClasses > 0 ? { title: "¡Tú puedes!", text: "Un poco de esfuerzo hoy, grandes resultados mañana." } :
+    { title: "¡Te extrañamos!", text: "Graba una clase hoy y retoma tu racha de estudio." };
+  const pose = streak >= 2 || (accuracy !== null && accuracy >= 80) ? "logro" : "tu-puedes";
+  return (
+    <div className="motivation-card">
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <p style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>{msg.title}</p>
+        <p style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>{msg.text}</p>
+      </div>
+      <Mascot pose={pose} size={96} halo={false} />
+    </div>
+  );
+}
+
 function Onboarding() {
   const STEPS = [
-    { icon: "mic",       color: "#60A5FA", title: "Graba tu clase",          text: "Transcribimos en vivo y detectamos los conceptos clave." },
-    { icon: "zap",       color: "#FBBF24", title: "Responde en el momento",  text: "Preguntas rápidas de active recall mientras avanza la clase." },
-    { icon: "sparkles",  color: "#A78BFA", title: "Repasa lo importante",    text: "Resumen, mapa mental y repaso espaciado al terminar." },
+    { icon: "mic",       color: "var(--blue)", title: "Graba tu clase",          text: "Transcribimos en vivo y detectamos los conceptos clave." },
+    { icon: "zap",       color: "var(--yellow)", title: "Responde en el momento",  text: "Preguntas rápidas de active recall mientras avanza la clase." },
+    { icon: "sparkles",  color: "var(--violet)", title: "Repasa lo importante",    text: "Resumen, mapa mental y repaso espaciado al terminar." },
   ];
   return (
     <div className="ui-card ui-card--lg" style={{ textAlign: "center" }}>
-      <IconBadge name="graduation" size={60} style={{ margin: "0 auto 16px" }} />
-      <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text)" }}>Tu primera clase empieza aquí</h2>
+      <Mascot pose="hola" size={170} float priority style={{ margin: "0 auto 12px" }} />
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>¡Hola! ¿Listo para aprender?</h2>
       <p style={{ fontSize: 13.5, color: "var(--text-2)", marginTop: 6, maxWidth: 440, marginInline: "auto", lineHeight: 1.6 }}>
         VibeLearning te acompaña durante la clase y te deja todo listo para estudiar después.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, margin: "24px 0", textAlign: "left" }}>
         {STEPS.map((s, i) => (
-          <div key={s.title} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 }}>
+          <div key={s.title} style={{ background: "var(--tint-1)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <IconBadge name={s.icon} color={s.color} size={34} />
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>PASO {i + 1}</span>
@@ -288,6 +307,7 @@ export default async function Dashboard() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+              <MotivationCard streak={streak} weekClasses={weekClasses} accuracy={accuracy} />
               <ReviewTodayCard cards={reviewKeys} />
               <QuickActions />
               <CoursesWidget classes={classes} />

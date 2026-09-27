@@ -3,7 +3,7 @@ import { useEffect, useRef, useId } from "react";
 import Icon from "./Icon";
 import { stripEmoji } from "@/lib/text";
 
-const PALETTE = ["#8B7FFF", "#7C6CF8", "#A78BFA", "#C4B5FD", "#DDD6FE"];
+const PALETTE = ["#7C6CF8", "#6D5BF7", "#8B7FFF", "#9B8AFB", "#A78BFA"];
 
 function colorForDepth(depth) {
   return PALETTE[Math.min(depth, PALETTE.length - 1)];
@@ -17,7 +17,7 @@ function ToolbarBtn({ children, onClick, title }) {
       title={title}
       style={{
         width: 26, height: 26, borderRadius: 7, border: "1px solid var(--border)",
-        background: "rgba(23,23,33,0.85)", color: "var(--text-2)", fontSize: 14,
+        background: "var(--card-glass)", color: "var(--text-2)", fontSize: 14,
         fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center",
         justifyContent: "center", lineHeight: 1, backdropFilter: "blur(6px)",
       }}
@@ -58,7 +58,7 @@ export default function MindMap({ markdown }) {
           lineWidth: (node) => Math.max(4 - node.state.depth, 1.25),
           style: (id) => `
             #${id} { background: radial-gradient(circle at 28% 22%, rgba(124,108,248,0.10), transparent 55%); }
-            #${id} .markmap-foreign { color: var(--text-2); font: 400 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+            #${id} .markmap-foreign { color: var(--text-2); font: 500 13px/1.5 var(--font-sans), system-ui, sans-serif; }
             #${id} [data-depth="0"] > .markmap-foreign { color: var(--text); font-weight: 700; font-size: 15px; }
             #${id} [data-depth="1"] > .markmap-foreign { color: var(--text); font-weight: 600; }
             #${id} .markmap-node > circle { stroke-width: 2px; }

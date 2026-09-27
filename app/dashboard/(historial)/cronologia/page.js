@@ -25,17 +25,17 @@ function getMilestones(classes) {
   let totalConcepts = 0;
   sorted.forEach((c, i) => {
     const ms = [];
-    if (i === 0)  ms.push({ text: "Primera clase", icon: "sparkles", color: "#A78BFA" });
-    if (i === 4)  ms.push({ text: "5 clases completadas", icon: "star", color: "#FBBF24" });
-    if (i === 9)  ms.push({ text: "10 clases completadas", icon: "flame", color: "#F97316" });
-    if (i === 24) ms.push({ text: "25 clases completadas", icon: "trophy", color: "#FBBF24" });
-    if (i === 49) ms.push({ text: "50 clases completadas", icon: "rocket", color: "#60A5FA" });
+    if (i === 0)  ms.push({ text: "Primera clase", icon: "sparkles", color: "var(--violet)" });
+    if (i === 4)  ms.push({ text: "5 clases completadas", icon: "star", color: "var(--yellow)" });
+    if (i === 9)  ms.push({ text: "10 clases completadas", icon: "flame", color: "var(--orange)" });
+    if (i === 24) ms.push({ text: "25 clases completadas", icon: "trophy", color: "var(--yellow)" });
+    if (i === 49) ms.push({ text: "50 clases completadas", icon: "rocket", color: "var(--blue)" });
 
     const prev = totalConcepts;
     totalConcepts += c.data?.concepts?.length || 0;
-    if (prev < 50  && totalConcepts >= 50)  ms.push({ text: "50 conceptos aprendidos", icon: "brain", color: "#A78BFA" });
-    if (prev < 100 && totalConcepts >= 100) ms.push({ text: "100 conceptos aprendidos", icon: "lightbulb", color: "#FBBF24" });
-    if (prev < 250 && totalConcepts >= 250) ms.push({ text: "250 conceptos aprendidos", icon: "graduation", color: "#22C55E" });
+    if (prev < 50  && totalConcepts >= 50)  ms.push({ text: "50 conceptos aprendidos", icon: "brain", color: "var(--violet)" });
+    if (prev < 100 && totalConcepts >= 100) ms.push({ text: "100 conceptos aprendidos", icon: "lightbulb", color: "var(--yellow)" });
+    if (prev < 250 && totalConcepts >= 250) ms.push({ text: "250 conceptos aprendidos", icon: "graduation", color: "var(--green)" });
 
     if (ms.length) map.set(c.id, ms);
   });
@@ -81,7 +81,7 @@ export default async function Cronologia() {
       left: -30, top: 16,
       width: 12, height: 12, borderRadius: "50%",
       background: active ? "var(--accent)" : "var(--border)",
-      border: `2px solid ${active ? "var(--accent)" : "rgba(255,255,255,0.08)"}`,
+      border: `2px solid ${active ? "var(--accent)" : "var(--tint-4)"}`,
       boxShadow: active ? "0 0 10px rgba(124,108,248,0.5)" : "none",
       zIndex: 1,
     }),
@@ -127,7 +127,7 @@ export default async function Cronologia() {
 
       {/* Empty */}
       {classes.length === 0 && (
-        <EmptyState icon="calendar" title="Aún no hay clases" text="Tu línea de tiempo aparecerá aquí a medida que completes clases." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
+        <EmptyState mascot="calendario" title="Aún no hay clases" text="Tu línea de tiempo aparecerá aquí a medida que completes clases." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
       )}
 
       {/* Start marker */}
@@ -150,7 +150,7 @@ export default async function Cronologia() {
         <div key={key}>
           {/* Month header */}
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--tint-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.75">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
@@ -211,7 +211,7 @@ export default async function Cronologia() {
                             <span style={{ fontSize: 11, color: "var(--text-2)" }}>{concepts.length} conceptos</span>
                           </>}
                           {hasPDF && (
-                            <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "#EF4444", borderRadius: 4, padding: "1px 6px" }}>PDF</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "var(--red)", borderRadius: 4, padding: "1px 6px" }}>PDF</span>
                           )}
                         </div>
                       </div>

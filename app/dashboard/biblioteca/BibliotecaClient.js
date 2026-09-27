@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import { useStoredJSON } from "@/lib/useStoredJSON";
+import Mascot from "@/components/Mascot";
 const NO_COURSES = [];
 
 /* ── Icons ── */
@@ -73,7 +74,7 @@ function MaterialCard({ c, colorIdx, onUpload }) {
             <button
               onClick={e => { e.preventDefault(); e.stopPropagation(); onUpload(c.id); }}
               title="Reemplazar PDF"
-              style={{ padding: "4px 8px", background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 7, color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11, flexShrink: 0 }}
+              style={{ padding: "4px 8px", background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 7, color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11, flexShrink: 0 }}
             >
               <IcoUpload s={12} /> Reemplazar
             </button>
@@ -82,7 +83,7 @@ function MaterialCard({ c, colorIdx, onUpload }) {
           {concepts.length > 0 && (
             <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
               {concepts.map((tag, j) => (
-                <span key={j} style={{ fontSize: 11, color: "var(--text-3)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 99, padding: "1px 8px", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tag}</span>
+                <span key={j} style={{ fontSize: 11, color: "var(--text-3)", background: "var(--tint-2)", border: "1px solid var(--tint-3)", borderRadius: 99, padding: "1px 8px", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tag}</span>
               ))}
               {c.data?.concepts?.length > 4 && <span style={{ fontSize: 11, color: "var(--text-3)", alignSelf: "center" }}>+{c.data.concepts.length - 4}</span>}
             </div>
@@ -203,7 +204,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
             })()}
           </select>
           {hasExisting && (
-            <p style={{ fontSize: 11, color: "#FBBF24", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
+            <p style={{ fontSize: 11, color: "var(--yellow)", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
               <AppIcon name="alert" size={13} /> Esta clase ya tiene un PDF. El nuevo lo reemplazará.
             </p>
           )}
@@ -218,7 +219,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
           style={{
             border: `2px dashed ${dragging ? "var(--accent)" : file ? "rgba(34,197,94,0.6)" : "var(--border)"}`,
             borderRadius: 12, padding: "28px 20px", textAlign: "center",
-            background: dragging ? "rgba(124,108,248,0.06)" : file ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.02)",
+            background: dragging ? "rgba(124,108,248,0.06)" : file ? "rgba(34,197,94,0.05)" : "var(--tint-1)",
             cursor: "pointer", transition: "all 180ms",
           }}
         >
@@ -227,7 +228,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
           {file ? (
             <div>
               <IconBadge name="file-text" color="#22C55E" size={44} style={{ margin: "0 auto 10px" }} />
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#22C55E" }}>{file.name}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--green)" }}>{file.name}</p>
               <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
                 {(file.size / 1024).toFixed(0)} KB · clic para cambiar
               </p>
@@ -243,7 +244,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
 
         {/* Error */}
         {error && (
-          <p style={{ fontSize: 12, color: "#EF4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "8px 12px" }}>
+          <p style={{ fontSize: 12, color: "var(--red)", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "8px 12px" }}>
             {error}
           </p>
         )}
@@ -486,7 +487,7 @@ export default function BibliotecaClient({ classes }) {
             {displayed.length === 0 ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
                 <div style={{ textAlign: "center" }}>
-                  <IconBadge name="book-open" color="#60A5FA" size={56} style={{ margin: "0 auto 14px" }} />
+                  <Mascot pose="biblioteca" size={140} style={{ margin: "0 auto 10px" }} />
                   <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
                     {selection.type === "uncategorized" ? "Todos los materiales están en un curso" : "Sin materiales aquí"}
                   </p>

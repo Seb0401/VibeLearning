@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import { useStoredJSON } from "@/lib/useStoredJSON";
+import Mascot from "@/components/Mascot";
 const NO_COURSES = [];
 
 function fmtDate(str) {
@@ -199,7 +200,7 @@ export default function CheatSheetClient({ classes }) {
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar…"
                 style={{
-                  width: "100%", background: "rgba(255,255,255,0.04)",
+                  width: "100%", background: "var(--tint-2)",
                   border: "1px solid var(--border)", borderRadius: 9,
                   padding: "7px 12px", fontSize: 12, color: "var(--text)",
                   outline: "none", boxSizing: "border-box",
@@ -266,7 +267,7 @@ export default function CheatSheetClient({ classes }) {
       }}>
         {markdown && !loading && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "11px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-            <button onClick={copy} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, fontWeight: 500, color: copied ? "var(--green)" : "var(--text-2)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <button onClick={copy} className="btn-ghost" style={{ background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, fontWeight: 500, color: copied ? "var(--green)" : "var(--text-2)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
               <AppIcon name={copied ? "check" : "copy"} size={13} /> {copied ? "Copiado" : "Copiar"}
             </button>
             <button onClick={() => window.print()} className="btn-accent" style={{ background: "var(--accent)", border: "none", borderRadius: 9, padding: "7px 16px", fontSize: 12, fontWeight: 600, color: "white", cursor: "pointer" }}>
@@ -300,7 +301,7 @@ export default function CheatSheetClient({ classes }) {
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div style={{ textAlign: "center", maxWidth: 340 }}>
-                <IconBadge name="clipboard" size={56} style={{ margin: "0 auto 18px" }} />
+                <Mascot pose="repasar" size={140} style={{ margin: "0 auto 14px" }} />
                 <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>Tu cheat sheet aparecerá aquí</p>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.7 }}>
                   Selecciona clases o un curso a la izquierda y presiona{" "}

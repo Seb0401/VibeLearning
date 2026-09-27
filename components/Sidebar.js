@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NAV_ITEMS, NAV_GROUP_ORDER, isItemActive, resolveVisible } from "./navConfig";
+import BrandLogo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 function Svg({ size = 18, children }) {
   return (
@@ -35,14 +37,7 @@ const IcoMenu  = () => <Svg size={20}><line x1="3" y1="6" x2="21" y2="6"/><line 
 const IcoClose = () => <Svg size={20}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Svg>;
 
 function Logo({ size = 30 }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <div style={{ width: size, height: size, borderRadius: 8, background: "linear-gradient(135deg, #7C6CF8 0%, #A78BFA 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,108,248,0.3)" }}>
-        <svg width={size / 2} height={size / 2} viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)", letterSpacing: "-0.01em" }}>VibeLearning</span>
-    </div>
-  );
+  return <BrandLogo size={size} textSize={17} />;
 }
 
 /* ── Modal: elegir qué páginas aparecen en el sidebar ──────────────────── */
@@ -120,7 +115,7 @@ function CustomizeModal({ visible, onClose, onSaved }) {
           ))}
         </div>
 
-        {error && <p role="alert" style={{ color: "#F87171", fontSize: 12.5, padding: "0 22px 8px" }}>{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--red)", fontSize: 12.5, padding: "0 22px 8px" }}>{error}</p>}
 
         <div style={{ padding: "14px 22px 18px", borderTop: "1px solid var(--border)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button type="button" onClick={onClose} className="btn-ghost" style={{ background: "transparent", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
@@ -170,14 +165,7 @@ export default function Sidebar({ userName, userEmail, sidebarPages }) {
       {/* Top bar solo en móvil */}
       <div className="mobile-topbar">
         <Link href="/dashboard" style={{ textDecoration: "none" }}><Logo size={28} /></Link>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Abrir menú"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text)", cursor: "pointer" }}
-        >
-          <IcoMenu />
-        </button>
+        <ThemeToggle compact />
       </div>
       <div className={`sidebar-backdrop${open ? " is-open" : ""}`} onClick={() => setOpen(false)} />
 
@@ -246,8 +234,9 @@ export default function Sidebar({ userName, userEmail, sidebarPages }) {
           </button>
         </nav>
 
-        {/* Footer: usuario + cerrar sesión */}
+        {/* Footer: tema + usuario + cerrar sesión */}
         <div style={{ padding: "8px 10px 12px" }}>
+          <div style={{ padding: "0 2px 10px" }}><ThemeToggle /></div>
           <div style={{ height: 1, background: "var(--border)", marginBottom: 8 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px" }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #A78BFA)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initial}</div>

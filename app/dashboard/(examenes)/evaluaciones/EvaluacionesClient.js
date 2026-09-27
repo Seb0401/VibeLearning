@@ -85,7 +85,7 @@ export default function EvaluacionesClient({ classes }) {
         <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>Genera un examen con IA a partir de tus clases.</p>
       </div>
 
-      {error && <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "#EF4444" }}>{error}</div>}
+      {error && <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "var(--red)" }}>{error}</div>}
 
       <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 340px", gap: 20, minHeight: 0 }}>
 
@@ -124,7 +124,7 @@ export default function EvaluacionesClient({ classes }) {
                     const checked   = selectedIds.has(c.id);
                     const nConcepts = c.data?.concepts?.length || 0;
                     return (
-                      <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: checked ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", border: `1px solid ${checked ? "rgba(124,108,248,0.25)" : "transparent"}`, cursor: "pointer", transition: "background 150ms" }}>
+                      <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, background: checked ? "var(--accent-dim)" : "var(--tint-1)", border: `1px solid ${checked ? "rgba(124,108,248,0.25)" : "transparent"}`, cursor: "pointer", transition: "background 150ms" }}>
                         <input type="checkbox" checked={checked} onChange={() => toggleClass(c.id)} style={{ accentColor: "var(--accent)", width: 15, height: 15 }} />
                         <span style={{ flex: 1, fontSize: 14, color: checked ? "var(--text)" : "var(--text-2)", fontWeight: checked ? 500 : 400 }}>{c.title}</span>
                         {nConcepts > 0 && <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{nConcepts} conceptos</span>}
@@ -152,7 +152,7 @@ export default function EvaluacionesClient({ classes }) {
                       display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 12px", borderRadius: 10, marginBottom: 4,
                       cursor: "pointer",
-                      background: isActive ? "var(--accent-dim)" : "rgba(255,255,255,0.02)",
+                      background: isActive ? "var(--accent-dim)" : "var(--tint-1)",
                       border: `1px solid ${isActive ? "rgba(124,108,248,0.25)" : "transparent"}`,
                       transition: "all 140ms",
                     }}>
@@ -187,7 +187,7 @@ export default function EvaluacionesClient({ classes }) {
             <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 14 }}>Número de preguntas</h2>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[5, 8, 10, 15].map(n => (
-                <button key={n} onClick={() => setNumQ(n)} style={{ padding: "14px 8px", fontSize: 15, fontWeight: 700, border: `1px solid ${numQ === n ? "rgba(124,108,248,0.4)" : "var(--border)"}`, background: numQ === n ? "var(--accent-dim)" : "rgba(255,255,255,0.03)", color: numQ === n ? "var(--accent)" : "var(--text-2)", borderRadius: 12, cursor: "pointer" }}>
+                <button key={n} onClick={() => setNumQ(n)} style={{ padding: "14px 8px", fontSize: 15, fontWeight: 700, border: `1px solid ${numQ === n ? "rgba(124,108,248,0.4)" : "var(--border)"}`, background: numQ === n ? "var(--accent-dim)" : "var(--tint-1)", color: numQ === n ? "var(--accent)" : "var(--text-2)", borderRadius: 12, cursor: "pointer" }}>
                   {n}
                 </button>
               ))}
@@ -201,7 +201,7 @@ export default function EvaluacionesClient({ classes }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
               {[
                 { label: "Conceptos disponibles", value: classes.filter(c => selectedIds.has(c.id)).reduce((s, c) => s + (c.data?.concepts?.length || 0), 0), color: "var(--accent)" },
-                { label: "Preguntas a generar",   value: numQ, color: "#22C55E" },
+                { label: "Preguntas a generar",   value: numQ, color: "var(--green)" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                   <span style={{ color: "var(--text-3)" }}>{label}</span>
@@ -238,17 +238,17 @@ export default function EvaluacionesClient({ classes }) {
             <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>{Object.keys(answers).length} / {questions.length} respondidas</p>
           </div>
         </div>
-        {error && <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "#EF4444", flexShrink: 0 }}>{error}</div>}
+        {error && <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "var(--red)", flexShrink: 0 }}>{error}</div>}
         {questions.map((q, qi) => (
           <div key={qi} style={{ background: "var(--card)", border: `1px solid ${answers[qi] ? "rgba(124,108,248,0.25)" : "var(--border)"}`, borderRadius: "var(--radius-card)", padding: "22px 24px", flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, background: answers[qi] ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", color: answers[qi] ? "var(--accent)" : "var(--text-3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, border: `1px solid ${answers[qi] ? "rgba(124,108,248,0.3)" : "var(--border)"}` }}>{qi + 1}</span>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, background: answers[qi] ? "var(--accent-dim)" : "var(--tint-2)", color: answers[qi] ? "var(--accent)" : "var(--text-3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, border: `1px solid ${answers[qi] ? "rgba(124,108,248,0.3)" : "var(--border)"}` }}>{qi + 1}</span>
               <p style={{ fontSize: 15, fontWeight: 500, color: "var(--text)", lineHeight: 1.5, flex: 1 }}>{q.question}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, paddingLeft: 38 }}>
               {OPTS.map(opt => (
-                <button key={opt} onClick={() => !submitted && setAnswers(prev => ({ ...prev, [qi]: opt }))} style={{ textAlign: "left", padding: "11px 16px", borderRadius: 10, border: `1px solid ${answers[qi] === opt ? "rgba(124,108,248,0.5)" : "var(--border)"}`, background: answers[qi] === opt ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", color: answers[qi] === opt ? "var(--accent)" : "var(--text-2)", fontSize: 13, fontWeight: answers[qi] === opt ? 600 : 400, cursor: "pointer", transition: "all 120ms", display: "flex", gap: 10, alignItems: "center" }}>
-                  <span style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, border: `1.5px solid ${answers[qi] === opt ? "var(--accent)" : "rgba(255,255,255,0.12)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: answers[qi] === opt ? "var(--accent)" : "var(--text-3)" }}>{opt}</span>
+                <button key={opt} onClick={() => !submitted && setAnswers(prev => ({ ...prev, [qi]: opt }))} style={{ textAlign: "left", padding: "11px 16px", borderRadius: 10, border: `1px solid ${answers[qi] === opt ? "rgba(124,108,248,0.5)" : "var(--border)"}`, background: answers[qi] === opt ? "var(--accent-dim)" : "var(--tint-1)", color: answers[qi] === opt ? "var(--accent)" : "var(--text-2)", fontSize: 13, fontWeight: answers[qi] === opt ? 600 : 400, cursor: "pointer", transition: "all 120ms", display: "flex", gap: 10, alignItems: "center" }}>
+                  <span style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, border: `1.5px solid ${answers[qi] === opt ? "var(--accent)" : "var(--tint-4)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: answers[qi] === opt ? "var(--accent)" : "var(--text-3)" }}>{opt}</span>
                   {q.options[opt]}
                 </button>
               ))}
@@ -262,7 +262,7 @@ export default function EvaluacionesClient({ classes }) {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
             <svg viewBox="0 0 36 36" style={{ transform: "rotate(-90deg)", width: 72, height: 72 }}>
-              <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3"/>
+              <circle cx="18" cy="18" r="15" fill="none" stroke="var(--tint-4)" strokeWidth="3"/>
               <circle cx="18" cy="18" r="15" fill="none" stroke="var(--accent)" strokeWidth="3" strokeDasharray={`${(Object.keys(answers).length / questions.length) * 94.2} 94.2`} strokeLinecap="round"/>
             </svg>
           </div>
@@ -273,7 +273,7 @@ export default function EvaluacionesClient({ classes }) {
             {questions.map((_, qi) => (
               <div key={qi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 11, color: "var(--text-3)", width: 20, flexShrink: 0 }}>P{qi + 1}</span>
-                <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 99 }}>
+                <div style={{ flex: 1, height: 4, background: "var(--tint-3)", borderRadius: 99 }}>
                   <div style={{ height: "100%", width: answers[qi] ? "100%" : "0%", background: "var(--accent)", borderRadius: 99, transition: "width 200ms ease" }} />
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function EvaluacionesClient({ classes }) {
             {scorePct >= 80 ? "¡Excelente dominio!" : scorePct >= 60 ? "Bien, puedes mejorar." : "Revisa estos temas."}
           </p>
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
-            <button onClick={() => { setPhase("exam"); setAnswers({}); setSubmitted(false); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: "rgba(255,255,255,0.06)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "11px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+            <button onClick={() => { setPhase("exam"); setAnswers({}); setSubmitted(false); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: "var(--tint-3)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "11px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
               <IcoRefresh s={14} /> Reintentar
             </button>
             <button onClick={() => setPhase("setup")} className="btn-accent" style={{ width: "100%", background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "11px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>

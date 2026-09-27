@@ -87,8 +87,8 @@ export default async function Historial() {
         }}>
           {[
             { label: "Total de clases",   value: classes.length,    color: "#7C6CF8" },
-            { label: "Conceptos totales", value: totalConcepts,     color: "#22C55E" },
-            { label: "Esta semana",       value: weekCount,         color: "#FBBF24" },
+            { label: "Conceptos totales", value: totalConcepts,     color: "var(--green)" },
+            { label: "Esta semana",       value: weekCount,         color: "var(--yellow)" },
           ].map(({ label, value, color }) => (
             <div key={label} style={{
               background: "var(--card)", border: "1px solid var(--border)",
@@ -104,7 +104,7 @@ export default async function Historial() {
 
       {/* Empty state */}
       {classes.length === 0 && (
-        <EmptyState icon="book" title="Sin historial aún" text="Inicia tu primera clase y empieza a construir tu historial de aprendizaje." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
+        <EmptyState mascot="biblioteca" title="Sin historial aún" text="Inicia tu primera clase y empieza a construir tu historial de aprendizaje." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
       )}
 
       {/* Grouped class list */}
@@ -122,7 +122,7 @@ export default async function Historial() {
             </span>
             <span style={{
               fontSize: 11, fontWeight: 500, color: "var(--text-3)",
-              background: "rgba(255,255,255,0.05)", borderRadius: 99,
+              background: "var(--tint-2)", borderRadius: 99,
               padding: "2px 8px", border: "1px solid var(--border)",
             }}>
               {monthClasses.length} {monthClasses.length === 1 ? "clase" : "clases"}

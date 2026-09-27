@@ -11,7 +11,7 @@ export default function RecallPanel({ accuracy, answerQuiz, closeQuiz, concepts,
       <section style={{ borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <span style={{ color: "#FBBF24", display: "flex" }}><AppIcon name="zap" size={16} /></span>
+            <span style={{ color: "var(--yellow)", display: "flex" }}><AppIcon name="zap" size={16} /></span>
             <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Active Recall</span>
           </div>
           {quiz && quizCountdown !== null && quizAnswer === null && (
@@ -33,11 +33,11 @@ export default function RecallPanel({ accuracy, answerQuiz, closeQuiz, concepts,
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                 {streak >= 2 && quizAnswer === null && (
-                  <span style={{ background: "rgba(249,115,22,0.12)", color: "#f97316", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>
+                  <span style={{ background: "rgba(249,115,22,0.12)", color: "var(--orange)", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>
                     <AppIcon name="flame" size={11} style={{ verticalAlign: "-1px" }} /> ×{streakMultiplier}
                   </span>
                 )}
-                <span style={{ background: "rgba(251,191,36,0.1)", color: "#FBBF24", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>
+                <span style={{ background: "rgba(251,191,36,0.1)", color: "var(--yellow)", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>
                   {quizAnswer === null
                     ? `+${10 * streakMultiplier} pts`
                     : quizAnswer === quiz.correct
@@ -101,7 +101,7 @@ export default function RecallPanel({ accuracy, answerQuiz, closeQuiz, concepts,
 
             {quizAnswer !== null && quiz.explanation && (
               <p style={{ marginTop: 8, fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.45 }}>
-                <AppIcon name="lightbulb" size={13} style={{ verticalAlign: "-2px", marginRight: 5, color: "#FBBF24" }} />{quiz.explanation}
+                <AppIcon name="lightbulb" size={13} style={{ verticalAlign: "-2px", marginRight: 5, color: "var(--yellow)" }} />{quiz.explanation}
               </p>
             )}
           </div>

@@ -38,7 +38,7 @@ const CSS = `
   }
   .cc:hover {
     transform: translateY(-1px);
-    border-color: rgba(255,255,255,.11) !important;
+    border-color: var(--tint-4) !important;
   }
   .cc:hover .cc-bar   { opacity: 1 !important; }
   .cc:hover .cc-dots  { opacity: 1; }
@@ -49,7 +49,7 @@ const CSS = `
   .cc:hover .cc-icon { transform: scale(1.05); }
 
   .cc-dots  { opacity:0; transition: opacity 140ms, background 120ms; }
-  .cc-dots:hover { background: rgba(255,255,255,.08) !important; }
+  .cc-dots:hover { background: var(--tint-4) !important; }
   .cc-arrow { opacity:.2; transition: opacity 200ms, transform 200ms; }
 
   .cc-menu-pop { animation: cc-menu 130ms cubic-bezier(.16,1,.3,1) both; }
@@ -60,7 +60,7 @@ const CSS = `
     font-size:13px; font-weight:500; text-align:left; cursor:pointer;
     transition: background 100ms;
   }
-  .cc-mi:hover        { background: rgba(255,255,255,.06); }
+  .cc-mi:hover        { background: var(--tint-3); }
   .cc-mi-del          { color:#EF4444 !important; }
   .cc-mi-del:hover    { background: rgba(239,68,68,.09) !important; }
 
@@ -77,14 +77,14 @@ const CSS = `
   .cc-btn:disabled { opacity:.5; cursor:not-allowed; }
   .cc-btn-accent { background:var(--accent); color:#fff; }
   .cc-btn-accent:hover:not(:disabled) { opacity:.85; }
-  .cc-btn-ghost  { background:rgba(255,255,255,.07); color:var(--text-2); }
-  .cc-btn-ghost:hover:not(:disabled)  { background:rgba(255,255,255,.11); }
+  .cc-btn-ghost  { background:var(--tint-3); color:var(--text-2); }
+  .cc-btn-ghost:hover:not(:disabled)  { background:var(--tint-4); }
   .cc-btn-danger { background:rgba(239,68,68,.15); color:#EF4444; }
   .cc-btn-danger:hover:not(:disabled) { background:rgba(239,68,68,.25); }
 
   .cc-input {
     flex:1; min-width:0;
-    background:rgba(255,255,255,.05);
+    background:var(--tint-2);
     border:1px solid var(--accent);
     border-radius:7px; padding:5px 10px;
     font-size:14px; font-weight:600; color:var(--text); outline:none;
@@ -119,18 +119,18 @@ const IcoLayers = ({ s }) => <Icon size={s}><polygon points="12 2 2 7 12 12 22 7
 function getSubject(title, idx) {
   const t = (title || "").toLowerCase();
   if (t.match(/machine.?learn|neural|deep.?learn|\bml\b|\bia\b|intelig|ai/))
-    return { icon: <IcoSpark s={17} />, bg: "rgba(96,165,250,.13)",  color: "#60A5FA" };
+    return { icon: <IcoSpark s={17} />, bg: "rgba(96,165,250,.13)",  color: "var(--blue)" };
   if (t.match(/cálculo|calculo|ecuaci|integr|derivad|serie|álgebra|algebra|matem/))
-    return { icon: <span style={{ fontSize:15, fontWeight:700, lineHeight:1 }}>∑</span>, bg: "rgba(167,139,250,.13)", color: "#A78BFA" };
+    return { icon: <span style={{ fontSize:15, fontWeight:700, lineHeight:1 }}>∑</span>, bg: "rgba(167,139,250,.13)", color: "var(--violet)" };
   if (t.match(/base.*dato|sql|database|datos|normaliz/))
-    return { icon: <IcoDB s={17} />,     bg: "rgba(34,197,94,.13)",  color: "#22C55E" };
+    return { icon: <IcoDB s={17} />,     bg: "rgba(34,197,94,.13)",  color: "var(--green)" };
   if (t.match(/program|código|codigo|oop|objeto|herencia|polimorf/))
-    return { icon: <IcoCode s={17} />,   bg: "rgba(251,191,36,.13)", color: "#FBBF24" };
+    return { icon: <IcoCode s={17} />,   bg: "rgba(251,191,36,.13)", color: "var(--yellow)" };
   const POOL = [
-    { icon: <IcoBook   s={17} />, bg: "rgba(96,165,250,.13)",  color: "#60A5FA"  },
-    { icon: <IcoSpark  s={17} />, bg: "rgba(167,139,250,.13)", color: "#A78BFA"  },
-    { icon: <IcoLayers s={17} />, bg: "rgba(34,197,94,.13)",   color: "#22C55E"  },
-    { icon: <IcoZap    s={17} />, bg: "rgba(251,191,36,.13)",  color: "#FBBF24"  },
+    { icon: <IcoBook   s={17} />, bg: "rgba(96,165,250,.13)",  color: "var(--blue)"  },
+    { icon: <IcoSpark  s={17} />, bg: "rgba(167,139,250,.13)", color: "var(--violet)"  },
+    { icon: <IcoLayers s={17} />, bg: "rgba(34,197,94,.13)",   color: "var(--green)"  },
+    { icon: <IcoZap    s={17} />, bg: "rgba(251,191,36,.13)",  color: "var(--yellow)"  },
   ];
   return POOL[idx % POOL.length];
 }
@@ -229,7 +229,7 @@ export default function ClassCard({ c, idx }) {
           userSelect: "none",
           zIndex: menuOpen ? 10 : "auto",
           boxShadow: isHov
-            ? `0 1px 0 rgba(255,255,255,.05) inset, 0 12px 40px rgba(0,0,0,.38), 0 0 0 1px ${subj.color}28, 0 0 48px ${subj.color}0D`
+            ? `0 1px 0 var(--tint-2) inset, 0 12px 40px rgba(0,0,0,.38), 0 0 0 1px ${subj.color}28, 0 0 48px ${subj.color}0D`
             : "none",
         }}
       >
@@ -314,7 +314,7 @@ export default function ClassCard({ c, idx }) {
             {!renaming && !deleting && (
               <span className="cc-done" style={{
                 display: "inline-flex", alignItems: "center", gap: 5,
-                fontSize: 11, fontWeight: 600, color: "#22C55E",
+                fontSize: 11, fontWeight: 600, color: "var(--green)",
                 background: "rgba(34,197,94,.09)",
                 border: "1px solid rgba(34,197,94,.18)",
                 borderRadius: 99, padding: "3px 9px", flexShrink: 0,
@@ -341,7 +341,7 @@ export default function ClassCard({ c, idx }) {
                   className="cc-dots"
                   onClick={() => setMenuOpen(o => !o)}
                   style={{
-                    background: menuOpen ? "rgba(255,255,255,.08)" : "none",
+                    background: menuOpen ? "var(--tint-4)" : "none",
                     border: "none", borderRadius: 7, cursor: "pointer",
                     width: 28, height: 28, color: "var(--text-2)",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -356,9 +356,9 @@ export default function ClassCard({ c, idx }) {
                     style={{
                       position: "absolute", right: 0, top: "calc(100% + 6px)",
                       background: "#1a1a26",
-                      border: "1px solid rgba(255,255,255,.09)",
+                      border: "1px solid var(--tint-4)",
                       borderRadius: 10, overflow: "hidden",
-                      boxShadow: "0 20px 48px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.05) inset",
+                      boxShadow: "0 20px 48px rgba(0,0,0,.55), 0 1px 0 var(--tint-2) inset",
                       zIndex: 100, minWidth: 152,
                     }}
                   >
@@ -366,7 +366,7 @@ export default function ClassCard({ c, idx }) {
                       onClick={() => { setRenaming(true); setMenuOpen(false); }}>
                       <IcoPencil s={13} /> Renombrar
                     </button>
-                    <div style={{ height: 1, background: "rgba(255,255,255,.06)", margin: "0 8px" }} />
+                    <div style={{ height: 1, background: "var(--tint-3)", margin: "0 8px" }} />
                     <button className="cc-mi cc-mi-del"
                       onClick={() => { setDeleting(true); setMenuOpen(false); }}>
                       <IcoTrash s={13} /> Eliminar
@@ -393,7 +393,7 @@ export default function ClassCard({ c, idx }) {
               onClick={e => e.stopPropagation()}
               style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 4 }}
             >
-              <span style={{ fontSize: 12, color: "#EF4444", fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 500 }}>
                 ¿Eliminar esta clase?
               </span>
               <button onClick={doDelete} disabled={busy} className="cc-btn cc-btn-danger">
@@ -407,8 +407,8 @@ export default function ClassCard({ c, idx }) {
             <div style={{ display: "flex", gap: 5, flexWrap: "wrap", paddingTop: 2 }}>
               {tags.slice(0, 4).map((tag, i) => (
                 <span key={i} className="cc-tag" style={{
-                  background: i === 0 ? `${subj.color}12` : "rgba(255,255,255,.04)",
-                  border: `1px solid ${i === 0 ? subj.color + "28" : "rgba(255,255,255,.07)"}`,
+                  background: i === 0 ? `${subj.color}12` : "var(--tint-2)",
+                  border: `1px solid ${i === 0 ? subj.color + "28" : "var(--tint-3)"}`,
                   color: i === 0 ? subj.color : "var(--text-3)",
                   fontSize: 11, fontWeight: i === 0 ? 600 : 500,
                   borderRadius: 99, padding: "2px 9px",

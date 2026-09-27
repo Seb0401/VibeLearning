@@ -14,7 +14,7 @@ export default function ChatPanel({ chatEndRef, chatHistory, chatLoading, chatQu
           <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Chatbot RAG</span>
         </div>
         {materialSummary && (
-          <span style={{ fontSize: "0.72rem", color: "#22C55E", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 99, padding: "2px 9px", fontWeight: 600 }}>Con PDF</span>
+          <span style={{ fontSize: "0.72rem", color: "var(--green)", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 99, padding: "2px 9px", fontWeight: 600 }}>Con PDF</span>
         )}
       </div>
 

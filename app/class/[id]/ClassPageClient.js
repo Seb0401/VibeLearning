@@ -207,20 +207,20 @@ export default function ClassPageClient({ cls }) {
     const isCorrect  = quizQ?.correct === key;
     const revealed   = selected !== null;
     if (!revealed) return {
-      base:   { background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", color: "var(--text-2)" },
-      letter: { background: "rgba(255,255,255,0.07)", color: "var(--text-3)" },
+      base:   { background: "var(--tint-2)", border: "1px solid var(--border)", color: "var(--text-2)" },
+      letter: { background: "var(--tint-3)", color: "var(--text-3)" },
     };
     if (isCorrect) return {
-      base:   { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", color: "#22C55E" },
-      letter: { background: "rgba(34,197,94,0.15)", color: "#22C55E" },
+      base:   { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.4)", color: "var(--green)" },
+      letter: { background: "rgba(34,197,94,0.15)", color: "var(--green)" },
     };
     if (isSelected) return {
-      base:   { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.35)", color: "#EF4444" },
-      letter: { background: "rgba(239,68,68,0.15)", color: "#EF4444" },
+      base:   { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.35)", color: "var(--red)" },
+      letter: { background: "rgba(239,68,68,0.15)", color: "var(--red)" },
     };
     return {
-      base:   { background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", color: "var(--text-3)", opacity: 0.45 },
-      letter: { background: "rgba(255,255,255,0.04)", color: "var(--text-3)" },
+      base:   { background: "var(--tint-1)", border: "1px solid var(--border)", color: "var(--text-3)", opacity: 0.45 },
+      letter: { background: "var(--tint-2)", color: "var(--text-3)" },
     };
   }
 
@@ -263,7 +263,7 @@ export default function ClassPageClient({ cls }) {
           <span title={cls.title} style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", maxWidth: 400, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {cls.title}
           </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.1)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.2)", fontSize: 11, fontWeight: 600, borderRadius: 99, padding: "3px 10px", flexShrink: 0 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.1)", color: "var(--green)", border: "1px solid rgba(34,197,94,0.2)", fontSize: 11, fontWeight: 600, borderRadius: 99, padding: "3px 10px", flexShrink: 0 }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />
             Guardada
           </span>
@@ -289,7 +289,7 @@ export default function ClassPageClient({ cls }) {
         {/* ── LEFT: RESUMEN + QUIZ ── */}
         <div style={{ ...COL, borderRight: "1px solid var(--border)" }}>
           <div style={PANEL_HDR}>
-            <div role="tablist" aria-label="Contenido de la clase" style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
+            <div role="tablist" aria-label="Contenido de la clase" style={{ display: "flex", gap: 4, background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
               {[["summary", "Resumen"], ["transcript", "Transcript"]].map(([key, label]) => {
                 const active = leftTab === key;
                 return (
@@ -369,7 +369,7 @@ export default function ClassPageClient({ cls }) {
                       <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Practica esta clase</span>
                     </div>
                     {quizScore.total > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)", background: "rgba(255,255,255,0.05)", borderRadius: 99, padding: "3px 10px" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)", background: "var(--tint-2)", borderRadius: 99, padding: "3px 10px" }}>
                         {quizScore.correct}/{quizScore.total} correctas
                       </span>
                     )}
@@ -458,7 +458,7 @@ export default function ClassPageClient({ cls }) {
                   <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: 0 }}>Mapa mental</h2>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} style={{ background: isFullscreen ? "var(--accent-dim)" : "rgba(255,255,255,0.05)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                  <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} style={{ background: isFullscreen ? "var(--accent-dim)" : "var(--tint-2)", border: `1px solid ${isFullscreen ? "var(--accent)" : "var(--border)"}`, borderRadius: 8, padding: "5px 7px", color: isFullscreen ? "var(--accent)" : "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}>
                     {isFullscreen
                       ? <RI s={13}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></RI>
                       : <RI s={13}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></RI>
@@ -535,7 +535,7 @@ export default function ClassPageClient({ cls }) {
                 {visual_notes.map((note, i) => {
                   const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
                   return (
-                    <div key={i} style={{ flexShrink: 0, width: 120, borderRadius: 8, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                    <div key={i} style={{ flexShrink: 0, width: 120, borderRadius: 8, border: "1px solid var(--border)", overflow: "hidden", background: "var(--tint-1)" }}>
                       <div style={{ position: "relative" }}>
                         <StorageImage
                           path={note.storagePath}
@@ -543,7 +543,7 @@ export default function ClassPageClient({ cls }) {
                           alt={note.description || tb.label}
                           style={{ width: "100%", height: 70, objectFit: "cover", display: "block" }}
                           fallback={
-                            <div style={{ height: 70, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)" }}>
+                            <div style={{ height: 70, background: "var(--tint-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)" }}>
                               <AppIcon name="image" size={18} />
                             </div>
                           }
@@ -552,7 +552,7 @@ export default function ClassPageClient({ cls }) {
                       </div>
                       <div style={{ padding: "5px 7px" }}>
                         <p style={{ fontSize: 9, color: "var(--text-2)", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{note.description}</p>
-                        {note.gaps && <p style={{ fontSize: 9, color: "#FBBF24", marginTop: 3, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}><AppIcon name="alert" size={10} /> Gap visual</p>}
+                        {note.gaps && <p style={{ fontSize: 9, color: "var(--yellow)", marginTop: 3, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}><AppIcon name="alert" size={10} /> Gap visual</p>}
                       </div>
                     </div>
                   );
@@ -575,7 +575,7 @@ export default function ClassPageClient({ cls }) {
               </svg>
               <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", margin: 0 }}>Agente de estudio</h2>
             </div>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "#22C55E" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "var(--green)" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />
               Basado en esta clase
             </span>
@@ -638,7 +638,7 @@ export default function ClassPageClient({ cls }) {
                 onClick={() => sendMessage(label)}
                 disabled={chatLoading}
                 className="chip-btn"
-                style={{ fontSize: 11, fontWeight: 500, color: "var(--text-2)", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: 99, padding: "5px 11px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}
+                style={{ fontSize: 11, fontWeight: 500, color: "var(--text-2)", background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 99, padding: "5px 11px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}
               >
                 <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
                 {label}

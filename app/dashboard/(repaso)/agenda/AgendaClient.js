@@ -109,9 +109,9 @@ export default function AgendaClient({ cardMap, classLog }) {
 
         {/* Week navigation */}
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={prevWeek} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}><AppIcon name="chevron-left" size={15} /> Anterior</button>
+          <button onClick={prevWeek} className="btn-ghost" style={{ background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}><AppIcon name="chevron-left" size={15} /> Anterior</button>
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", textAlign: "center" }}>{weekLabel}</span>
-          <button onClick={nextWeek} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>Siguiente <AppIcon name="chevron-right" size={15} /></button>
+          <button onClick={nextWeek} className="btn-ghost" style={{ background: "var(--tint-2)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>Siguiente <AppIcon name="chevron-right" size={15} /></button>
         </div>
 
         {/* Calendar grid */}
@@ -163,7 +163,7 @@ export default function AgendaClient({ cardMap, classLog }) {
                   {due.length > 0 && (
                     <div style={{ marginBottom: 4 }}>
                       <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "3px 7px", display: "inline-block" }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#EF4444" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)" }}>
                           {due.length} repaso{due.length > 1 ? "s" : ""}
                         </span>
                       </div>
@@ -173,7 +173,7 @@ export default function AgendaClient({ cardMap, classLog }) {
                   {/* Classes */}
                   {classes && (
                     <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 6, padding: "3px 7px", display: "inline-block" }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "#22C55E" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--green)" }}>
                         {classes.count} clase{classes.count > 1 ? "s" : ""}
                       </span>
                     </div>
@@ -193,7 +193,7 @@ export default function AgendaClient({ cardMap, classLog }) {
 
             {selClasses && (
               <div style={{ marginBottom: 14 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#22C55E", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 6 }}>Clases grabadas</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--green)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 6 }}>Clases grabadas</p>
                 {selClasses.titles.map((t, i) => (
                   <p key={i} style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 2 }}>· {t}</p>
                 ))}
@@ -202,12 +202,12 @@ export default function AgendaClient({ cardMap, classLog }) {
 
             {selCards.length > 0 ? (
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#EF4444", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
                   Conceptos para repasar ({selCards.length})
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {selCards.slice(0, 10).map((c, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 9 }}>
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "var(--tint-1)", border: "1px solid var(--border)", borderRadius: 9 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: BOX_COLORS[c.box] || "#7C6CF8", flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.conceptName}</p>
@@ -268,7 +268,7 @@ export default function AgendaClient({ cardMap, classLog }) {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E" }} />
-                <span style={{ fontSize: 13, color: "#22C55E", fontWeight: 600 }}>Notificaciones activas</span>
+                <span style={{ fontSize: 13, color: "var(--green)", fontWeight: 600 }}>Notificaciones activas</span>
               </div>
               <p style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.6 }}>
                 Recibirás un recordatorio cuando abras la app con conceptos pendientes.
@@ -280,7 +280,7 @@ export default function AgendaClient({ cardMap, classLog }) {
             </p>
           ) : notifState === "denied" ? (
             <div>
-              <p style={{ fontSize: 13, color: "#EF4444", fontWeight: 500, marginBottom: 6 }}>Notificaciones bloqueadas</p>
+              <p style={{ fontSize: 13, color: "var(--red)", fontWeight: 500, marginBottom: 6 }}>Notificaciones bloqueadas</p>
               <p style={{ fontSize: 12, color: "var(--text-3)", lineHeight: 1.6 }}>
                 Ve a la configuración de tu navegador para permitir notificaciones de este sitio.
               </p>
@@ -301,11 +301,11 @@ export default function AgendaClient({ cardMap, classLog }) {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: 20 }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 12 }}>Leyenda SM-2</p>
           {[
-            { label: "Caja 1 — hoy",     color: "#EF4444" },
-            { label: "Caja 2 — 1 día",   color: "#FBBF24" },
-            { label: "Caja 3 — 3 días",  color: "#22C55E" },
-            { label: "Caja 4 — 1 semana",color: "#60A5FA" },
-            { label: "Caja 5 — 2 semanas",color:"#A78BFA" },
+            { label: "Caja 1 — hoy",     color: "var(--red)" },
+            { label: "Caja 2 — 1 día",   color: "var(--yellow)" },
+            { label: "Caja 3 — 3 días",  color: "var(--green)" },
+            { label: "Caja 4 — 1 semana",color: "var(--blue)" },
+            { label: "Caja 5 — 2 semanas",color:"var(--violet)" },
             { label: "Caja 6 — 1 mes",   color: "#7C6CF8" },
           ].map(({ label, color }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>

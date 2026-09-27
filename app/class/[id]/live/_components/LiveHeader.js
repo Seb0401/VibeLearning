@@ -19,7 +19,7 @@ export default function LiveHeader({ accuracy, audioSource, elapsed, finishClass
       {recording && (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-          <span style={{ color: "#f87171", fontSize: "0.82rem", fontWeight: 600 }}>
+          <span style={{ color: "var(--red)", fontSize: "0.82rem", fontWeight: 600 }}>
             {audioSource === "mic" ? "Grabando" : audioSource === "system" ? "Capturando tab" : "Mic + Tab"}
           </span>
           <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>{formatTimer(elapsed)}</span>
@@ -29,9 +29,9 @@ export default function LiveHeader({ accuracy, audioSource, elapsed, finishClass
       {/* Score display */}
       {(score > 0 || quizStats.total > 0) && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 20, padding: "4px 12px" }}>
-          <span style={{ color: "#FBBF24", fontWeight: 700, fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="star" size={13} /> {score} pts</span>
+          <span style={{ color: "var(--yellow)", fontWeight: 700, fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="star" size={13} /> {score} pts</span>
           {streak >= 2 && (
-            <span style={{ color: "#f97316", fontWeight: 700, fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: 3 }}><AppIcon name="flame" size={13} />×{streakMultiplier}</span>
+            <span style={{ color: "var(--orange)", fontWeight: 700, fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: 3 }}><AppIcon name="flame" size={13} />×{streakMultiplier}</span>
           )}
           {accuracy !== null && (
             <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{quizStats.correct}/{quizStats.total}</span>

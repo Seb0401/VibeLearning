@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Mascot from "@/components/Mascot";
 
 const IN_PROGRESS_TITLE = "Clase en progreso...";
 
@@ -46,7 +47,7 @@ export default function NewClass() {
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       {error ? (
         <div className="fade-up" role="alert" style={{ maxWidth: 380, width: "100%", textAlign: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "32px 28px" }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(239,68,68,0.1)", color: "#F87171", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", fontSize: 22, fontWeight: 700 }}>!</div>
+          <Mascot pose="ayuda" size={130} style={{ margin: "0 auto 10px" }} />
           <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Algo salió mal</p>
           <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, marginBottom: 20 }}>{error}</p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -60,8 +61,11 @@ export default function NewClass() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, color: "var(--text-2)", fontSize: 14 }}>
-          <span className="spinner spinner-lg" />
-          Preparando tu clase…
+          <Mascot pose="grabando" size={150} float priority />
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontWeight: 600 }}>
+            <span className="spinner" style={{ borderColor: "var(--border-strong)", borderTopColor: "var(--accent)" }} />
+            Preparando tu clase…
+          </span>
         </div>
       )}
     </div>

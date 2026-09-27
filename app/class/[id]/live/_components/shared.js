@@ -1,5 +1,6 @@
 "use client";
 import AppIcon from "@/components/Icon";
+import BrandLogo from "@/components/Logo";
 
 // Iconos propios para los botones de fuente (reemplazan a lucide-react).
 export const MicIcon    = ({ size = 24, strokeWidth = 2 }) => <AppIcon name="mic" size={size} strokeWidth={strokeWidth} />;
@@ -27,7 +28,7 @@ export function HighlightedText({ text, conceptNames }) {
     <span>
       {parts.map((part, i) =>
         conceptNames.some((n) => n.toLowerCase() === part.toLowerCase()) ? (
-          <span key={i} style={{ color: "#a78bfa", fontWeight: 600 }}>{part}</span>
+          <span key={i} style={{ color: "var(--violet)", fontWeight: 600 }}>{part}</span>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -47,16 +48,7 @@ export function RI({ s = 16, children }) {
 }
 
 export function VibeLearningLogo() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #7C6CF8 0%, #A78BFA 100%)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,108,248,0.3)" }}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-        </svg>
-      </div>
-      <span style={{ fontWeight: 700, fontSize: "0.95rem", letterSpacing: "-0.01em", color: "var(--text)" }}>VibeLearning</span>
-    </div>
-  );
+  return <BrandLogo size={30} textSize={18} />;
 }
 
 export function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainClick, options, selectedKey, onOptionClick }) {
@@ -87,7 +79,7 @@ export function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, on
               top: "50%", left: "50%",
               transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
               background: sel ? optBg : "rgba(13,13,28,0.92)",
-              border: `1px solid ${sel ? optColor : "rgba(255,255,255,0.13)"}`,
+              border: `1px solid ${sel ? optColor : "var(--tint-4)"}`,
               borderRadius: 99,
               padding: "5px 12px",
               color: sel ? optColor : "rgba(255,255,255,0.72)",
@@ -132,7 +124,7 @@ export function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, on
         {isRecording ? (
           [0,1,2,3,4].map(bar => <span key={bar} className="mic-level" style={{ animationDelay: `${bar * 90}ms` }} />)
         ) : (
-          <span style={{ width: 34, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.11)" }} />
+          <span style={{ width: 34, height: 4, borderRadius: 99, background: "var(--tint-4)" }} />
         )}
       </div>
 
@@ -157,5 +149,5 @@ export const TYPE_BADGE = {
   table:       { bg: "rgba(249,115,22,0.15)",   fg: "#FB923C", label: "Tabla"       },
   screenshot:  { bg: "rgba(99,102,241,0.15)",   fg: "#818CF8", label: "Captura"     },
   photo:       { bg: "rgba(239,68,68,0.15)",    fg: "#F87171", label: "Foto"        },
-  other:       { bg: "rgba(255,255,255,0.08)",  fg: "#9CA3AF", label: "Visual"      },
+  other:       { bg: "var(--tint-4)",  fg: "#9CA3AF", label: "Visual"      },
 };
