@@ -725,6 +725,7 @@ export default function LiveClass() {
         title: json.title || "Clase sin título",
         data: {
           transcript: transcriptRef.current,
+          transcript_segments: transcriptLines.map(({ time, text }) => ({ time, text })),
           concepts: conceptsRef.current,
           material_summary: materialSummary,
           visual_notes: visualNotes.map(({ previewUrl, ...rest }) => rest),

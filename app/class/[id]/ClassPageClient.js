@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import AppIcon from "@/components/Icon";
 import StorageImage from "@/components/StorageImage";
 import QuizCard from "@/components/QuizCard";
+import TranscriptView from "@/components/TranscriptView";
 
 function RI({ s = 16, children }) {
   return (
@@ -133,16 +134,6 @@ export default function ClassPageClient({ cls }) {
   const [leftTab, setLeftTab] = useState("summary"); // "summary" | "transcript"
 
   const wordTotal = transcript ? transcript.trim().split(/\s+/).filter(Boolean).length : 0;
-  // El transcript llega como texto corrido: lo partimos en párrafos de ~5 oraciones para que se lea mejor.
-  const transcriptParagraphs = (() => {
-    if (!transcript) return [];
-    const byLines = transcript.split(/\n{2,}/).map(t => t.trim()).filter(Boolean);
-    if (byLines.length > 1) return byLines;
-    const sentences = transcript.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [transcript];
-    const out = [];
-    for (let i = 0; i < sentences.length; i += 5) out.push(sentences.slice(i, i + 5).join(" ").trim());
-    return out;
-  })();
 
   const createdLabel = new Date(cls.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
 
@@ -292,14 +283,12 @@ export default function ClassPageClient({ cls }) {
           </div>
 
           {leftTab === "transcript" ? (
-            <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px 24px" }}>
-              {transcript ? (
-                transcriptParagraphs.map((para, i) => (
-                  <p key={i} style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.8, marginBottom: 14 }}>{para}</p>
-                ))
-              ) : (
-                <p style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", marginTop: 40 }}>Esta clase no tiene transcript guardado.</p>
-              )}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 22px 24px" }}>
+              <TranscriptView
+                transcript={transcript}
+                segments={cls.data?.transcript_segments}
+                concepts={concepts.map(c => (typeof c === "string" ? c : c.name)).filter(Boolean)}
+              />
             </div>
           ) : (
           <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: 20 }}>

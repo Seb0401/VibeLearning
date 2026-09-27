@@ -795,3 +795,23 @@ body { transition: background-color 200ms ease, color 200ms ease; }
 
 /* En móvil, lo que se desplaza a la vista (foco, enlaces) queda por encima de la barra inferior */
 @media (max-width: 900px) { html, .app-main, .class-view { scroll-padding-bottom: 96px; } }
+
+/* ── Transcript (clase guardada) ──────────────────────────────────────── */
+.tx-search {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 14px;
+  background: var(--tint-2); border: 1px solid var(--border); color: var(--text-3);
+  position: sticky; top: 0; z-index: 2; backdrop-filter: blur(8px);
+}
+.tx-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.tx-search input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text); font: inherit; font-size: 14px; }
+.tx-search__count { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.tx-block { display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding: 10px 6px; border-radius: 12px; }
+.tx-block:hover { background: var(--tint-1); }
+.tx-time {
+  font-size: 11.5px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums;
+  background: var(--accent-dim); border-radius: 8px; padding: 3px 0; text-align: center; height: fit-content; margin-top: 2px;
+}
+.tx-text { font-size: 14px; line-height: 1.75; color: var(--text-2); }
+.tx-concept { color: var(--text); font-weight: 800; }
+.tx-mark { background: rgba(251, 191, 36, 0.35); color: var(--text); border-radius: 4px; padding: 0 2px; }
