@@ -6,6 +6,7 @@ import SummaryMarkdown from "@/components/SummaryMarkdown";
 import ObsidianCanvas from "@/app/components/ObsidianCanvas";
 import { createClient } from "@/lib/supabase/client";
 import AppIcon from "@/components/Icon";
+import StorageImage from "@/components/StorageImage";
 
 function RI({ s = 16, children }) {
   return (
@@ -535,16 +536,20 @@ export default function ClassPageClient({ cls }) {
                   const tb = TYPE_BADGE[note.content_type] || TYPE_BADGE.other;
                   return (
                     <div key={i} style={{ flexShrink: 0, width: 120, borderRadius: 8, border: "1px solid var(--border)", overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
-                      {note.imageUrl ? (
-                        <div style={{ position: "relative" }}>
-                          <img src={note.imageUrl} alt="" style={{ width: "100%", height: 70, objectFit: "cover", display: "block" }} />
-                          <span style={{ position: "absolute", top: 3, left: 3, fontSize: 9, fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", borderRadius: 99, padding: "1px 5px" }}>{tb.label}</span>
-                        </div>
-                      ) : (
-                        <div style={{ height: 70, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 9, color: tb.fg, fontWeight: 700 }}>{tb.label}</span>
-                        </div>
-                      )}
+                      <div style={{ position: "relative" }}>
+                        <StorageImage
+                          path={note.storagePath}
+                          initialUrl={note.imageUrl}
+                          alt={note.description || tb.label}
+                          style={{ width: "100%", height: 70, objectFit: "cover", display: "block" }}
+                          fallback={
+                            <div style={{ height: 70, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)" }}>
+                              <AppIcon name="image" size={18} />
+                            </div>
+                          }
+                        />
+                        <span style={{ position: "absolute", top: 3, left: 3, fontSize: 9, fontWeight: 700, color: tb.fg, background: "rgba(0,0,0,0.6)", borderRadius: 99, padding: "1px 5px" }}>{tb.label}</span>
+                      </div>
                       <div style={{ padding: "5px 7px" }}>
                         <p style={{ fontSize: 9, color: "var(--text-2)", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{note.description}</p>
                         {note.gaps && <p style={{ fontSize: 9, color: "#FBBF24", marginTop: 3, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}><AppIcon name="alert" size={10} /> Gap visual</p>}
