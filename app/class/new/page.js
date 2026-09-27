@@ -61,7 +61,7 @@ export default function NewClass() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, color: "var(--text-2)", fontSize: 14 }}>
-          <Mascot pose="grabando" size={150} float priority />
+          <Mascot pose="procesando" size={150} float priority />
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10, fontWeight: 600 }}>
             <span className="spinner" style={{ borderColor: "var(--border-strong)", borderTopColor: "var(--accent)" }} />
             Preparando tu clase…

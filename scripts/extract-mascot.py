@@ -1,66 +1,66 @@
+# Recorta las poses de MASCOTA.png (raíz del repo, fondo transparente, cuadrícula 5×4)
+# y las guarda en public/mascot/<pose>.png.
+# Uso: python scripts/extract-mascot.py   (requiere Pillow, numpy y scipy)
+#
+# Cada pieza (mascota, burbujas, confeti, "zzz"…) se asigna a la pose cuya celda contiene
+# su centro, así los elementos que cruzan la línea entre filas no se cortan.
 import os
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-# Recorta las poses de MASCOTA.png (raíz del repo) y las guarda en public/mascot/.
-# Uso: python scripts/extract-mascot.py   (requiere Pillow, numpy y scipy)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-S = os.path.join(ROOT, ".mascot-preview")   # hojas de muestra para revisar el recorte
-os.makedirs(os.path.join(S, "shots"), exist_ok=True)
 OUT = os.path.join(ROOT, "public", "mascot")
+PREVIEW = os.path.join(ROOT, ".mascot-preview")
 os.makedirs(OUT, exist_ok=True)
+os.makedirs(PREVIEW, exist_ok=True)
 
 NAMES = [
-    ["hola", "menu", "grabando", "procesando", "reproduciendo", "repasar"],
-    ["tu-puedes", "logro", "notificacion", "enfoque", "descanso", "ayuda"],
-    ["cargando", "completado", "calendario", "biblioteca", "perfil", "despedida"],
+    ["hola",      "menu",        "amor",       "procesando", "musica"],
+    ["tu-puedes", "logro",       "notificacion", "enfoque",  "descanso"],
+    ["cargando",  "completado",  "calendario", "biblioteca", "perfil"],
+    ["despedida", "ayuda",       "idea",       "dormido",    "celebrando"],
 ]
-ROW_BANDS = [(178, 388), (474, 674), (768, 960)]
-COL_W = 1536 / 6
+# Límites de filas y columnas (detectados a partir del canal alfa)
+ROWS = [0, 300, 567, 812, 1024]
+COLS = [0, 305, 602, 910, 1223, 1536]
+MAX_SIDE = 360
 
-A = np.asarray(Image.open(os.path.join(ROOT, "MASCOTA.png")).convert("RGB")).astype(np.int16)
+img = Image.open(os.path.join(ROOT, "MASCOTA.png")).convert("RGBA")
+A = np.asarray(img).copy()
+A[..., 3] = np.where(A[..., 3] <= 8, 0, A[..., 3])   # limpia el halo casi invisible
+solid = A[..., 3] > 0
+# Une piezas muy cercanas (antialias, pelo) antes de etiquetar
+lab, n = ndi.label(ndi.binary_dilation(solid, iterations=2))
+centers = ndi.center_of_mass(solid, lab, range(1, n + 1))
+sizes = ndi.sum(solid, lab, range(1, n + 1))
 
-BARRIER = 7
+def cell_of(cy, cx):
+    r = next(i for i in range(4) if ROWS[i] <= cy < ROWS[i + 1])
+    c = next(i for i in range(5) if COLS[i] <= cx < COLS[i + 1])
+    return r, c
 
-def extract(cell):
-    mn = cell.min(axis=2); mx = cell.max(axis=2)
-    # Fondo candidato: claro y poco saturado (incluye las sombras lavanda del suelo)
-    light = (mn > 180) & ((mx - mn) < 62)
-    fg = ~light
-    # Quitar fragmentos sueltos (líneas de las etiquetas, texto residual)
-    lab, n = ndi.label(fg)
-    sizes = ndi.sum(fg, lab, range(1, n + 1))
-    keep = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s >= 120])
-    # Barrera: silueta engrosada 3px (tapa huecos de hasta ~6px en el contorno)
-    barrier = ndi.binary_dilation(keep, iterations=BARRIER)
-    lab2, _ = ndi.label(~barrier)
-    border_labels = set(np.unique(np.concatenate([lab2[0], lab2[-1], lab2[:, 0], lab2[:, -1]]))) - {0}
-    bg = np.isin(lab2, list(border_labels))
-    # Devolver el fondo a su tamaño real, solo sobre píxeles claros
-    for _ in range(BARRIER + 1):
-        bg = bg | (ndi.binary_dilation(bg) & light)
-    solid = ~bg
-    alpha = (solid * 255).astype(np.uint8)
-    # Borde suave
-    alpha = ndi.gaussian_filter(alpha.astype(float), 0.7)
-    alpha = np.clip(alpha * 1.15, 0, 255).astype(np.uint8)
-    ys, xs = np.where(solid)
+groups = {}
+for idx, ((cy, cx), size) in enumerate(zip(centers, sizes), start=1):
+    if size < 25:  # motas sueltas
+        continue
+    groups.setdefault(cell_of(cy, cx), []).append(idx)
+
+preview_dark = Image.new("RGBA", (5 * 200, 4 * 200), (24, 24, 36, 255))
+preview_light = Image.new("RGBA", (5 * 200, 4 * 200), (238, 236, 252, 255))
+for (r, c), ids in sorted(groups.items()):
+    mask = np.isin(lab, ids) & solid
+    ys, xs = np.where(mask)
     y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
-    rgba = np.dstack([cell.astype(np.uint8), alpha])[y0:y1, x0:x1]
-    return Image.fromarray(rgba, "RGBA")
+    rgba = A[y0:y1, x0:x1].copy()
+    rgba[..., 3] = np.where(mask[y0:y1, x0:x1], rgba[..., 3], 0)
+    pose = Image.fromarray(rgba, "RGBA")
+    pose.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
+    pose.save(os.path.join(OUT, f"{NAMES[r][c]}.png"), optimize=True)
+    t = pose.copy(); t.thumbnail((185, 185))
+    pos = (c * 200 + (200 - t.width) // 2, r * 200 + (200 - t.height) // 2)
+    preview_dark.alpha_composite(t, pos); preview_light.alpha_composite(t, pos)
 
-sheet = Image.new("RGBA", (6 * 180, 3 * 200), (32, 32, 48, 255))
-sheet_light = Image.new("RGBA", (6 * 180, 3 * 200), (238, 236, 252, 255))
-for r, (y0, y1) in enumerate(ROW_BANDS):
-    for c in range(6):
-        x0, x1 = int(c * COL_W) + 8, int((c + 1) * COL_W) - 8
-        img = extract(A[y0:y1, x0:x1])
-        img.thumbnail((320, 320), Image.LANCZOS)
-        img.save(os.path.join(OUT, f"{NAMES[r][c]}.png"), optimize=True)
-        t = img.copy(); t.thumbnail((170, 170))
-        pos = (c * 180 + (180 - t.width) // 2, r * 200 + 5)
-        sheet.alpha_composite(t, pos); sheet_light.alpha_composite(t, pos)
-sheet.save(os.path.join(S, "shots", "mascot_sheet.png"))
-sheet_light.save(os.path.join(S, "shots", "mascot_sheet_light.png"))
-print("peso total KB:", round(sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT)) / 1024))
+preview_dark.save(os.path.join(PREVIEW, "dark.png"))
+preview_light.save(os.path.join(PREVIEW, "light.png"))
+print("poses:", len(groups), "| peso KB:", round(sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT)) / 1024))

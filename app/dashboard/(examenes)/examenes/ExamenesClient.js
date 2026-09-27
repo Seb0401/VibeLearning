@@ -335,7 +335,7 @@ export default function ExamenesClient({ classes }) {
         {!result && !loading && (
           <div style={{ flex: 1, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center", maxWidth: 380, padding: "0 20px" }}>
-              <Mascot pose="repasar" size={140} style={{ margin: "0 auto 12px" }} />
+              <Mascot pose="idea" size={140} style={{ margin: "0 auto 12px" }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
                 Sube tu examen para analizarlo
               </p>

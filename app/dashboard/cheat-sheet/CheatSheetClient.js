@@ -301,7 +301,7 @@ export default function CheatSheetClient({ classes }) {
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div style={{ textAlign: "center", maxWidth: 340 }}>
-                <Mascot pose="repasar" size={140} style={{ margin: "0 auto 14px" }} />
+                <Mascot pose="idea" size={140} style={{ margin: "0 auto 14px" }} />
                 <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>Tu cheat sheet aparecerá aquí</p>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.7 }}>
                   Selecciona clases o un curso a la izquierda y presiona{" "}

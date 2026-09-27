@@ -2,14 +2,15 @@ import Image from "next/image";
 
 // Poses disponibles en /public/mascot (recortadas de MASCOTA.png).
 export const MASCOT_POSES = [
-  "hola", "menu", "grabando", "procesando", "reproduciendo", "repasar",
-  "tu-puedes", "logro", "notificacion", "enfoque", "descanso", "ayuda",
-  "cargando", "completado", "calendario", "biblioteca", "perfil", "despedida",
+  "hola", "menu", "amor", "procesando", "musica",
+  "tu-puedes", "logro", "notificacion", "enfoque", "descanso",
+  "cargando", "completado", "calendario", "biblioteca", "perfil",
+  "despedida", "ayuda", "idea", "dormido", "celebrando",
 ];
 
 const ALT = {
   hola: "Mascota de VibeLearning saludando",
-  grabando: "Mascota de VibeLearning grabando la clase",
+  idea: "Mascota de VibeLearning con una idea",
   procesando: "Mascota de VibeLearning procesando",
   "tu-puedes": "Mascota de VibeLearning estudiando",
   logro: "Mascota de VibeLearning celebrando con una estrella",
