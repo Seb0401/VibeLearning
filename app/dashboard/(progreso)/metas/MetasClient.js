@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { IconBadge } from "@/components/Icon";
 
 function Icon({ size = 16, children }) {
   return (
@@ -17,17 +18,17 @@ const IcoTarget = ({ s }) => <Icon size={s}><circle cx="12" cy="12" r="10"/><cir
 const STORAGE_KEY = "metas_v1";
 
 const GOAL_TEMPLATES = [
-  { type: "clases_semana",  label: "Clases por semana",   unit: "clases",   min: 1, max: 7,   default: 3,  description: "Completa X clases esta semana", icon: "🎓" },
-  { type: "conceptos_mes",  label: "Conceptos este mes",  unit: "conceptos",min: 5, max: 200,  default: 30, description: "Aprende X nuevos conceptos este mes", icon: "⚡" },
-  { type: "pdfs_mes",       label: "Materiales este mes", unit: "PDFs",     min: 1, max: 20,   default: 4,  description: "Sube X PDFs durante clases este mes", icon: "📄" },
-  { type: "racha_dias",     label: "Racha de días",       unit: "días",     min: 3, max: 30,   default: 7,  description: "Estudia X días consecutivos", icon: "🔥" },
+  { type: "clases_semana",  label: "Clases por semana",   unit: "clases",   min: 1, max: 7,   default: 3,  description: "Completa X clases esta semana", icon: "graduation" },
+  { type: "conceptos_mes",  label: "Conceptos este mes",  unit: "conceptos",min: 5, max: 200,  default: 30, description: "Aprende X nuevos conceptos este mes", icon: "lightbulb" },
+  { type: "pdfs_mes",       label: "Materiales este mes", unit: "PDFs",     min: 1, max: 20,   default: 4,  description: "Sube X PDFs durante clases este mes", icon: "file-text" },
+  { type: "racha_dias",     label: "Racha de días",       unit: "días",     min: 3, max: 30,   default: 7,  description: "Estudia X días consecutivos", icon: "flame" },
 ];
 
 const GOAL_COLORS = {
   clases_semana: { fg: "#7C6CF8", bg: "rgba(124,108,248,0.12)" },
-  conceptos_mes: { fg: "#22C55E", bg: "rgba(34,197,94,0.12)"   },
-  pdfs_mes:      { fg: "#EF4444", bg: "rgba(239,68,68,0.12)"   },
-  racha_dias:    { fg: "#FBBF24", bg: "rgba(251,191,36,0.12)"  },
+  conceptos_mes: { fg: "#FBBF24", bg: "rgba(251,191,36,0.12)"  },
+  pdfs_mes:      { fg: "#60A5FA", bg: "rgba(96,165,250,0.12)"  },
+  racha_dias:    { fg: "#F97316", bg: "rgba(249,115,22,0.12)"  },
 };
 
 function computeProgress(type, target, stats) {
@@ -61,7 +62,7 @@ export default function MetasClient({ stats }) {
     <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: 28, height: "100%", boxSizing: "border-box" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", flexShrink: 0 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>Metas</h1>
           <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>Define objetivos y sigue tu progreso automáticamente.</p>
@@ -71,7 +72,7 @@ export default function MetasClient({ stats }) {
         </button>
       </div>
 
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, minHeight: 0 }}>
+      <div className="split-300" style={{ flex: 1, gap: 24, minHeight: 0 }}>
 
         {/* LEFT: goals list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", minWidth: 0 }}>
@@ -84,7 +85,7 @@ export default function MetasClient({ stats }) {
                 {GOAL_TEMPLATES.map(tmpl => (
                   <label key={tmpl.type} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, background: newType === tmpl.type ? "var(--accent-dim)" : "rgba(255,255,255,0.02)", border: `1px solid ${newType === tmpl.type ? "rgba(124,108,248,0.3)" : "var(--border)"}`, cursor: "pointer" }}>
                     <input type="radio" name="goalType" value={tmpl.type} checked={newType === tmpl.type} onChange={() => onTemplateChange(tmpl.type)} style={{ accentColor: "var(--accent)" }} />
-                    <span style={{ fontSize: 18 }}>{tmpl.icon}</span>
+                    <IconBadge name={tmpl.icon} color={GOAL_COLORS[tmpl.type].fg} size={32} />
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>{tmpl.label}</p>
                       <p style={{ fontSize: 11, color: "var(--text-3)" }}>{tmpl.description}</p>
@@ -97,10 +98,10 @@ export default function MetasClient({ stats }) {
                   <label style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 500, display: "block", marginBottom: 6 }}>
                     Objetivo ({GOAL_TEMPLATES.find(t => t.type === newType)?.unit})
                   </label>
-                  <input type="number" value={newTarget} min={GOAL_TEMPLATES.find(t => t.type === newType)?.min ?? 1} max={GOAL_TEMPLATES.find(t => t.type === newType)?.max ?? 100} onChange={e => setNewTarget(Number(e.target.value))} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", fontSize: 15, fontWeight: 600, color: "var(--text)", outline: "none", boxSizing: "border-box" }} />
+                  <input type="number" value={newTarget} min={GOAL_TEMPLATES.find(t => t.type === newType)?.min ?? 1} max={GOAL_TEMPLATES.find(t => t.type === newType)?.max ?? 100} onChange={e => setNewTarget(Number(e.target.value))} className="input" style={{ fontSize: 15, fontWeight: 600 }} />
                 </div>
-                <button onClick={addGoal} style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Guardar</button>
-                <button onClick={() => setAdding(false)} style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 16px", fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                <button onClick={addGoal} className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Guardar</button>
+                <button onClick={() => setAdding(false)} className="btn-ghost" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 16px", fontSize: 14, cursor: "pointer" }}>Cancelar</button>
               </div>
             </div>
           )}
@@ -108,8 +109,8 @@ export default function MetasClient({ stats }) {
           {/* Empty state */}
           {goals.length === 0 && !adding && (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "56px 48px", textAlign: "center", maxWidth: 400, width: "100%" }}>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>🎯</div>
+              <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "48px 32px", textAlign: "center", maxWidth: 400, width: "100%" }}>
+                <IconBadge name="target" size={56} style={{ margin: "0 auto 16px" }} />
                 <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8, fontSize: 16 }}>Sin metas activas</p>
                 <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 24 }}>Define una meta y el progreso se calcula automáticamente.</p>
                 <button onClick={() => setAdding(true)} className="btn-accent" style={{ background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "11px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -132,9 +133,7 @@ export default function MetasClient({ stats }) {
                   <div key={g.id} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                        <div style={{ width: 38, height: 38, borderRadius: "50%", background: col.bg, color: col.fg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>
-                          {tmpl?.icon || "🎯"}
-                        </div>
+                        <IconBadge name={tmpl?.icon || "target"} color={col.fg} size={40} />
                         <div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{g.label}</p>
                           <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Meta: {g.target} {g.unit}</p>
@@ -142,7 +141,7 @@ export default function MetasClient({ stats }) {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <span style={{ fontSize: 22, fontWeight: 800, color: col.fg, letterSpacing: "-0.02em" }}>{current}/{total}</span>
-                        <button onClick={() => removeGoal(g.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}><IcoTrash s={14} /></button>
+                        <button onClick={() => removeGoal(g.id)} aria-label={`Eliminar meta ${g.label}`} title="Eliminar meta" className="link-muted" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}><IcoTrash s={14} /></button>
                       </div>
                     </div>
                     <div>
@@ -173,9 +172,9 @@ export default function MetasClient({ stats }) {
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{g.label}</p>
-                      <p style={{ fontSize: 11, color: "#22C55E", marginTop: 2 }}>✓ {current}/{total} {g.unit} — Meta alcanzada</p>
+                      <p style={{ fontSize: 11, color: "#22C55E", marginTop: 2 }}>{current}/{total} {g.unit} · Meta alcanzada</p>
                     </div>
-                    <button onClick={() => removeGoal(g.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}><IcoTrash s={14} /></button>
+                    <button onClick={() => removeGoal(g.id)} aria-label={`Eliminar meta ${g.label}`} title="Eliminar meta" className="link-muted" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 4 }}><IcoTrash s={14} /></button>
                   </div>
                 );
               })}
@@ -189,13 +188,13 @@ export default function MetasClient({ stats }) {
             <p style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>Tu actividad actual</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[
-                { icon: "🎓", label: "Clases esta semana", value: stats.weekClasses,   color: "#7C6CF8", unit: "clases"   },
-                { icon: "⚡", label: "Conceptos este mes",  value: stats.monthConcepts, color: "#22C55E", unit: "conceptos"},
-                { icon: "📄", label: "PDFs este mes",       value: stats.monthPdfs,     color: "#EF4444", unit: "PDFs"     },
-                { icon: "🔥", label: "Racha actual",        value: stats.streak,        color: "#FBBF24", unit: "días"     },
+                { icon: "graduation", label: "Clases esta semana", value: stats.weekClasses,   color: "#7C6CF8", unit: "clases"   },
+                { icon: "lightbulb",  label: "Conceptos este mes", value: stats.monthConcepts, color: "#FBBF24", unit: "conceptos"},
+                { icon: "file-text",  label: "PDFs este mes",      value: stats.monthPdfs,     color: "#60A5FA", unit: "PDFs"     },
+                { icon: "flame",      label: "Racha actual",       value: stats.streak,        color: "#F97316", unit: "días"     },
               ].map(({ icon, label, value, color, unit }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
+                  <IconBadge name={icon} color={color} size={36} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 11, color: "var(--text-3)" }}>{label}</p>
                     <p style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: "-0.02em" }}>{value} <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-3)" }}>{unit}</span></p>
@@ -211,9 +210,9 @@ export default function MetasClient({ stats }) {
               {GOAL_TEMPLATES.map(tmpl => {
                 const col = GOAL_COLORS[tmpl.type];
                 return (
-                  <button key={tmpl.type} onClick={() => { setNewType(tmpl.type); setNewTarget(tmpl.default); setAdding(true); }} style={{ textAlign: "left", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center" }}>
-                    <span style={{ fontSize: 18 }}>{tmpl.icon}</span>
-                    <div>
+                  <button key={tmpl.type} onClick={() => { setNewType(tmpl.type); setNewTarget(tmpl.default); setAdding(true); }} className="chip-btn" style={{ textAlign: "left", background: "rgba(255,255,255,0.02)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", cursor: "pointer", display: "flex", gap: 10, alignItems: "center", color: "var(--text-3)" }}>
+                    <IconBadge name={tmpl.icon} color={col.fg} size={30} />
+                    <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{tmpl.label}</p>
                       <p style={{ fontSize: 10, color: "var(--text-3)" }}>Sugerido: {tmpl.default} {tmpl.unit}</p>
                     </div>

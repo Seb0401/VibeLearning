@@ -1,7 +1,8 @@
 import { groq } from "@/lib/groq";
+import { stripEmoji } from "@/lib/text";
 
 function stripMarkdown(text) {
-  return text
+  return stripEmoji(text)
     .replace(/#{1,6}\s*/g, "")      // headers
     .replace(/\*\*(.+?)\*\*/g, "$1") // bold
     .replace(/\*(.+?)\*/g, "$1")     // italic

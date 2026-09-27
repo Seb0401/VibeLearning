@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import AppIcon from "@/components/Icon";
+import EmptyState from "@/components/EmptyState";
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
 function groupByMonth(classes) {
@@ -21,17 +23,17 @@ function getMilestones(classes) {
   let totalConcepts = 0;
   sorted.forEach((c, i) => {
     const ms = [];
-    if (i === 0)  ms.push({ text: "Primera clase", emoji: "🎉" });
-    if (i === 4)  ms.push({ text: "5 clases completadas", emoji: "⭐" });
-    if (i === 9)  ms.push({ text: "10 clases completadas", emoji: "🔥" });
-    if (i === 24) ms.push({ text: "25 clases completadas", emoji: "🏆" });
-    if (i === 49) ms.push({ text: "50 clases completadas", emoji: "🚀" });
+    if (i === 0)  ms.push({ text: "Primera clase", icon: "sparkles", color: "#A78BFA" });
+    if (i === 4)  ms.push({ text: "5 clases completadas", icon: "star", color: "#FBBF24" });
+    if (i === 9)  ms.push({ text: "10 clases completadas", icon: "flame", color: "#F97316" });
+    if (i === 24) ms.push({ text: "25 clases completadas", icon: "trophy", color: "#FBBF24" });
+    if (i === 49) ms.push({ text: "50 clases completadas", icon: "rocket", color: "#60A5FA" });
 
     const prev = totalConcepts;
     totalConcepts += c.data?.concepts?.length || 0;
-    if (prev < 50  && totalConcepts >= 50)  ms.push({ text: "50 conceptos aprendidos",  emoji: "🧠" });
-    if (prev < 100 && totalConcepts >= 100) ms.push({ text: "100 conceptos aprendidos", emoji: "💡" });
-    if (prev < 250 && totalConcepts >= 250) ms.push({ text: "250 conceptos aprendidos", emoji: "🎓" });
+    if (prev < 50  && totalConcepts >= 50)  ms.push({ text: "50 conceptos aprendidos", icon: "brain", color: "#A78BFA" });
+    if (prev < 100 && totalConcepts >= 100) ms.push({ text: "100 conceptos aprendidos", icon: "lightbulb", color: "#FBBF24" });
+    if (prev < 250 && totalConcepts >= 250) ms.push({ text: "250 conceptos aprendidos", icon: "graduation", color: "#22C55E" });
 
     if (ms.length) map.set(c.id, ms);
   });
@@ -122,13 +124,7 @@ export default async function Cronologia() {
 
       {/* Empty */}
       {classes.length === 0 && (
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: 48, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📅</div>
-          <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Aún no hay clases</p>
-          <p style={{ fontSize: 13, color: "var(--text-2)" }}>
-            <Link href="/class/new" style={{ color: "var(--accent)" }}>Inicia tu primera clase</Link> y aparecerá aquí.
-          </p>
-        </div>
+        <EmptyState icon="calendar" title="Aún no hay clases" text="Tu línea de tiempo aparecerá aquí a medida que completes clases." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
       )}
 
       {/* Start marker */}
@@ -182,11 +178,13 @@ export default async function Cronologia() {
                   {ms.map(m => (
                     <div key={m.text} style={{
                       display: "inline-flex", alignItems: "center", gap: 6,
-                      background: "rgba(124,108,248,0.08)", border: "1px solid rgba(124,108,248,0.2)",
-                      borderRadius: 99, padding: "3px 12px", marginBottom: 6, marginRight: 6,
+                      background: `color-mix(in srgb, ${m.color} 10%, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${m.color} 28%, transparent)`,
+                      borderRadius: 99, padding: "3px 12px 3px 9px", marginBottom: 6, marginRight: 6,
+                      color: m.color,
                     }}>
-                      <span style={{ fontSize: 13 }}>{m.emoji}</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)" }}>{m.text}</span>
+                      <AppIcon name={m.icon} size={13} />
+                      <span style={{ fontSize: 11, fontWeight: 600 }}>{m.text}</span>
                     </div>
                   ))}
 

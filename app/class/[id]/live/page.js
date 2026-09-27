@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import MindMap from "@/components/MindMap";
 import ObsidianCanvas from "@/app/components/ObsidianCanvas";
 import SummaryMarkdown from "@/components/SummaryMarkdown";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 const CHUNK_INTERVAL = 7000;
 const WINDOW_CHUNKS = 13;
@@ -13,7 +14,7 @@ const QUIZ_INTERVAL = 30_000;   // nueva pregunta cada 30s
 const QUIZ_TIMEOUT = 30_000;    // auto-cierre si no responde
 const QUIZ_RESULT_DELAY = 4000; // muestra resultado 4s antes de cerrar
 const QUIZ_MIN_WORDS = 25;      // transcript mínimo para empezar a preguntar
-const CONCEPT_ICONS = ["📈", "Σ", "✕", "🛡", "⚡", "🔬", "💡", "🔗", "📊", "🎯"];
+const CONCEPT_ICONS = ["trending-up", "sigma", "puzzle", "shield", "zap", "microscope", "lightbulb", "link", "bar-chart", "target"];
 
 function formatTimer(s) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -112,7 +113,7 @@ function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainCli
               transition: "all 0.12s",
             }}
           >
-            <span style={{ fontSize: "0.82rem" }}>{icon}</span>
+            <AppIcon name={icon} size={13} />
             <span>{label}</span>
           </button>
         );
@@ -621,7 +622,7 @@ export default function LiveClass() {
       setStreak(newStreak);
       setScore((s) => s + pts);
       const flashMsg = multiplier > 1
-        ? `+${pts} pts 🔥×${multiplier}`
+        ? `+${pts} pts · racha ×${multiplier}`
         : `+${pts} pts`;
       setScoreFlash(flashMsg);
       setTimeout(() => setScoreFlash(null), 2000);
@@ -1032,7 +1033,7 @@ export default function LiveClass() {
                 { icon: <RI s={15}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></RI>, bg: "rgba(96,165,250,0.12)", fg: "#60A5FA", label: "Duración", val: durationFmt || "—" },
                 { icon: <RI s={15}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></RI>, bg: "rgba(251,191,36,0.12)", fg: "#FBBF24", label: "Puntos", val: finalData.score ?? 0 },
                 { icon: <RI s={15}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></RI>, bg: finalAccuracy !== null ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.04)", fg: finalAccuracy !== null ? "#22C55E" : "var(--text-3)", label: "Precisión", val: finalAccuracy !== null ? `${finalAccuracy}%` : "—" },
-                { icon: <RI s={15}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></RI>, bg: materialSummary ? "rgba(251,191,36,0.12)" : "rgba(255,255,255,0.04)", fg: materialSummary ? "var(--yellow)" : "var(--text-3)", label: "Material", val: materialSummary ? "PDF ✓" : "Sin PDF" },
+                { icon: <RI s={15}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></RI>, bg: materialSummary ? "rgba(251,191,36,0.12)" : "rgba(255,255,255,0.04)", fg: materialSummary ? "var(--yellow)" : "var(--text-3)", label: "Material", val: materialSummary ? "PDF" : "Sin PDF" },
               ].map(({ icon, bg, fg, label, val }, i) => (
                 <div key={i} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 32, height: 32, borderRadius: "50%", background: bg, color: fg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
@@ -1098,10 +1099,10 @@ export default function LiveClass() {
                 <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, flexShrink: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124, 108, 248, 0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      🗺️
+                      <AppIcon name="network" size={15} />
                     </div>
                     <div>
-                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>🗺️ Mapa de conocimiento</h2>
+                      <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Mapa de conocimiento</h2>
                       <p style={{ fontSize: 10, color: "var(--text-3)" }}>Explora los conceptos y sus relaciones de manera interactiva</p>
                     </div>
                   </div>
@@ -1134,7 +1135,7 @@ export default function LiveClass() {
           <div className="report-chat" style={{ width: 360, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", background: "var(--card)", overflow: "hidden" }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✨</div>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--accent-dim)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}><AppIcon name="sparkles" size={15} /></div>
                 <div>
                   <h2 style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Asistente IA</h2>
                   <p style={{ fontSize: 11, color: "var(--text-3)" }}>Pregunta sobre la clase</p>
@@ -1145,14 +1146,14 @@ export default function LiveClass() {
             <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 0" }}>
               {reportChatHistory.length === 0 && (
                 <div style={{ textAlign: "center", marginTop: "4rem" }}>
-                  <div style={{ fontSize: "2rem", marginBottom: 10 }}>✨</div>
+                  <IconBadge name="sparkles" size={48} style={{ margin: "0 auto 12px" }} />
                   <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>Haz una pregunta sobre los<br />conceptos o el contenido de la clase</p>
                 </div>
               )}
               {reportChatHistory.map((msg, i) => (
                 <div key={i} style={{ marginBottom: 12, display: "flex", flexDirection: msg.role === "user" ? "row-reverse" : "row", gap: 8, alignItems: "flex-start" }}>
                   <div style={{ width: 28, height: 28, borderRadius: "50%", background: msg.role === "user" ? "var(--accent)" : "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "white", fontWeight: 700, fontSize: msg.role === "user" ? "0.7rem" : "0.85rem" }}>
-                    {msg.role === "user" ? "A" : "🧠"}
+                    {msg.role === "user" ? "Tú" : <AppIcon name="bot" size={14} />}
                   </div>
                   <div style={{ maxWidth: "76%", background: msg.role === "user" ? "var(--accent)" : "var(--surface)", border: msg.role === "ai" ? "1px solid var(--border)" : "none", borderRadius: msg.role === "user" ? "12px 4px 12px 12px" : "4px 12px 12px 12px", padding: "8px 11px", fontSize: "0.82rem", lineHeight: 1.55, color: msg.role === "user" ? "white" : "var(--text)" }}>
                     {msg.text}
@@ -1161,7 +1162,7 @@ export default function LiveClass() {
               ))}
               {reportChatLoading && (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 12 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "0.85rem" }}>🧠</div>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "white" }}><AppIcon name="bot" size={14} /></div>
                   <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "10px 14px" }}><span className="typing-dots" aria-label="Pensando"><span /><span /><span /></span></div>
                 </div>
               )}
@@ -1237,9 +1238,9 @@ export default function LiveClass() {
         {/* Score display */}
         {(score > 0 || quizStats.total > 0) && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: 20, padding: "4px 12px" }}>
-            <span style={{ color: "#FBBF24", fontWeight: 700, fontSize: "0.85rem" }}>🎯 {score} pts</span>
+            <span style={{ color: "#FBBF24", fontWeight: 700, fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="star" size={13} /> {score} pts</span>
             {streak >= 2 && (
-              <span style={{ color: "#f97316", fontWeight: 700, fontSize: "0.82rem" }}>🔥×{streakMultiplier}</span>
+              <span style={{ color: "#f97316", fontWeight: 700, fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: 3 }}><AppIcon name="flame" size={13} />×{streakMultiplier}</span>
             )}
             {accuracy !== null && (
               <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{quizStats.correct}/{quizStats.total}</span>
@@ -1305,9 +1306,9 @@ export default function LiveClass() {
                   isExpanded={micExpanded}
                   onMainClick={handleMicMainClick}
                   options={[
-                    { key: "mic",    icon: "🎤", label: "Micrófono" },
-                    { key: "system", icon: "🖥️", label: "Pantalla / Tab" },
-                    { key: "both",   icon: "🔀", label: "Mic + Tab" },
+                    { key: "mic",    icon: "mic", label: "Micrófono" },
+                    { key: "system", icon: "monitor", label: "Pantalla / Tab" },
+                    { key: "both",   icon: "shuffle", label: "Mic + Tab" },
                   ]}
                   selectedKey={audioSource}
                   onOptionClick={handleMicOption}
@@ -1319,9 +1320,9 @@ export default function LiveClass() {
                   isExpanded={camExpanded}
                   onMainClick={handleCamMainClick}
                   options={[
-                    { key: "screenshot", icon: "🖥️", label: "Captura" },
-                    { key: "upload",     icon: "📁", label: "Subir archivo" },
-                    { key: "camera",     icon: "📷", label: "Cámara" },
+                    { key: "screenshot", icon: "monitor", label: "Captura" },
+                    { key: "upload",     icon: "upload", label: "Subir archivo" },
+                    { key: "camera",     icon: "camera", label: "Cámara" },
                   ]}
                   selectedKey={visualSource}
                   onOptionClick={handleCamOption}
@@ -1383,7 +1384,7 @@ export default function LiveClass() {
                           )}
                           {note.gaps && (
                             <div style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.18)", borderRadius: 6, padding: "5px 8px" }}>
-                              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--yellow)" }}>⚠ Gap: </span>
+                              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--yellow)" }}><AppIcon name="alert" size={11} style={{ verticalAlign: "-1px", marginRight: 3 }} />Gap: </span>
                               <span style={{ fontSize: "0.68rem", color: "var(--text-2)" }}>{note.gaps}</span>
                             </div>
                           )}
@@ -1401,7 +1402,7 @@ export default function LiveClass() {
           <div style={{ order: 3, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontSize: 15 }}>✨</span>
+                <span style={{ color: "var(--accent)", display: "flex" }}><AppIcon name="sparkles" size={16} /></span>
                 <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Chatbot RAG</span>
               </div>
               {materialSummary && (
@@ -1412,14 +1413,14 @@ export default function LiveClass() {
             <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 0" }}>
               {chatHistory.length === 0 && (
                 <div style={{ textAlign: "center", marginTop: "4rem" }}>
-                  <div style={{ fontSize: "2.5rem", marginBottom: 10 }}>✨</div>
+                  <IconBadge name="sparkles" size={52} style={{ margin: "0 auto 12px" }} />
                   <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>Hazme una pregunta sobre la clase<br />y te responderé con el contexto del material</p>
                 </div>
               )}
               {chatHistory.map((msg, i) => (
                 <div key={i} style={{ marginBottom: 14, display: "flex", flexDirection: msg.role === "user" ? "row-reverse" : "row", gap: 8, alignItems: "flex-start" }}>
                   <div style={{ width: 30, height: 30, borderRadius: "50%", background: msg.role === "user" ? "var(--accent)" : "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "white", fontWeight: 700, fontSize: msg.role === "user" ? "0.75rem" : "0.9rem" }}>
-                    {msg.role === "user" ? "A" : "🧠"}
+                    {msg.role === "user" ? "Tú" : <AppIcon name="bot" size={15} />}
                   </div>
                   <div style={{ maxWidth: "76%", background: msg.role === "user" ? "var(--accent)" : "var(--surface)", border: msg.role === "ai" ? "1px solid var(--border)" : "none", borderRadius: msg.role === "user" ? "12px 4px 12px 12px" : "4px 12px 12px 12px", padding: "9px 12px", fontSize: "0.83rem", lineHeight: 1.55, color: msg.role === "user" ? "white" : "var(--text)" }}>
                     {msg.text}
@@ -1428,7 +1429,7 @@ export default function LiveClass() {
               ))}
               {chatLoading && (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 14 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "0.9rem" }}>🧠</div>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#7c6df2,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "white" }}><AppIcon name="bot" size={15} /></div>
                   <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "4px 12px 12px 12px", padding: "11px 14px" }}><span className="typing-dots" aria-label="Pensando"><span /><span /><span /></span></div>
                 </div>
               )}
@@ -1440,9 +1441,9 @@ export default function LiveClass() {
                 <p style={{ fontSize: "0.71rem", color: "var(--text-muted)", marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Sugerencias de seguimiento</p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {[
-                    { icon: "🧩", text: "Explícalo más simple" },
-                    { icon: "💡", text: "Dame un ejemplo" },
-                    { icon: "🎯", text: "Genera otra pregunta" },
+                    { icon: "puzzle", text: "Explícalo más simple" },
+                    { icon: "lightbulb", text: "Dame un ejemplo" },
+                    { icon: "target", text: "Genera otra pregunta" },
                   ].map(({ icon, text }) => (
                     <button
                       key={text}
@@ -1450,7 +1451,7 @@ export default function LiveClass() {
                       className="chip-btn"
                       style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px", fontSize: "0.74rem", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                     >
-                      {icon} {text}
+                      <AppIcon name={icon} size={12} /> {text}
                     </button>
                   ))}
                 </div>
@@ -1488,7 +1489,7 @@ export default function LiveClass() {
             <section style={{ borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
               <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 15 }}>⚡</span>
+                  <span style={{ color: "#FBBF24", display: "flex" }}><AppIcon name="zap" size={16} /></span>
                   <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Active Recall</span>
                 </div>
                 {quiz && quizCountdown !== null && quizAnswer === null && (
@@ -1511,7 +1512,7 @@ export default function LiveClass() {
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                       {streak >= 2 && quizAnswer === null && (
                         <span style={{ background: "rgba(249,115,22,0.12)", color: "#f97316", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 700 }}>
-                          🔥×{streakMultiplier}
+                          <AppIcon name="flame" size={11} style={{ verticalAlign: "-1px" }} /> ×{streakMultiplier}
                         </span>
                       )}
                       <span style={{ background: "rgba(251,191,36,0.1)", color: "#FBBF24", fontSize: "0.7rem", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>
@@ -1559,8 +1560,8 @@ export default function LiveClass() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: "0.82rem", fontWeight: 700, color: quizAnswer === quiz.correct ? "#22c55e" : "#ef4444" }}>
                           {quizAnswer === quiz.correct
-                            ? `✓ Correcto${streak >= 2 ? ` — Racha ${streak} 🔥` : ""}`
-                            : `✗ Incorrecto — Respuesta correcta: ${quiz.correct}`}
+                            ? <><AppIcon name="check-circle" size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} />Correcto{streak >= 2 ? ` · racha de ${streak}` : ""}</>
+                            : <><AppIcon name="x-circle" size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} />Incorrecto · la correcta era {quiz.correct}</>}
                         </span>
                         <button onClick={closeQuiz} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.77rem", flexShrink: 0 }}>Cerrar</button>
                       </div>
@@ -1578,7 +1579,7 @@ export default function LiveClass() {
 
                   {quizAnswer !== null && quiz.explanation && (
                     <p style={{ marginTop: 8, fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.45 }}>
-                      💡 {quiz.explanation}
+                      <AppIcon name="lightbulb" size={13} style={{ verticalAlign: "-2px", marginRight: 5, color: "#FBBF24" }} />{quiz.explanation}
                     </p>
                   )}
                 </div>
@@ -1617,11 +1618,11 @@ export default function LiveClass() {
                       style={{ borderRadius: 10, border: `1px solid ${isExpanded ? "var(--accent)" : "var(--border)"}`, background: isExpanded ? "rgba(124,109,242,0.08)" : "var(--surface)", padding: "10px 12px", marginBottom: 8, cursor: "pointer", transition: "border-color 0.15s" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: "1rem", opacity: 0.8, flexShrink: 0 }}>{CONCEPT_ICONS[i % CONCEPT_ICONS.length]}</span>
+                        <span style={{ width: 28, height: 28, borderRadius: 8, background: isExpanded ? "rgba(124,108,248,0.18)" : "rgba(124,108,248,0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><AppIcon name={CONCEPT_ICONS[i % CONCEPT_ICONS.length]} size={15} /></span>
                         <span style={{ flex: 1, fontWeight: 600, fontSize: "0.87rem", color: isExpanded ? "var(--accent)" : "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</span>
                         {isExpanded
-                          ? <span style={{ color: "var(--accent)", fontSize: "0.7rem" }}>▲</span>
-                          : <span style={{ color: "#22c55e", fontSize: "0.95rem" }}>✓</span>}
+                          ? <span style={{ color: "var(--accent)", display: "flex", transform: "rotate(-90deg)" }}><AppIcon name="chevron-right" size={15} /></span>
+                          : <span style={{ color: "var(--text-3)", display: "flex", transform: "rotate(90deg)" }}><AppIcon name="chevron-right" size={15} /></span>}
                       </div>
                       {isExpanded && (
                         <div style={{ marginTop: 8 }}>
@@ -1630,7 +1631,7 @@ export default function LiveClass() {
                             onClick={(e) => { e.stopPropagation(); sendChatText(`Dame un ejemplo de ${c.name}`); }}
                             style={{ background: "none", border: "1px solid var(--border)", borderRadius: 6, padding: "3px 8px", color: "var(--text-muted)", fontSize: "0.74rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                           >
-                            💡 Ver ejemplo
+                            <AppIcon name="lightbulb" size={12} /> Ver ejemplo
                           </button>
                         </div>
                       )}
@@ -1674,13 +1675,13 @@ export default function LiveClass() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "var(--card)", border: "1px solid var(--border-strong)", borderRadius: 20, padding: 24, width: 480, maxWidth: "92vw" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 7 }}>📷 Tomar foto</span>
+              <span style={{ fontWeight: 700, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 7 }}><AppIcon name="camera" size={17} /> Tomar foto</span>
               <button onClick={closeCamera} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 6, color: "var(--text-2)", cursor: "pointer", fontSize: 18, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             </div>
             <video ref={cameraVideoRef} autoPlay playsInline muted style={{ width: "100%", borderRadius: 12, background: "#000", display: "block", maxHeight: 320, objectFit: "cover" }} />
             <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
               <button onClick={captureFromCamera} className="btn-accent" style={{ flex: 1, background: "var(--accent)", color: "white", border: "none", borderRadius: "var(--radius-btn)", padding: "11px", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-                📸 Capturar
+                <AppIcon name="camera" size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />Capturar
               </button>
               <button onClick={closeCamera} className="btn-ghost" style={{ flex: 1, background: "transparent", color: "var(--text-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-btn)", padding: "11px", fontWeight: 500, fontSize: 14, cursor: "pointer" }}>
                 Cancelar

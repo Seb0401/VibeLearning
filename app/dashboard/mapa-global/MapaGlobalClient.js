@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import MindMap from "@/components/MindMap";
+import { IconBadge } from "@/components/Icon";
 
 function Icon({ size = 16, children }) {
   return (
@@ -87,7 +88,7 @@ export default function MapaGlobalClient({ classes, markdown }) {
           background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)",
         }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🗺️</div>
+            <IconBadge name="network" size={56} style={{ margin: "0 auto 14px" }} />
             <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Sin conceptos aún</p>
             <p style={{ fontSize: 13, color: "var(--text-2)" }}>Completa clases para construir tu mapa de conocimiento.</p>
           </div>

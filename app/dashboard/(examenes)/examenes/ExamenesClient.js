@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 function Svg({ size = 16, children }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
@@ -194,13 +195,13 @@ export default function ExamenesClient({ classes }) {
               {examPreview ? (
                 <div>
                   <img src={examPreview} alt="preview" style={{ maxWidth: "100%", maxHeight: 180, borderRadius: 8, objectFit: "contain" }} />
-                  <p style={{ fontSize: 11, color: "#22C55E", marginTop: 8, fontWeight: 600 }}>✓ {examFile.name}</p>
+                  <p style={{ fontSize: 11, color: "#22C55E", marginTop: 8, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="check" size={12} strokeWidth={2.25} /> {examFile.name}</p>
                   <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Haz clic para cambiar</p>
                 </div>
               ) : examFile ? (
                 <div>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#22C55E", marginBottom: 4 }}>✓ {examFile.name}</p>
+                  <IconBadge name="file-text" color="#22C55E" size={44} style={{ margin: "0 auto 10px" }} />
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#22C55E", marginBottom: 4 }}>{examFile.name}</p>
                   <p style={{ fontSize: 11, color: "var(--text-3)" }}>Haz clic para cambiar</p>
                 </div>
               ) : (
@@ -230,7 +231,7 @@ export default function ExamenesClient({ classes }) {
               </p>
               <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Opcional — mejora la calificación</p>
             </div>
-            {hasInstr && <span style={{ fontSize: 10, background: "rgba(34,197,94,0.1)", color: "#22C55E", borderRadius: 4, padding: "2px 8px", fontWeight: 700 }}>✓ Incluidas</span>}
+            {hasInstr && <span style={{ fontSize: 10, background: "rgba(34,197,94,0.1)", color: "#22C55E", borderRadius: 4, padding: "2px 8px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}><AppIcon name="check" size={11} strokeWidth={2.5} /> Incluidas</span>}
           </div>
           <div style={{ padding: 14 }}>
             {/* Mode toggle */}
@@ -320,7 +321,7 @@ export default function ExamenesClient({ classes }) {
         {loading && (
           <div style={{ flex: 1, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 14 }}>🔍</div>
+              <span className="spinner spinner-lg" style={{ marginBottom: 16 }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>Analizando tu examen…</p>
               <p style={{ fontSize: 13, color: "var(--text-2)" }}>
                 {hasInstr ? "Calificando con las indicaciones del profesor" : "Leyendo cada pregunta y respuesta"}
@@ -332,7 +333,7 @@ export default function ExamenesClient({ classes }) {
         {!result && !loading && (
           <div style={{ flex: 1, minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center", maxWidth: 380, padding: "0 20px" }}>
-              <div style={{ fontSize: 44, marginBottom: 16 }}>📋</div>
+              <IconBadge name="clipboard" size={56} style={{ margin: "0 auto 16px" }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
                 Sube tu examen para analizarlo
               </p>

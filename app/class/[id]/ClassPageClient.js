@@ -5,6 +5,7 @@ import MindMap from "@/components/MindMap";
 import SummaryMarkdown from "@/components/SummaryMarkdown";
 import ObsidianCanvas from "@/app/components/ObsidianCanvas";
 import { createClient } from "@/lib/supabase/client";
+import AppIcon from "@/components/Icon";
 
 function RI({ s = 16, children }) {
   return (
@@ -399,7 +400,7 @@ export default function ClassPageClient({ cls }) {
                               style={{ ...base, borderRadius: 10, padding: "9px 11px", display: "flex", alignItems: "center", gap: 8, cursor: selected ? "default" : "pointer", textAlign: "left" }}
                             >
                               <span style={{ ...letter, width: 22, height: 22, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-                                {showCheck ? "✓" : key}
+                                {showCheck ? <AppIcon name="check" size={13} strokeWidth={2.5} /> : key}
                               </span>
                               <span style={{ fontSize: 12, lineHeight: 1.35 }}>{quizQ.options[key]}</span>
                             </button>
@@ -408,8 +409,9 @@ export default function ClassPageClient({ cls }) {
                       </div>
                       {selected && (
                         <div className="fade-up" style={{ marginBottom: 12 }}>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: selected === quizQ.correct ? "#22C55E" : "#EF4444" }}>
-                            {selected === quizQ.correct ? "¡Correcto! 🎉" : `Incorrecto. La respuesta correcta era ${quizQ.correct}.`}
+                          <p style={{ fontSize: 12, fontWeight: 600, color: selected === quizQ.correct ? "#22C55E" : "#EF4444", display: "flex", alignItems: "center", gap: 6 }}>
+                            <AppIcon name={selected === quizQ.correct ? "check-circle" : "x-circle"} size={14} />
+                            {selected === quizQ.correct ? "¡Correcto!" : `Incorrecto. La respuesta correcta era ${quizQ.correct}.`}
                           </p>
                           {quizQ.explanation && (
                             <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.55, marginTop: 4 }}>{quizQ.explanation}</p>
@@ -479,7 +481,7 @@ export default function ClassPageClient({ cls }) {
               <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", flexShrink: 0 }}>
                 <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,108,248,0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>🗺️</div>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,108,248,0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}><AppIcon name="network" size={15} /></div>
                     <div>
                       <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Mapa de conocimiento</h2>
                       <p style={{ fontSize: 10, color: "var(--text-3)" }}>Explora los conceptos y sus relaciones de manera interactiva</p>
@@ -545,7 +547,7 @@ export default function ClassPageClient({ cls }) {
                       )}
                       <div style={{ padding: "5px 7px" }}>
                         <p style={{ fontSize: 9, color: "var(--text-2)", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{note.description}</p>
-                        {note.gaps && <p style={{ fontSize: 9, color: "#FBBF24", marginTop: 3, fontWeight: 600 }}>⚠ Gap visual</p>}
+                        {note.gaps && <p style={{ fontSize: 9, color: "#FBBF24", marginTop: 3, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}><AppIcon name="alert" size={10} /> Gap visual</p>}
                       </div>
                     </div>
                   );

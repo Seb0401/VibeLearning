@@ -1,5 +1,6 @@
 "use client";
 import ReactMarkdown from "react-markdown";
+import { stripEmoji } from "@/lib/text";
 
 export default function SummaryMarkdown({ text }) {
   if (!text) return null;
@@ -17,7 +18,7 @@ export default function SummaryMarkdown({ text }) {
         code: ({ children }) => <code style={{ background: "rgba(124,108,248,0.1)", color: "var(--accent)", borderRadius: 4, padding: "1px 5px", fontSize: "0.87em" }}>{children}</code>,
       }}
     >
-      {text}
+      {stripEmoji(text)}
     </ReactMarkdown>
   );
 }

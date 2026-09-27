@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 /* ── Icons ── */
 function Icon({ size = 16, children }) {
@@ -201,7 +202,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
           </select>
           {hasExisting && (
             <p style={{ fontSize: 11, color: "#FBBF24", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
-              ⚠ Esta clase ya tiene un PDF. El nuevo lo reemplazará.
+              <AppIcon name="alert" size={13} /> Esta clase ya tiene un PDF. El nuevo lo reemplazará.
             </p>
           )}
         </div>
@@ -223,7 +224,7 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
             onChange={e => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
           {file ? (
             <div>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
+              <IconBadge name="file-text" color="#22C55E" size={44} style={{ margin: "0 auto 10px" }} />
               <p style={{ fontSize: 13, fontWeight: 600, color: "#22C55E" }}>{file.name}</p>
               <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
                 {(file.size / 1024).toFixed(0)} KB · clic para cambiar
@@ -489,7 +490,7 @@ export default function BibliotecaClient({ classes }) {
             {displayed.length === 0 ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 40, marginBottom: 14 }}>📄</div>
+                  <IconBadge name="book-open" color="#60A5FA" size={56} style={{ margin: "0 auto 14px" }} />
                   <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
                     {selection.type === "uncategorized" ? "Todos los materiales están en un curso" : "Sin materiales aquí"}
                   </p>

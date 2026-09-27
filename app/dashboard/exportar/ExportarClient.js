@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 function Svg({ size = 16, children }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
@@ -38,7 +39,7 @@ function fmtDate(str) {
 const EXPORT_TYPES = [
   {
     id: "anki",
-    emoji: "🃏",
+    icon: "cards",
     name: "Flashcards para Anki",
     desc: "CSV listo para importar en Anki. Formato: pregunta / respuesta.",
     ext: ".csv",
@@ -50,7 +51,7 @@ const EXPORT_TYPES = [
   },
   {
     id: "transcript",
-    emoji: "📝",
+    icon: "pen-note",
     name: "Transcripción completa",
     desc: "El texto completo de la clase grabada en formato .txt.",
     ext: ".txt",
@@ -62,7 +63,7 @@ const EXPORT_TYPES = [
   },
   {
     id: "summary",
-    emoji: "📄",
+    icon: "file-text",
     name: "Resumen high-yield",
     desc: "El resumen final generado por IA en formato .txt.",
     ext: ".txt",
@@ -74,7 +75,7 @@ const EXPORT_TYPES = [
   },
   {
     id: "mindmap",
-    emoji: "🗺️",
+    icon: "network",
     name: "Mapa mental (Markdown)",
     desc: "El mapa mental en formato Markdown compatible con Obsidian y otros.",
     ext: ".md",
@@ -86,7 +87,7 @@ const EXPORT_TYPES = [
   },
   {
     id: "concepts",
-    emoji: "💡",
+    icon: "lightbulb",
     name: "Conceptos JSON",
     desc: "Lista de conceptos con sus definiciones en formato JSON.",
     ext: ".json",
@@ -160,7 +161,7 @@ export default function ExportarClient({ classes }) {
         {sel ? (
           <>
             {/* Header */}
-            <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
               <div>
                 <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>{sel.title}</p>
                 <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3 }}>
@@ -168,7 +169,7 @@ export default function ExportarClient({ classes }) {
                   {sel.transcript && ` · ${Math.round(sel.transcript.split(/\s+/).length / 130)} min`}
                 </p>
               </div>
-              <button onClick={downloadAll} style={{
+              <button onClick={downloadAll} className="btn-accent" style={{
                 display: "flex", alignItems: "center", gap: 7,
                 background: "var(--accent)", color: "white", border: "none",
                 borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -189,9 +190,7 @@ export default function ExportarClient({ classes }) {
                     opacity: available ? 1 : 0.4,
                   }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: `${t.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-                        {t.emoji}
-                      </div>
+                      <IconBadge name={t.icon} color={t.color} size={40} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{t.name}</p>
                         <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3, lineHeight: 1.5 }}>{t.desc}</p>
@@ -210,7 +209,7 @@ export default function ExportarClient({ classes }) {
                         transition: "all 150ms",
                       }}
                     >
-                      {done ? "✓ Descargado" : <><IcoDownload /> Descargar {t.ext}</>}
+                      {done ? <><AppIcon name="check" size={14} strokeWidth={2.25} /> Descargado</> : <><IcoDownload /> Descargar {t.ext}</>}
                     </button>
                     {!available && (
                       <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8, textAlign: "center" }}>
@@ -226,14 +225,14 @@ export default function ExportarClient({ classes }) {
             <div style={{ background: "rgba(96,165,250,0.05)", border: "1px solid rgba(96,165,250,0.15)", borderRadius: "var(--radius-card)", padding: "16px 20px" }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#60A5FA", marginBottom: 6 }}>Cómo importar en Anki</p>
               <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.65 }}>
-                Descarga el CSV de flashcards → Anki → Archivo → Importar → selecciona el archivo. Las columnas ya están configuradas correctamente. El mazo se llamará "VibeLearning".
+                Descarga el CSV de flashcards y en Anki ve a <strong>Archivo › Importar</strong> y selecciona el archivo. Las columnas ya están configuradas y el mazo se llamará <strong>VibeLearning</strong>.
               </p>
             </div>
           </>
         ) : (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 44, marginBottom: 16 }}>📦</div>
+              <IconBadge name="package" size={56} style={{ margin: "0 auto 16px" }} />
               <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Selecciona una clase</p>
               <p style={{ fontSize: 13, color: "var(--text-2)" }}>Elige una clase de la izquierda para ver las opciones de exportación</p>
             </div>

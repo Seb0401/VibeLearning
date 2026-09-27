@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import ClassCard from "@/app/dashboard/ClassCard";
+import EmptyState from "@/components/EmptyState";
 
 function Icon({ size = 16, children }) {
   return (
@@ -102,26 +103,7 @@ export default async function Historial() {
 
       {/* Empty state */}
       {classes.length === 0 && (
-        <div style={{
-          background: "var(--card)", border: "1px solid var(--border)",
-          borderRadius: "var(--radius-card)", padding: "64px 48px",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📚</div>
-          <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8, fontSize: 16 }}>Sin historial aún</p>
-          <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 24 }}>
-            Inicia tu primera clase y empieza a construir tu historial de aprendizaje.
-          </p>
-          <Link href="/class/new" style={{ textDecoration: "none" }}>
-            <span className="btn-accent" style={{ display: "inline-block",
-              background: "var(--accent)", color: "white", border: "none",
-              borderRadius: "var(--radius-btn)", padding: "11px 24px",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-            }}>
-              Iniciar primera clase
-            </span>
-          </Link>
-        </div>
+        <EmptyState icon="book" title="Sin historial aún" text="Inicia tu primera clase y empieza a construir tu historial de aprendizaje." action={{ href: "/class/new", label: "Iniciar primera clase" }} />
       )}
 
       {/* Grouped class list */}

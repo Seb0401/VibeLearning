@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 function fmtDate(str) {
   return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: "UTC" });
@@ -269,10 +270,10 @@ export default function CheatSheetClient({ classes }) {
       }}>
         {markdown && !loading && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "11px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-            <button onClick={copy} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, fontWeight: 500, color: copied ? "var(--green)" : "var(--text-2)", cursor: "pointer" }}>
-              {copied ? "✓ Copiado" : "Copiar"}
+            <button onClick={copy} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, fontWeight: 500, color: copied ? "var(--green)" : "var(--text-2)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <AppIcon name={copied ? "check" : "copy"} size={13} /> {copied ? "Copiado" : "Copiar"}
             </button>
-            <button onClick={() => window.print()} style={{ background: "var(--accent)", border: "none", borderRadius: 9, padding: "7px 16px", fontSize: 12, fontWeight: 600, color: "white", cursor: "pointer" }}>
+            <button onClick={() => window.print()} className="btn-accent" style={{ background: "var(--accent)", border: "none", borderRadius: 9, padding: "7px 16px", fontSize: 12, fontWeight: 600, color: "white", cursor: "pointer" }}>
               Imprimir / PDF
             </button>
           </div>
@@ -281,7 +282,7 @@ export default function CheatSheetClient({ classes }) {
           {loading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 14 }}>⚡</div>
+                <span className="spinner spinner-lg" style={{ marginBottom: 16 }} />
                 <p style={{ fontSize: 14, color: "var(--text-2)" }}>Generando tu cheat sheet…</p>
                 <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 6 }}>Puede tardar 5-10 segundos</p>
               </div>
@@ -303,7 +304,7 @@ export default function CheatSheetClient({ classes }) {
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div style={{ textAlign: "center", maxWidth: 340 }}>
-                <div style={{ fontSize: 44, marginBottom: 18 }}>📋</div>
+                <IconBadge name="clipboard" size={56} style={{ margin: "0 auto 18px" }} />
                 <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>Tu cheat sheet aparecerá aquí</p>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.7 }}>
                   Selecciona clases o un curso a la izquierda y presiona{" "}

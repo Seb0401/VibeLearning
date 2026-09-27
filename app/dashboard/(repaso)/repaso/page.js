@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import MindMap from "@/components/MindMap";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 function Icon({ size = 16, children }) {
   return (
@@ -157,8 +158,8 @@ export default function Repaso() {
             </div>
             {totalDone > 0 && (
               <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12 }}>
-                <span style={{ color: "var(--green)" }}>✓ {sessionStats.correct} correctas</span>
-                <span style={{ color: "var(--red)" }}>✗ {sessionStats.incorrect} a repasar</span>
+                <span style={{ color: "var(--green)", display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="check" size={13} strokeWidth={2.25} /> {sessionStats.correct} correctas</span>
+                <span style={{ color: "var(--red)", display: "inline-flex", alignItems: "center", gap: 5 }}><AppIcon name="x" size={13} strokeWidth={2.25} /> {sessionStats.incorrect} a repasar</span>
               </div>
             )}
           </div>
@@ -167,7 +168,7 @@ export default function Repaso() {
         {phase === "done" && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "56px 48px", textAlign: "center", maxWidth: 460, width: "100%" }}>
-              <div style={{ fontSize: 52, marginBottom: 20 }}>🎉</div>
+              <IconBadge name={totalDone > 0 ? "trophy" : "check-circle"} color={totalDone > 0 ? "#FBBF24" : "#22C55E"} size={64} style={{ margin: "0 auto 20px" }} />
               {totalDone > 0 ? (
                 <><p style={{ fontWeight: 700, fontSize: 20, color: "var(--text)", marginBottom: 10 }}>¡Sesión completada!</p>
                 <p style={{ fontSize: 14, color: "var(--text-2)" }}>{sessionStats.correct} correctas · {sessionStats.incorrect} a repasar pronto</p></>

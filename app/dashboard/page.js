@@ -122,7 +122,7 @@ export default async function Dashboard() {
       <div className="dash-header">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
-            Bienvenido de nuevo, {name} 👋
+            Bienvenido de nuevo, {name}
           </h1>
           <p style={{ fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>
             Continúa aprendiendo donde lo dejaste.

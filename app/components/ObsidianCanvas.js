@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import Icon from "@/components/Icon";
 
 const NODE_COLORS = [
   "#7C3AED", // Violeta
@@ -524,7 +525,7 @@ export default function ObsidianCanvas({ nodes }) {
               e.currentTarget.style.borderColor = "rgba(124, 108, 248, 0.4)";
             }}
           >
-            🎯 Centrar vista
+            <Icon name="crosshair" size={11} /> Centrar vista
           </button>
           
           <div style={{ width: 1, height: 12, background: "var(--border)" }} />
@@ -631,7 +632,7 @@ export default function ObsidianCanvas({ nodes }) {
                   borderRadius: "4px",
                 }}
               >
-                📸 Unsplash HD
+                <Icon name="image" size={10} style={{ verticalAlign: "-1px", marginRight: 3 }} />Unsplash HD
               </span>
             </div>
 
@@ -678,7 +679,7 @@ export default function ObsidianCanvas({ nodes }) {
                         onMouseEnter={(e) => (e.currentTarget.style.background = "#2d2d5a")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "#1c1c38")}
                       >
-                        🔗 {targetNode.label}
+                        <Icon name="link" size={10} style={{ verticalAlign: "-1px", marginRight: 4 }} />{targetNode.label}
                       </span>
                     );
                   })}

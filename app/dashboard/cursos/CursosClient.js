@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import AppIcon, { IconBadge } from "@/components/Icon";
 
 const COLORS = ["#7C6CF8", "#22C55E", "#60A5FA", "#FBBF24", "#EF4444", "#A78BFA"];
 const SK = "cursos_v1";
@@ -85,8 +86,8 @@ export default function CursosClient({ classes }) {
               style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid var(--accent)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "var(--text)", outline: "none", boxSizing: "border-box", marginBottom: 8 }}
             />
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={createCourse} style={{ flex: 1, background: "var(--accent)", color: "white", border: "none", borderRadius: 7, padding: "7px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Crear</button>
-              <button onClick={() => { setCreating(false); setNewTitle(""); }} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 7, padding: "7px 10px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>✕</button>
+              <button onClick={createCourse} className="btn-accent" style={{ flex: 1, background: "var(--accent)", color: "white", border: "none", borderRadius: 7, padding: "7px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Crear</button>
+              <button onClick={() => { setCreating(false); setNewTitle(""); }} aria-label="Cancelar" title="Cancelar" className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 7, padding: "7px 10px", color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center" }}><AppIcon name="x" size={14} /></button>
             </div>
           </div>
         )}
@@ -94,7 +95,7 @@ export default function CursosClient({ classes }) {
         <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
           {courses.length === 0 && !creating && (
             <div style={{ padding: "28px 16px", textAlign: "center" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📂</div>
+              <IconBadge name="folder" size={44} style={{ margin: "0 auto 12px" }} />
               <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 12 }}>Sin cursos todavía</p>
               <button onClick={() => setCreating(true)} style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid rgba(124,108,248,0.2)", borderRadius: 9, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                 Crear curso
@@ -163,13 +164,13 @@ export default function CursosClient({ classes }) {
               {curClasses.length > 0 && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <Link href="/dashboard/repaso" style={{ textDecoration: "none" }}>
-                    <span style={{ display: "inline-block", background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
-                      Repasar →
+                    <span className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>
+                      <AppIcon name="repeat" size={13} /> Repasar
                     </span>
                   </Link>
                   <Link href="/dashboard/evaluaciones" style={{ textDecoration: "none" }}>
-                    <span style={{ display: "inline-block", background: "var(--accent-dim)", border: "1px solid rgba(124,108,248,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}>
-                      Evaluar →
+                    <span className="chip-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--accent-dim)", border: "1px solid rgba(124,108,248,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 12, color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}>
+                      <AppIcon name="clipboard" size={13} /> Evaluar
                     </span>
                   </Link>
                 </div>
@@ -220,7 +221,7 @@ export default function CursosClient({ classes }) {
       ) : (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)" }}>
           <div style={{ textAlign: "center", maxWidth: 300 }}>
-            <div style={{ fontSize: 44, marginBottom: 16 }}>📂</div>
+            <IconBadge name="folder" size={56} style={{ margin: "0 auto 16px" }} />
             <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Organiza tus clases en cursos</p>
             <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
               Crea cursos para agrupar clases relacionadas, llevar un progreso y navegar más fácil.

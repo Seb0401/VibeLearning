@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useId } from "react";
+import Icon from "./Icon";
+import { stripEmoji } from "@/lib/text";
 
 const PALETTE = ["#8B7FFF", "#7C6CF8", "#A78BFA", "#C4B5FD", "#DDD6FE"];
 
@@ -11,6 +13,7 @@ function ToolbarBtn({ children, onClick, title }) {
   return (
     <button
       onClick={onClick}
+      aria-label={title}
       title={title}
       style={{
         width: 26, height: 26, borderRadius: 7, border: "1px solid var(--border)",
@@ -39,7 +42,7 @@ export default function MindMap({ markdown }) {
       if (cancelled || !ref.current) return;
       ref.current.innerHTML = "";
       ref.current.id = svgId;
-      const { root } = new Transformer().transform(markdown);
+      const { root } = new Transformer().transform(stripEmoji(markdown));
       const mm = Markmap.create(
         ref.current,
         {
@@ -113,10 +116,10 @@ export default function MindMap({ markdown }) {
     <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 200 }}>
       <svg ref={ref} style={{ width: "100%", height: "100%", display: "block" }} />
       <div style={{ position: "absolute", bottom: 10, right: 10, display: "flex", gap: 4 }}>
-        <ToolbarBtn onClick={() => zoom(1.25)} title="Acercar">+</ToolbarBtn>
-        <ToolbarBtn onClick={() => zoom(0.8)} title="Alejar">−</ToolbarBtn>
-        <ToolbarBtn onClick={fit} title="Ajustar a la vista">⤢</ToolbarBtn>
-        <ToolbarBtn onClick={exportSVG} title="Descargar como SVG">⬇</ToolbarBtn>
+        <ToolbarBtn onClick={() => zoom(1.25)} title="Acercar"><Icon name="plus" size={14} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => zoom(0.8)} title="Alejar"><Icon name="minus" size={14} /></ToolbarBtn>
+        <ToolbarBtn onClick={fit} title="Ajustar a la vista"><Icon name="maximize" size={13} /></ToolbarBtn>
+        <ToolbarBtn onClick={exportSVG} title="Descargar como SVG"><Icon name="download" size={13} /></ToolbarBtn>
       </div>
     </div>
   );

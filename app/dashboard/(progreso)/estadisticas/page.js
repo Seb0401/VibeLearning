@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import AppIcon from "@/components/Icon";
+import EmptyState from "@/components/EmptyState";
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 function Icon({ size = 16, children }) {
@@ -15,7 +17,6 @@ const IcoZap      = ({ s }) => <Icon size={s}><polygon points="13 2 3 14 12 14 1
 const IcoClock    = ({ s }) => <Icon size={s}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
 const IcoFileText = ({ s }) => <Icon size={s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></Icon>;
 const IcoTarget   = ({ s }) => <Icon size={s}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Icon>;
-const IcoTrend    = ({ s }) => <Icon size={s}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>;
 const IcoPlay     = ({ s }) => <Icon size={s}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
 const IcoSpark    = ({ s }) => <Icon size={s}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/></Icon>;
 
@@ -81,6 +82,14 @@ function weeklyActivity(classes) {
 function quizStats(classes) {
   let total = 0, correct = 0;
   for (const c of classes) {
+    // Formato actual: data.quiz_stats = { total, correct } (lo guarda la clase en vivo).
+    const qs = c.data?.quiz_stats;
+    if (qs && typeof qs.total === "number") {
+      total   += qs.total;
+      correct += qs.correct || 0;
+      continue;
+    }
+    // Formato antiguo: lista de resultados.
     const qr = c.data?.quiz_results;
     if (!Array.isArray(qr)) continue;
     for (const q of qr) {
@@ -186,7 +195,7 @@ export default async function Estadisticas() {
     <div style={{ padding: "40px 48px", display: "flex", flexDirection: "column", gap: "36px" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.02em" }}>
             Estadísticas
@@ -210,27 +219,12 @@ export default async function Estadisticas() {
 
       {/* Empty state */}
       {classes.length === 0 && (
-        <div style={{
-          background: "var(--card)", border: "1px solid var(--border)",
-          borderRadius: "var(--radius-card)", padding: "64px 48px", textAlign: "center",
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>📊</div>
-          <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8, fontSize: 16 }}>
-            Aún no hay datos
-          </p>
-          <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 24 }}>
-            Completa al menos una clase para ver tus estadísticas.
-          </p>
-          <Link href="/class/new" style={{ textDecoration: "none" }}>
-            <span className="btn-accent" style={{ display: "inline-block",
-              background: "var(--accent)", color: "white", border: "none",
-              borderRadius: "var(--radius-btn)", padding: "11px 24px",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-            }}>
-              Iniciar clase
-            </span>
-          </Link>
-        </div>
+        <EmptyState
+          icon="bar-chart"
+          title="Aún no hay datos"
+          text="Completa al menos una clase para ver tus estadísticas."
+          action={{ href: "/class/new", label: "Iniciar clase" }}
+        />
       )}
 
       {classes.length > 0 && (
@@ -246,29 +240,29 @@ export default async function Estadisticas() {
             />
             <StatCard
               icon={<IcoZap s={18} />}
-              iconBg="rgba(34,197,94,0.13)" iconColor="#22C55E"
+              iconBg="rgba(251,191,36,0.12)" iconColor="#FBBF24"
               label="Conceptos aprendidos"
               value={totalConcepts}
               sub={weekConcepts > 0 ? `+${weekConcepts} esta semana` : undefined}
             />
             <StatCard
               icon={<IcoClock s={18} />}
-              iconBg="rgba(96,165,250,0.12)" iconColor="#60A5FA"
+              iconBg="rgba(34,197,94,0.13)" iconColor="#22C55E"
               label="Horas de clase"
               value={fmtHours(totalHours)}
               sub={weekHours > 0 ? `${fmtHours(weekHours)} esta semana` : undefined}
             />
             <StatCard
               icon={<IcoFileText s={18} />}
-              iconBg="rgba(251,191,36,0.12)" iconColor="#FBBF24"
+              iconBg="rgba(96,165,250,0.12)" iconColor="#60A5FA"
               label="Materiales subidos"
               value={materials}
               sub={materials === 0 ? "Sube un PDF en tu próxima clase" : "PDFs con resumen IA"}
             />
             {streak > 0 && (
               <StatCard
-                icon={<IcoTrend s={18} />}
-                iconBg="rgba(239,68,68,0.12)" iconColor="#EF4444"
+                icon={<AppIcon name="flame" size={18} />}
+                iconBg="rgba(249,115,22,0.12)" iconColor="#F97316"
                 label="Racha actual"
                 value={`${streak} día${streak !== 1 ? "s" : ""}`}
                 sub="Días consecutivos estudiando"
@@ -292,7 +286,7 @@ export default async function Estadisticas() {
             borderRadius: "var(--radius-card)",
             padding: "28px 28px 24px",
           }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Actividad semanal</h2>
                 <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Clases completadas por semana (últimas 8)</p>
@@ -355,7 +349,7 @@ export default async function Estadisticas() {
           </div>
 
           {/* ── Bottom row: subjects + best day breakdown ─────────────── */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
 
             {/* Subject breakdown */}
             <div style={{

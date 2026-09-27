@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import AppIcon from "@/components/Icon";
 
 const STORAGE_KEY = "repaso_v1";
 const WEEK_DAYS   = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -110,9 +111,9 @@ export default function AgendaClient({ cardMap, classLog }) {
 
         {/* Week navigation */}
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "var(--radius-card)", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={prevWeek} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 14px", color: "var(--text-2)", fontSize: 13, cursor: "pointer" }}>← Anterior</button>
+          <button onClick={prevWeek} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}><AppIcon name="chevron-left" size={15} /> Anterior</button>
           <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", textAlign: "center" }}>{weekLabel}</span>
-          <button onClick={nextWeek} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 14px", color: "var(--text-2)", fontSize: 13, cursor: "pointer" }}>Siguiente →</button>
+          <button onClick={nextWeek} className="btn-ghost" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 12px", color: "var(--text-2)", fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>Siguiente <AppIcon name="chevron-right" size={15} /></button>
         </div>
 
         {/* Calendar grid */}
@@ -219,8 +220,8 @@ export default function AgendaClient({ cardMap, classLog }) {
                   {selCards.length > 10 && <p style={{ fontSize: 12, color: "var(--text-3)", textAlign: "center" }}>+{selCards.length - 10} más</p>}
                 </div>
                 <Link href="/dashboard/repaso">
-                  <span style={{ display: "inline-block", marginTop: 12, background: "var(--accent)", color: "white", border: "none", borderRadius: 9, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                    Ir a Repaso →
+                  <span className="btn-accent" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: "var(--accent)", color: "white", border: "none", borderRadius: 9, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    Ir a Repaso <AppIcon name="arrow-right" size={14} />
                   </span>
                 </Link>
               </div>
