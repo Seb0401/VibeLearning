@@ -2,14 +2,12 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import AppIcon from "@/components/Icon";
+import { useStoredJSON, useBrowserValue } from "@/lib/useStoredJSON";
+const NO_PROGRESS = {};
 
 const STORAGE_KEY = "repaso_v1";
 const WEEK_DAYS   = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-function loadRepaso() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
-  catch { return {}; }
-}
 
 function toDateKey(ts) {
   const d = new Date(ts);
@@ -42,15 +40,15 @@ function isToday(date) {
 }
 
 export default function AgendaClient({ cardMap, classLog }) {
-  const [repaso,      setRepaso]      = useState({});
+  const repaso = useStoredJSON(STORAGE_KEY, NO_PROGRESS);
+  // "Ahora" fijo para este render (evita llamar Date.now() durante el render).
+  const [now] = useState(() => Date.now());
   const [weekStart,   setWeekStart]   = useState(() => getMondayOf(new Date()));
   const [selDay,      setSelDay]      = useState(null);   // Date obj
-  const [notifState,  setNotifState]  = useState("unknown"); // "granted"|"denied"|"default"|"unknown"|"unsupported"
+  const [requestedPerm, setNotifState] = useState(null);
+  const browserPerm = useBrowserValue(() => ("Notification" in window ? Notification.permission : "unsupported"), "unknown");
+  const notifState = requestedPerm ?? browserPerm; // "granted"|"denied"|"default"|"unknown"|"unsupported"
 
-  useEffect(() => {
-    setRepaso(loadRepaso());
-    if ("Notification" in window) setNotifState(Notification.permission);
-  }, []);
 
   // Build schedule: dateKey → { due: Card[], upcoming: Card[] }
   const schedule = useMemo(() => {
@@ -86,7 +84,7 @@ export default function AgendaClient({ cardMap, classLog }) {
   }
 
   const todayCards  = schedule[todayKey()] || [];
-  const totalDue    = Object.values(schedule).flat().filter(c => c.nextReview <= Date.now()).length;
+  const totalDue    = Object.values(schedule).flat().filter(c => c.nextReview <= now).length;
   const selDateKey  = selDay ? toDateKey(selDay.getTime()) : null;
   const selCards    = selDateKey ? (schedule[selDateKey] || []) : [];
   const selClasses  = selDateKey ? (classLog[selDateKey] || null) : null;
@@ -135,7 +133,7 @@ export default function AgendaClient({ cardMap, classLog }) {
               const classes = classLog[dk];
               const today   = isToday(day);
               const isSel   = selDay && toDateKey(selDay.getTime()) === dk;
-              const isPast  = day < new Date(Date.now() - 86400000);
+              const isPast  = day < new Date(now - 86400000);
 
               return (
                 <div

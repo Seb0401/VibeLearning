@@ -2,37 +2,34 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import { useStoredJSON, writeStoredJSON } from "@/lib/useStoredJSON";
 
 const COLORS = ["#7C6CF8", "#22C55E", "#60A5FA", "#FBBF24", "#EF4444", "#A78BFA"];
 const SK = "cursos_v1";
 
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-function load() { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } catch { return []; } }
-function persist(v) { localStorage.setItem(SK, JSON.stringify(v)); }
+const NO_COURSES = [];
 
 function fmtDate(str) {
   return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
 
 export default function CursosClient({ classes }) {
-  const [courses,  setCourses]  = useState([]);
-  const [selId,    setSelId]    = useState(null);
+  const courses = useStoredJSON(SK, NO_COURSES);
+  const [selIdRaw, setSelId]    = useState(null);
+  // Si no hay selección válida, se selecciona el primer curso.
+  const selId = selIdRaw && courses.some(c => c.id === selIdRaw) ? selIdRaw : (courses[0]?.id ?? null);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [search,   setSearch]   = useState("");
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    const c = load();
-    setCourses(c);
-    if (c.length) setSelId(c[0].id);
-  }, []);
 
   useEffect(() => {
     if (creating) inputRef.current?.focus();
   }, [creating]);
 
-  function save(list) { setCourses(list); persist(list); }
+  function save(list) { writeStoredJSON(SK, list); }
 
   function createCourse() {
     const t = newTitle.trim();

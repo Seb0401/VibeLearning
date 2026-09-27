@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import { useStoredJSON } from "@/lib/useStoredJSON";
+const NO_COURSES = [];
 
 /* ── Icons ── */
 function Icon({ size = 16, children }) {
@@ -275,18 +277,12 @@ function UploadModal({ classes, courses, initialClassId, onClose, onSuccess }) {
 /* ── Main component ── */
 export default function BibliotecaClient({ classes }) {
   const router = useRouter();
-  const [courses,         setCourses]         = useState([]);
+  const courses = useStoredJSON("cursos_v1", NO_COURSES);
   const [selection,       setSelection]       = useState({ type: "all" });
-  const [expandedCourses, setExpandedCourses] = useState(new Set());
+  // Todos los cursos empiezan expandidos: guardamos solo los colapsados.
+  const [collapsedCourses, setCollapsedCourses] = useState(() => new Set());
   const [uploadModal,     setUploadModal]     = useState(null); // null | { initialClassId }
 
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("cursos_v1") || "[]");
-      setCourses(stored);
-      setExpandedCourses(new Set(stored.map(c => c.id)));
-    } catch {}
-  }, []);
 
   const withPDF           = classes.filter(c => !!c.data?.material_summary);
   const allCourseClassIds = new Set(courses.flatMap(c => c.classIds || []));
@@ -303,7 +299,7 @@ export default function BibliotecaClient({ classes }) {
   }
 
   function toggleExpand(courseId) {
-    setExpandedCourses(prev => { const n = new Set(prev); n.has(courseId) ? n.delete(courseId) : n.add(courseId); return n; });
+    setCollapsedCourses(prev => { const n = new Set(prev); n.has(courseId) ? n.delete(courseId) : n.add(courseId); return n; });
   }
 
   function openUpload(initialClassId) {
@@ -363,7 +359,7 @@ export default function BibliotecaClient({ classes }) {
               // Also show courses that have classes even without PDF (for uploading)
               const allCourseClasses = classes.filter(c => (course.classIds || []).includes(c.id));
               if (!allCourseClasses.length) return null;
-              const expanded = expandedCourses.has(course.id);
+              const expanded = !collapsedCourses.has(course.id);
               const isActive = selection.type === "course" && selection.courseId === course.id;
 
               return (

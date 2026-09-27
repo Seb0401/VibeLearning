@@ -161,6 +161,7 @@ export default async function Estadisticas() {
   const classes = raw || [];
 
   /* Derived metrics */
+  // eslint-disable-next-line react-hooks/purity -- Server Component: se renderiza una vez por request
   const weekAgo       = Date.now() - 7 * 86400000;
   const weekClasses   = classes.filter(c => new Date(c.created_at).getTime() >= weekAgo);
   const totalConcepts = classes.reduce((s, c) => s + (c.data?.concepts?.length || 0), 0);

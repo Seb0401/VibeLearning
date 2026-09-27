@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useStoredJSON } from "@/lib/useStoredJSON";
 
 function Icon({ size = 14, children }) {
   return (
@@ -12,12 +12,10 @@ function Icon({ size = 14, children }) {
 }
 const IcoChevRight = () => <Icon><polyline points="9 18 15 12 9 6"/></Icon>;
 
-export default function CoursesWidget({ classes = [] }) {
-  const [courses, setCourses] = useState([]);
+const NO_COURSES = [];
 
-  useEffect(() => {
-    try { setCourses(JSON.parse(localStorage.getItem("cursos_v1") || "[]")); } catch {}
-  }, []);
+export default function CoursesWidget({ classes = [] }) {
+  const courses = useStoredJSON("cursos_v1", NO_COURSES);
 
   if (courses.length === 0) return null;
 

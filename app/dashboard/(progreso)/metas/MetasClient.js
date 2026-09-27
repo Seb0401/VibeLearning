@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { IconBadge } from "@/components/Icon";
+import { useStoredJSON, writeStoredJSON } from "@/lib/useStoredJSON";
 
 function Icon({ size = 16, children }) {
   return (
@@ -35,24 +36,23 @@ function computeProgress(type, target, stats) {
   const current = { clases_semana: stats.weekClasses, conceptos_mes: stats.monthConcepts, pdfs_mes: stats.monthPdfs, racha_dias: stats.streak }[type] ?? 0;
   return { current, total: target };
 }
-function loadGoals()   { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
-function saveGoals(g)  { localStorage.setItem(STORAGE_KEY, JSON.stringify(g)); }
+const NO_GOALS = [];
+function saveGoals(g)  { writeStoredJSON(STORAGE_KEY, g); }
 
 export default function MetasClient({ stats }) {
-  const [goals,     setGoals]     = useState([]);
+  const goals = useStoredJSON(STORAGE_KEY, NO_GOALS);
   const [adding,    setAdding]    = useState(false);
   const [newType,   setNewType]   = useState(GOAL_TEMPLATES[0].type);
   const [newTarget, setNewTarget] = useState(GOAL_TEMPLATES[0].default);
 
-  useEffect(() => { setGoals(loadGoals()); }, []);
 
   function addGoal() {
     const tmpl = GOAL_TEMPLATES.find(t => t.type === newType);
     if (!tmpl) return;
     const updated = [...goals, { id: Date.now(), type: newType, target: newTarget, label: tmpl.label, unit: tmpl.unit, description: tmpl.description, createdAt: new Date().toISOString() }];
-    setGoals(updated); saveGoals(updated); setAdding(false);
+    saveGoals(updated); setAdding(false);
   }
-  function removeGoal(id) { const u = goals.filter(g => g.id !== id); setGoals(u); saveGoals(u); }
+  function removeGoal(id) { saveGoals(goals.filter(g => g.id !== id)); }
   function onTemplateChange(type) { setNewType(type); const t = GOAL_TEMPLATES.find(x => x.type === type); if (t) setNewTarget(t.default); }
 
   const activeGoals    = goals.filter(g => { const { current, total } = computeProgress(g.type, g.target, stats); return current < total; });

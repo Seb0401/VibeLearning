@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useStoredJSON } from "@/lib/useStoredJSON";
+const NO_COURSES = [];
 
 function Icon({ size = 16, children }) {
   return (
@@ -35,12 +37,9 @@ export default function EvaluacionesClient({ classes }) {
   const [submitted,     setSubmitted]     = useState(false);
   const [error,         setError]         = useState("");
   const [selectorMode,  setSelectorMode]  = useState("clases"); // "clases" | "cursos"
-  const [courses,       setCourses]       = useState([]);
+  const courses = useStoredJSON("cursos_v1", NO_COURSES);
   const [activeCourse,  setActiveCourse]  = useState(null);
 
-  useEffect(() => {
-    try { setCourses(JSON.parse(localStorage.getItem("cursos_v1") || "[]")); } catch {}
-  }, []);
 
   function toggleClass(id) { setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
 

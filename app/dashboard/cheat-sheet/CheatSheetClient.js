@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import AppIcon, { IconBadge } from "@/components/Icon";
+import { useStoredJSON } from "@/lib/useStoredJSON";
+const NO_COURSES = [];
 
 function fmtDate(str) {
   return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
@@ -23,7 +25,7 @@ function Checkbox({ on }) {
 
 export default function CheatSheetClient({ classes }) {
   const [mode,          setMode]          = useState("clases"); // "clases" | "cursos"
-  const [courses,       setCourses]       = useState([]);
+  const courses = useStoredJSON("cursos_v1", NO_COURSES);
   const [activeCourse,  setActiveCourse]  = useState(null);
   const [selected,      setSelected]      = useState(new Set());
   const [loading,       setLoading]       = useState(false);
@@ -31,12 +33,6 @@ export default function CheatSheetClient({ classes }) {
   const [copied,        setCopied]        = useState(false);
   const [search,        setSearch]        = useState("");
 
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("cursos_v1") || "[]");
-      setCourses(stored);
-    } catch {}
-  }, []);
 
   const filtered = classes.filter(c =>
     c.title.toLowerCase().includes(search.toLowerCase())

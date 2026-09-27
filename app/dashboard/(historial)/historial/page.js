@@ -48,6 +48,7 @@ export default async function Historial() {
   const classes = raw || [];
   const groups  = groupByMonth(classes);
 
+  // eslint-disable-next-line react-hooks/purity -- Server Component: se renderiza una vez por request
   const weekAgo     = Date.now() - 7 * 86400000;
   const weekCount   = classes.filter(c => new Date(c.created_at).getTime() >= weekAgo).length;
   const totalConcepts = classes.reduce((s, c) => s + (c.data?.concepts?.length || 0), 0);

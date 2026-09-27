@@ -38,14 +38,13 @@ export default function ObsidianCanvas({ nodes }) {
     return `linear-gradient(135deg, ${color} 0%, #0c0c1b 100%)`;
   };
 
-  // Inicializar posiciones de los nodos en círculo equidistante
-  useEffect(() => {
-    if (!nodes || nodes.length === 0) return;
+  // Inicializar posiciones de los nodos en círculo equidistante cuando cambian los nodos
+  const [layoutFor, setLayoutFor] = useState(null);
+  if (nodes && nodes.length > 0 && layoutFor !== nodes) {
     const initialPositions = {};
     const radius = 220; // Radio del círculo de nodos
     const centerX = 320;
     const centerY = 240;
-
     nodes.forEach((node, idx) => {
       const angle = (idx / nodes.length) * 2 * Math.PI;
       initialPositions[node.id] = {
@@ -53,9 +52,10 @@ export default function ObsidianCanvas({ nodes }) {
         y: centerY + radius * Math.sin(angle),
       };
     });
+    setLayoutFor(nodes);
     setNodePositions(initialPositions);
     setSelectedNodeId(nodes[0]?.id || null); // Seleccionar el primero por defecto
-  }, [nodes]);
+  }
 
   // Manejar zoom con la rueda del ratón
   const handleWheel = (e) => {

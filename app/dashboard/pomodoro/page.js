@@ -37,8 +37,7 @@ export default function PomodoroPage() {
   const [concept,   setConcept]   = useState(null);
 
   const intervalRef = useRef(null);
-  const sb = useRef(null);
-  if (!sb.current) sb.current = createClient();
+  const [sb] = useState(() => createClient());
 
   const P     = PRESETS[pi];
   const total = phase === "work" ? P.work : phase === "short" ? P.short : P.long;
@@ -61,7 +60,7 @@ export default function PomodoroPage() {
   }
 
   async function loadConcept() {
-    const { data } = await sb.current.from("classes")
+    const { data } = await sb.from("classes")
       .select("title,data").neq("title", "Clase en progreso...").order("created_at", { ascending: false }).limit(10);
     const pool = (data || []).filter(c => c.data?.concepts?.length > 0);
     if (!pool.length) return;
