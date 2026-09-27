@@ -22,13 +22,15 @@ function hmsToSec(t) {
 function buildBlocks(transcript, segments) {
   if (Array.isArray(segments) && segments.length) {
     const t0 = hmsToSec(segments[0].time);
+    // (los marcadores se muestran como una fila propia)
     // Une fragmentos consecutivos de ~30 s en un bloque para que se lea mejor
     const blocks = [];
     for (const seg of segments) {
       const t = hmsToSec(seg.time);
       const rel = t0 !== null && t !== null ? (t - t0 + 86400) % 86400 : null;
+      if (seg.marker) { blocks.push({ start: rel, text: seg.label || "Marcador", marker: true }); continue; }
       const last = blocks[blocks.length - 1];
-      if (last && rel !== null && last.start !== null && rel - last.start < 30) last.text += " " + seg.text;
+      if (last && !last.marker && rel !== null && last.start !== null && rel - last.start < 30) last.text += " " + seg.text;
       else blocks.push({ start: rel, text: seg.text });
     }
     return blocks;
@@ -92,7 +94,9 @@ export default function TranscriptView({ transcript, segments, concepts = [] }) 
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {visible.map((b, i) => (
+        {visible.map((b, i) => b.marker ? (
+          <div key={i} className="tx-marker"><Icon name="bookmark" size={13} /> {b.text} · {b.start !== null ? fmt(b.start) : ""}</div>
+        ) : (
           <div key={i} className="tx-block">
             <span className="tx-time">{b.start !== null ? fmt(b.start) : "—"}</span>
             <p className="tx-text"><Highlighted text={b.text} query={query} concepts={concepts} /></p>

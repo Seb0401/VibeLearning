@@ -2,11 +2,6 @@
 import AppIcon from "@/components/Icon";
 import BrandLogo from "@/components/Logo";
 
-// Iconos propios para los botones de fuente (reemplazan a lucide-react).
-export const MicIcon    = ({ size = 24, strokeWidth = 2 }) => <AppIcon name="mic" size={size} strokeWidth={strokeWidth} />;
-export const MicOffIcon = ({ size = 24, strokeWidth = 2 }) => <AppIcon name="mic-off" size={size} strokeWidth={strokeWidth} />;
-export const CameraIcon = ({ size = 24, strokeWidth = 2 }) => <AppIcon name="camera" size={size} strokeWidth={strokeWidth} />;
-
 export function formatTimer(s) {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
@@ -49,95 +44,6 @@ export function RI({ s = 16, children }) {
 
 export function VibeLearningLogo() {
   return <BrandLogo size={30} textSize={18} />;
-}
-
-export function SourceButton({ colorClass, MainIcon, isRecording, isExpanded, onMainClick, options, selectedKey, onOptionClick }) {
-  const isMic    = colorClass === "mic";
-  const optColor = isMic ? "#60A5FA" : "#A78BFA";
-  const optBg    = isMic ? "rgba(96,165,250,0.22)" : "rgba(167,139,250,0.22)";
-
-  // Fan positions: [left, bottom-center, right] — opens downward to stay within overflow:hidden column
-  const fanPositions = [
-    { x: -90, y: 90 },
-    { x:   0, y: 112 },
-    { x:  90, y: 90 },
-  ];
-
-  return (
-    <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-      {/* Radial option pills */}
-      {isExpanded && options.map(({ key, icon, label }, idx) => {
-        const { x, y } = fanPositions[idx];
-        const sel = selectedKey === key;
-        return (
-          <button
-            key={key}
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOptionClick(key); }}
-            style={{
-              position: "absolute",
-              top: "50%", left: "50%",
-              transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-              background: sel ? optBg : "rgba(13,13,28,0.92)",
-              border: `1px solid ${sel ? optColor : "var(--tint-4)"}`,
-              borderRadius: 99,
-              padding: "5px 12px",
-              color: sel ? optColor : "rgba(255,255,255,0.72)",
-              fontSize: "0.69rem",
-              fontWeight: sel ? 700 : 400,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              display: "flex", alignItems: "center", gap: 5,
-              zIndex: 50,
-              boxShadow: sel ? `0 4px 20px ${optBg}` : "0 4px 20px rgba(0,0,0,0.48)",
-              backdropFilter: "blur(14px)",
-              WebkitBackdropFilter: "blur(14px)",
-              transition: "all 0.12s",
-            }}
-          >
-            <AppIcon name={icon} size={13} />
-            <span>{label}</span>
-          </button>
-        );
-      })}
-
-      {/* Main circular button */}
-      <div style={{ position: "relative", width: 108, height: 108, display: "grid", placeItems: "center" }}>
-        {isRecording && (
-          <>
-            <span className="mic-ring mic-ring-one" />
-            <span className="mic-ring mic-ring-two" />
-            <span className="mic-orbit" />
-          </>
-        )}
-        <button
-          type="button"
-          className={`live-src-btn live-src-btn--${colorClass}${isRecording ? " is-recording" : ""}${isExpanded ? " is-expanded" : ""}`}
-          onClick={onMainClick}
-        >
-          <MainIcon size={36} strokeWidth={2.15} />
-        </button>
-      </div>
-
-      {/* Waveform / static bar */}
-      <div style={{ height: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-        {isRecording ? (
-          [0,1,2,3,4].map(bar => <span key={bar} className="mic-level" style={{ animationDelay: `${bar * 90}ms` }} />)
-        ) : (
-          <span style={{ width: 34, height: 4, borderRadius: 99, background: "var(--tint-4)" }} />
-        )}
-      </div>
-
-      {/* Label */}
-      <span style={{
-        fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-        color: isRecording ? "#f87171" : isExpanded ? optColor : "var(--text-2)",
-        transition: "color 0.2s",
-      }}>
-        {isRecording ? "Detener" : isMic ? "Audio" : "Visual"}
-      </span>
-    </div>
-  );
 }
 
 export const TYPE_BADGE = {

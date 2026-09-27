@@ -1,68 +1,40 @@
 "use client";
 import AppIcon from "@/components/Icon";
-import { CameraIcon, HighlightedText, MicIcon, MicOffIcon, SourceButton, TYPE_BADGE } from "./shared";
+import { HighlightedText, TYPE_BADGE } from "./shared";
+import RecorderCard from "./RecorderCard";
 import Mascot from "@/components/Mascot";
 
-// Columna 2: fuentes de audio/visual + transcript e imágenes.
-export default function TranscriptPanel({ analyzeLoading, audioSource, camExpanded, col2Tab, conceptNames, handleCamMainClick, handleCamOption, handleMicMainClick, handleMicOption, micExpanded, recording, setCol2Tab, transcriptEndRef, transcriptLines, visualNotes, visualSource }) {
+// Columna 2: tarjeta de grabación + transcript e imágenes.
+export default function TranscriptPanel({ analyzeLoading, audioSource, audioStream, col2Tab, conceptNames, elapsed, handleCamOption, onMark, onPause, onResume, onSelectSource, onStart, onStop, paused, recording, setCol2Tab, transcriptEndRef, transcriptLines, visualNotes }) {
+  const markers = transcriptLines.filter((l) => l.marker).length;
   return (
     <>
     {/* ── COL 2: TRANSCRIPT ── */}
     <div style={{ order: 2, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
-      <div style={{ padding: "14px 16px 18px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, background: "linear-gradient(180deg, rgba(124,108,248,0.08), rgba(124,108,248,0))", position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", gap: 4, background: "var(--tint-2)", borderRadius: 8, padding: 3 }}>
-            <button
-              onClick={() => setCol2Tab("transcript")}
-              style={{ fontSize: "0.78rem", fontWeight: 600, borderRadius: 6, padding: "5px 12px", cursor: "pointer", border: "none", background: col2Tab === "transcript" ? "var(--accent)" : "transparent", color: col2Tab === "transcript" ? "white" : "var(--text-2)" }}
-            >
-              Transcript
-            </button>
-            <button
-              onClick={() => setCol2Tab("images")}
-              style={{ fontSize: "0.78rem", fontWeight: 600, borderRadius: 6, padding: "5px 12px", cursor: "pointer", border: "none", background: col2Tab === "images" ? "var(--accent)" : "transparent", color: col2Tab === "images" ? "white" : "var(--text-2)", display: "flex", alignItems: "center", gap: 5 }}
-            >
-              Imágenes {visualNotes.length > 0 && `(${visualNotes.length})`}
-            </button>
-          </div>
-          {recording && (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--green)", fontSize: "0.78rem", fontWeight: 600, flexShrink: 0 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "pulse 1.5s infinite" }} />
-              <span>Escuchando...</span>
-            </div>
-          )}
-        </div>
-
-        {/* Dos botones de fuente: audio (azul) + visual (morado) */}
-        <div style={{ display: "flex", gap: 32, justifyContent: "center", paddingTop: 8 }}>
-          <SourceButton
-            colorClass="mic"
-            MainIcon={recording ? MicOffIcon : MicIcon}
-            isRecording={recording}
-            isExpanded={micExpanded}
-            onMainClick={handleMicMainClick}
-            options={[
-              { key: "mic",    icon: "mic", label: "Micrófono" },
-              { key: "system", icon: "monitor", label: "Pantalla / Tab" },
-              { key: "both",   icon: "shuffle", label: "Mic + Tab" },
-            ]}
-            selectedKey={audioSource}
-            onOptionClick={handleMicOption}
-          />
-          <SourceButton
-            colorClass="cam"
-            MainIcon={CameraIcon}
-            isRecording={false}
-            isExpanded={camExpanded}
-            onMainClick={handleCamMainClick}
-            options={[
-              { key: "screenshot", icon: "monitor", label: "Captura" },
-              { key: "upload",     icon: "upload", label: "Subir archivo" },
-              { key: "camera",     icon: "camera", label: "Cámara" },
-            ]}
-            selectedKey={visualSource}
-            onOptionClick={handleCamOption}
-          />
+      <div style={{ padding: "14px 14px 12px", borderBottom: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 12, flexShrink: 0 }}>
+        <RecorderCard
+          recording={recording}
+          paused={paused}
+          elapsed={elapsed}
+          audioSource={audioSource}
+          audioStream={audioStream}
+          analyzeLoading={analyzeLoading}
+          markers={markers}
+          onSelectSource={onSelectSource}
+          onStart={onStart}
+          onPause={onPause}
+          onResume={onResume}
+          onStop={onStop}
+          onMark={onMark}
+          onVisual={handleCamOption}
+        />
+        <div role="tablist" className="live-tabs">
+          <button type="button" role="tab" aria-selected={col2Tab === "transcript"} className={`live-tabs__opt${col2Tab === "transcript" ? " is-active" : ""}`} onClick={() => setCol2Tab("transcript")}>
+            <AppIcon name="file-text" size={14} /> Transcripción
+          </button>
+          <button type="button" role="tab" aria-selected={col2Tab === "images"} className={`live-tabs__opt${col2Tab === "images" ? " is-active" : ""}`} onClick={() => setCol2Tab("images")}>
+            <AppIcon name="image" size={14} /> Imágenes {visualNotes.length > 0 && `(${visualNotes.length})`}
+          </button>
         </div>
       </div>
 
@@ -72,17 +44,21 @@ export default function TranscriptPanel({ analyzeLoading, audioSource, camExpand
             <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
               <Mascot pose={recording ? "procesando" : "hola"} size={120} float={recording} style={{ margin: "0 auto 10px" }} />
               <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>
-                {recording ? <>Escuchando la clase…<br />La transcripción aparecerá en unos segundos</> : <>Pulsa el micrófono para empezar<br />y la transcripción aparecerá aquí</>}
+                {recording ? <>Escuchando la clase…<br />La transcripción aparecerá en unos segundos</> : <>Pulsa el botón rojo para empezar<br />y la transcripción aparecerá aquí</>}
               </p>
             </div>
           )}
-          {transcriptLines.map((line, i) => (
+          {transcriptLines.map((line, i) => line.marker ? (
+            <div key={i} className="live-marker fade-up">
+              <AppIcon name="bookmark" size={13} /> {line.label} · {line.time}
+            </div>
+          ) : (
             <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
               <div style={{ flexShrink: 0, paddingTop: 6 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)" }} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ color: "var(--text-muted)", fontSize: "0.74rem", display: "block", marginBottom: 4 }}>{line.time}</span>
+                <span className="live-time">{line.time}</span>
                 <span style={{ fontSize: "0.875rem", lineHeight: 1.65 }}>
                   <HighlightedText text={line.text} conceptNames={conceptNames} />
                 </span>
@@ -95,7 +71,7 @@ export default function TranscriptPanel({ analyzeLoading, audioSource, camExpand
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", minHeight: 0 }}>
           {visualNotes.length === 0 && !analyzeLoading && (
             <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", marginTop: "2.5rem", lineHeight: 1.6 }}>
-              Captura pantalla, cámara o sube un archivo<br />con el botón morado de arriba
+              Captura la pantalla, usa la cámara o sube una imagen<br />desde la tarjeta de grabación
             </p>
           )}
           {analyzeLoading && (

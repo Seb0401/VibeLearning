@@ -19,10 +19,9 @@ export default function LiveClass() {
   const { id: classId } = useParams();
 
   const [recording, setRecording] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [audioStream, setAudioStream] = useState(null); // para la onda de audio
   const [audioSource, setAudioSource] = useState("mic"); // "mic" | "system" | "both"
-  const [visualSource, setVisualSource] = useState(null); // null | "screenshot" | "upload" | "camera"
-  const [micExpanded, setMicExpanded] = useState(false);
-  const [camExpanded, setCamExpanded] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [transcriptLines, setTranscriptLines] = useState([]);
   const [concepts, setConcepts] = useState([]);
@@ -87,6 +86,7 @@ export default function LiveClass() {
   const transcriptEndRef = useRef(null);
   const chatEndRef = useRef(null);
   const isRecordingRef = useRef(false);
+  const pausedRef = useRef(false);
   const streamRef = useRef(null);
   const chunkTimerRef = useRef(null);
   const cameraVideoRef = useRef(null);
@@ -111,13 +111,13 @@ export default function LiveClass() {
   const recentQuestionsRef = useRef([]); // últimas preguntas hechas, para evitar repetición
 
   useEffect(() => {
-    if (recording) {
+    if (recording && !paused) {
       timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
     } else {
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [recording]);
+  }, [recording, paused]);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -169,7 +169,7 @@ export default function LiveClass() {
     }, 1000);
 
     quizIntervalRef.current = setInterval(() => {
-      if (!quizActiveRef.current) {
+      if (!quizActiveRef.current && !pausedRef.current) {
         setNextQuizIn(QUIZ_INTERVAL / 1000);
         triggerQuiz();
       }
@@ -196,7 +196,7 @@ export default function LiveClass() {
   }
 
   function scheduleChunk() {
-    if (!isRecordingRef.current) return;
+    if (!isRecordingRef.current || pausedRef.current) return;
     if (!streamRef.current || streamRef.current.getTracks().every(t => t.readyState === "ended")) return;
 
     const chunks = [];
@@ -235,7 +235,7 @@ export default function LiveClass() {
             const line = { time: nowHMS(), text: json.text.trim() };
             setTranscriptLines((prev) => {
               const next = [...prev, line];
-              transcriptRef.current = next.map((l) => l.text).join(" ");
+              transcriptRef.current = next.filter((l) => !l.marker).map((l) => l.text).join(" ");
               return next;
             });
             if (chunkCountRef.current % WINDOW_CHUNKS === 0) {
@@ -325,7 +325,10 @@ export default function LiveClass() {
       }
 
       isRecordingRef.current = true;
+      pausedRef.current = false;
+      setPaused(false);
       setRecording(true);
+      setAudioStream(streamRef.current);
       scheduleChunk();
 
       // El ciclo de quiz arranca en cuanto haya suficiente transcript (ver scheduleChunk / startQuizTimer)
@@ -350,36 +353,39 @@ export default function LiveClass() {
     micStreamRef.current = null;
     displayStreamRef.current = null;
     audioCtxRef.current = null;
+    pausedRef.current = false;
+    setPaused(false);
+    setAudioStream(null);
     setRecording(false);
   }
 
-  function handleMicMainClick() {
-    if (recording) {
-      stopRecording();
-      setMicExpanded(false);
-    } else {
-      setMicExpanded(prev => !prev);
-      if (camExpanded) setCamExpanded(false);
-    }
+  function pauseRecording() {
+    if (!isRecordingRef.current || pausedRef.current) return;
+    pausedRef.current = true;
+    setPaused(true);
+    clearTimeout(chunkTimerRef.current);
+    // El trozo en curso se transcribe igual; luego scheduleChunk no programa otro
+    if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    streamRef.current?.getAudioTracks().forEach((t) => { t.enabled = false; });
   }
 
-  async function handleMicOption(key) {
-    setAudioSource(key);
-    audioSourceRef.current = key;
-    setMicExpanded(false);
-    await startRecording(key);
+  function resumeRecording() {
+    if (!isRecordingRef.current || !pausedRef.current) return;
+    streamRef.current?.getAudioTracks().forEach((t) => { t.enabled = true; });
+    pausedRef.current = false;
+    setPaused(false);
+    scheduleChunk();
   }
 
-  function handleCamMainClick() {
-    setCamExpanded(prev => !prev);
-    if (micExpanded) setMicExpanded(false);
+  function addMarker() {
+    setTranscriptLines((prev) => {
+      const n = prev.filter((l) => l.marker).length + 1;
+      return [...prev, { time: nowHMS(), text: "", marker: true, label: `Marcador ${n}` }];
+    });
+    showToast("Momento marcado en el transcript.", "success");
   }
 
-  // Cada opción dispara el análisis real con Groq Vision (captureScreen/openCamera/
-  // handleImageFile, definidas más abajo) en vez de solo mostrar la imagen sin procesar.
   async function handleCamOption(key) {
-    setVisualSource(key);
-    setCamExpanded(false);
     if (key === "screenshot") {
       await captureScreen();
     } else if (key === "camera") {
@@ -725,7 +731,7 @@ export default function LiveClass() {
         title: json.title || "Clase sin título",
         data: {
           transcript: transcriptRef.current,
-          transcript_segments: transcriptLines.map(({ time, text }) => ({ time, text })),
+          transcript_segments: transcriptLines.map(({ time, text, marker, label }) => (marker ? { time, text: "", marker: true, label } : { time, text })),
           concepts: conceptsRef.current,
           material_summary: materialSummary,
           visual_notes: visualNotes.map(({ previewUrl, ...rest }) => rest),
@@ -891,20 +897,23 @@ export default function LiveClass() {
           <TranscriptPanel
             analyzeLoading={analyzeLoading}
             audioSource={audioSource}
-            camExpanded={camExpanded}
+            audioStream={audioStream}
             col2Tab={col2Tab}
             conceptNames={conceptNames}
-            handleCamMainClick={handleCamMainClick}
+            elapsed={elapsed}
             handleCamOption={handleCamOption}
-            handleMicMainClick={handleMicMainClick}
-            handleMicOption={handleMicOption}
-            micExpanded={micExpanded}
+            onMark={addMarker}
+            onPause={pauseRecording}
+            onResume={resumeRecording}
+            onSelectSource={(key) => { setAudioSource(key); audioSourceRef.current = key; }}
+            onStart={() => startRecording(audioSourceRef.current)}
+            onStop={stopRecording}
+            paused={paused}
             recording={recording}
             setCol2Tab={setCol2Tab}
             transcriptEndRef={transcriptEndRef}
             transcriptLines={transcriptLines}
             visualNotes={visualNotes}
-            visualSource={visualSource}
           />
 
           <ChatPanel
