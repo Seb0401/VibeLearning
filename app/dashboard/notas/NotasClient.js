@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useTimeZone } from "@/lib/timezone-client";
 
 function Icon({ size = 16, children }) {
   return (
@@ -15,15 +16,16 @@ const IcoSave      = ({ s }) => <Icon size={s}><path d="M19 21H5a2 2 0 0 1-2-2V5
 const IcoFileText  = ({ s }) => <Icon size={s}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></Icon>;
 const IcoEdit      = ({ s }) => <Icon size={s}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></Icon>;
 
-function timeSince(dateStr) {
+function timeSince(dateStr, tz) {
   const days = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
   if (days === 0) return "hoy";
   if (days === 1) return "ayer";
   if (days < 7)  return `hace ${days} días`;
-  return new Date(dateStr).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+  return new Date(dateStr).toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: tz });
 }
 
 export default function NotasClient({ classes: initialClasses }) {
+  const tz = useTimeZone();
   const [classes]     = useState(initialClasses);
   const [selected, setSelected] = useState(initialClasses[0] ?? null);
   const [notes, setNotes]       = useState(selected?.data?.notes || "");
@@ -148,7 +150,7 @@ export default function NotasClient({ classes: initialClasses }) {
                     )}
                   </div>
                   <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3, paddingLeft: 22 }}>
-                    {timeSince(c.created_at)}
+                    {timeSince(c.created_at, tz)}
                   </p>
                 </button>
               );

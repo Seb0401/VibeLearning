@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useTimeZone } from "@/lib/timezone-client";
 
 /* ── CSS injected once ────────────────────────────────────────────────── */
 const CSS = `
@@ -136,11 +137,11 @@ function getSubject(title, idx) {
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
-function fmtDate(str) {
+function fmtDate(str, tz) {
   const d = new Date(str);
   return {
-    date: d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }),
-    time: d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false }),
+    date: d.toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: tz }),
+    time: d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz }),
   };
 }
 function estimateDuration(t) {
@@ -154,6 +155,7 @@ function Dot() {
 
 /* ── ClassCard ────────────────────────────────────────────────────────── */
 export default function ClassCard({ c, idx }) {
+  const tz = useTimeZone();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -196,7 +198,7 @@ export default function ClassCard({ c, idx }) {
     router.push(`/class/${c.id}`);
   }
 
-  const { date, time } = fmtDate(c.created_at);
+  const { date, time } = fmtDate(c.created_at, tz);
   const dur      = estimateDuration(c.data?.transcript);
   const concepts = c.data?.concepts || [];
   const tags     = concepts.map(x => (typeof x === "string" ? x : x.name)).filter(Boolean);

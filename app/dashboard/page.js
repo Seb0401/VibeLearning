@@ -291,7 +291,7 @@ export default async function Dashboard() {
                     <Link href="/dashboard/historial" className="ui-link">Ver las {classes.length} <Icon name="chevron-right" size={13} /></Link>
                   )}
                 </div>
-                <ClassDayList classes={classes.slice(0, RECENT_LIMIT)} />
+                <ClassDayList classes={classes.slice(0, RECENT_LIMIT)} now={now} />
               </section>
             </div>
 

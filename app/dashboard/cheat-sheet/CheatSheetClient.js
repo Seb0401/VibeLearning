@@ -4,10 +4,11 @@ import ReactMarkdown from "react-markdown";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import { useStoredJSON } from "@/lib/useStoredJSON";
 import Mascot from "@/components/Mascot";
+import { useTimeZone } from "@/lib/timezone-client";
 const NO_COURSES = [];
 
-function fmtDate(str) {
-  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+function fmtDate(str, tz) {
+  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", timeZone: tz });
 }
 
 function Checkbox({ on }) {
@@ -25,6 +26,7 @@ function Checkbox({ on }) {
 }
 
 export default function CheatSheetClient({ classes }) {
+  const tz = useTimeZone();
   const [mode,          setMode]          = useState("clases"); // "clases" | "cursos"
   const courses = useStoredJSON("cursos_v1", NO_COURSES);
   const [activeCourse,  setActiveCourse]  = useState(null);
@@ -230,7 +232,7 @@ export default function CheatSheetClient({ classes }) {
                         {c.title}
                       </p>
                       <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                        {c.concepts.length} conceptos · {fmtDate(c.created_at)}
+                        {c.concepts.length} conceptos · {fmtDate(c.created_at, tz)}
                       </p>
                     </div>
                   </div>

@@ -9,6 +9,7 @@ import AppIcon from "@/components/Icon";
 import StorageImage from "@/components/StorageImage";
 import QuizCard from "@/components/QuizCard";
 import TranscriptView from "@/components/TranscriptView";
+import { useTimeZone } from "@/lib/timezone-client";
 
 function RI({ s = 16, children }) {
   return (
@@ -61,6 +62,7 @@ function buildVisualContext(notes) {
 }
 
 export default function ClassPageClient({ cls }) {
+  const tz = useTimeZone();
   const { transcript, concepts = [], material_summary, final_summary, final_mindmap, canvas_nodes = [], visual_notes = [] } = cls.data ?? {};
   const duration = estimateDuration(transcript);
 
@@ -135,7 +137,7 @@ export default function ClassPageClient({ cls }) {
 
   const wordTotal = transcript ? transcript.trim().split(/\s+/).filter(Boolean).length : 0;
 
-  const createdLabel = new Date(cls.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+  const createdLabel = new Date(cls.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: tz });
 
   function answerQuiz(key) {
     if (selected || !quizQ) return;

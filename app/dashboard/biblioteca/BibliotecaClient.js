@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import { useStoredJSON } from "@/lib/useStoredJSON";
 import Mascot from "@/components/Mascot";
+import { useTimeZone } from "@/lib/timezone-client";
 const NO_COURSES = [];
 
 /* ── Icons ── */
@@ -49,8 +50,9 @@ function TreeRow({ active, depth = 0, onClick, children }) {
 
 /* ── Material card ── */
 function MaterialCard({ c, colorIdx, onUpload }) {
+  const tz = useTimeZone();
   const col     = PDF_COLORS[colorIdx % PDF_COLORS.length];
-  const date    = new Date(c.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+  const date    = new Date(c.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: tz });
   const summary = c.data?.material_summary || "";
   const preview = summary.length > 180 ? summary.slice(0, 180) + "…" : summary;
   const concepts = (c.data?.concepts || []).map(x => typeof x === "string" ? x : x?.name).filter(Boolean).slice(0, 4);

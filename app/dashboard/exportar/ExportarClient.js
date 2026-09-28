@@ -2,6 +2,7 @@
 import { useState } from "react";
 import AppIcon, { IconBadge } from "@/components/Icon";
 import Mascot from "@/components/Mascot";
+import { useTimeZone } from "@/lib/timezone-client";
 
 function Svg({ size = 16, children }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
@@ -33,8 +34,8 @@ function buildAnkiCSV(concepts) {
   return toCSV(rows);
 }
 
-function fmtDate(str) {
-  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+function fmtDate(str, tz) {
+  return new Date(str).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: tz });
 }
 
 const EXPORT_TYPES = [
@@ -101,6 +102,7 @@ const EXPORT_TYPES = [
 ];
 
 export default function ExportarClient({ classes }) {
+  const tz = useTimeZone();
   const [selId,  setSelId]  = useState(classes[0]?.id ?? null);
   const [dled,   setDled]   = useState(new Set());
   const [search, setSearch] = useState("");
@@ -150,7 +152,7 @@ export default function ExportarClient({ classes }) {
                 borderRadius: 10, padding: "9px 12px", marginBottom: 3, cursor: "pointer",
               }}>
                 <p style={{ fontSize: 13, fontWeight: on ? 600 : 400, color: on ? "var(--accent)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</p>
-                <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{fmtDate(c.created_at)}</p>
+                <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{fmtDate(c.created_at, tz)}</p>
               </button>
             );
           })}
@@ -166,7 +168,7 @@ export default function ExportarClient({ classes }) {
               <div>
                 <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>{sel.title}</p>
                 <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3 }}>
-                  {fmtDate(sel.created_at)} · {sel.concepts.length} conceptos
+                  {fmtDate(sel.created_at, tz)} · {sel.concepts.length} conceptos
                   {sel.transcript && ` · ${Math.round(sel.transcript.split(/\s+/).length / 130)} min`}
                 </p>
               </div>
